@@ -1,30 +1,20 @@
 // Avis.tsx
 import { useState } from 'react';
 import {
-  FiStar, FiMessageCircle, FiThumbsUp, FiThumbsDown,
-  FiMoreVertical, FiFilter, FiSearch, FiCalendar,
-  FiFlag, FiCheckCircle, FiXCircle, FiAlertCircle,
-  FiClock, FiUser, FiMail, FiTrendingUp, FiTrendingDown,
-  FiDownload, FiRefreshCw, FiPlus, FiEdit2, FiTrash2,
-  FiUsers, FiUserPlus, FiUserCheck, FiUserX, FiActivity,
-  FiGlobe, FiSmartphone, FiMonitor, FiCamera, FiUpload,
-  FiSave, FiImage, FiLink, FiPhone, FiMapPin, FiBriefcase,
-  FiAward, FiHeart, FiTwitter, FiFacebook, FiLinkedin
+  FiStar, FiMessageCircle, FiThumbsUp,
+  FiMoreVertical,FiSearch,
+  FiFlag, FiCheckCircle, FiAlertCircle,
+  FiMail,
+  FiDownload, FiRefreshCw, FiEdit2, FiTrash2,
+  FiUsers, FiUserPlus, FiUserCheck,FiActivity,
+ FiUpload,
+  FiSave, FiImage,FiPhone,
+  FiTwitter, FiFacebook, FiLinkedin
 } from 'react-icons/fi';
-import {
-  HiOutlineStar,
-  HiOutlineChatBubbleLeftRight,
-  HiOutlineAcademicCap,
-  HiOutlineUserGroup,
-  HiOutlineUsers,
-  HiOutlineUserCircle,
-} from 'react-icons/hi2';
-import { BsChatQuote, BsStars, BsGraphUp, BsPeople } from 'react-icons/bs';
-import { MdOutlineRateReview, MdOutlineAdminPanelSettings } from 'react-icons/md';
-import { RiUserSmileLine, RiUserUnfollowLine, RiTeamLine } from 'react-icons/ri';
-import { FaRegCommentDots } from 'react-icons/fa';
 
-// Types
+import { BsChatQuote } from 'react-icons/bs';
+import {RiTeamLine } from 'react-icons/ri';
+import { FaRegCommentDots } from 'react-icons/fa';
 interface Comment {
   id: number;
   author: string;

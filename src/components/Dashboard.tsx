@@ -1,12 +1,12 @@
-// Dashboard.tsx
 import { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
+import type { EChartsOption } from 'echarts';
 import {
-  FiTrendingUp, FiTrendingDown, FiDollarSign, FiUsers,
-  FiKey, FiPercent, FiActivity, FiClock, FiCalendar,
-  FiArrowUp, FiArrowDown, FiMoreVertical, FiRefreshCw,
-  FiDownload, FiEye, FiStar, FiAlertCircle, FiCheckCircle,
-  FiXCircle, FiBarChart2, FiPieChart
+  FiTrendingUp, FiDollarSign, FiUsers,
+  FiKey, FiPercent, FiActivity, FiClock,
+  FiArrowUp, FiArrowDown, FiRefreshCw,
+  FiDownload, FiAlertCircle, FiCheckCircle,
+  FiXCircle
 } from 'react-icons/fi';
 import {
   HiOutlinePresentationChartLine,
@@ -41,6 +41,20 @@ interface RiskClient {
   school: string;
   status: string;
   alert?: string;
+}
+
+interface StatCardProps {
+  label: string;
+  value: string;
+  unit?: string;
+  change?: { value: string; positive: boolean };
+  icon: React.ElementType;
+  color: string;
+  delay: number;
+}
+
+interface StatusBadgeProps {
+  status: string;
 }
 
 interface DashboardProps {
@@ -116,7 +130,7 @@ const riskClients: RiskClient[] = [
 ];
 
 // Composant Status Badge
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: StatusBadgeProps) {
   const statusConfig: Record<string, { class: string; label: string; icon: React.ElementType }> = {
     active: { class: 'badge-green', label: 'Actif', icon: FiCheckCircle },
     inactive: { class: 'badge-gray', label: 'Inactif', icon: FiXCircle },
@@ -147,15 +161,7 @@ function StatCard({
   icon: Icon, 
   color, 
   delay 
-}: { 
-  label: string; 
-  value: string; 
-  unit?: string; 
-  change?: { value: string; positive: boolean }; 
-  icon: React.ElementType; 
-  color: string; 
-  delay: number;
-}) {
+}: StatCardProps) {
   return (
     <div className="stat-card" style={{ animationDelay: `${delay}s` }}>
       <div className="stat-header">
@@ -190,17 +196,14 @@ function EChartsBarChart({ data }: { data: ChartData[] }) {
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
   useEffect(() => {
-    // Initialisation du graphique
     if (chartRef.current) {
-      // Nettoyer l'instance précédente si elle existe
       if (chartInstance.current) {
         chartInstance.current.dispose();
       }
       
-      // Créer une nouvelle instance
       chartInstance.current = echarts.init(chartRef.current);
 
-      const option = {
+      const option: EChartsOption = {
         tooltip: {
           trigger: 'axis',
           axisPointer: {
@@ -302,7 +305,6 @@ function EChartsBarChart({ data }: { data: ChartData[] }) {
       chartInstance.current.setOption(option);
     }
 
-    // Gestionnaire de redimensionnement
     const handleResize = () => {
       if (chartInstance.current) {
         chartInstance.current.resize();
@@ -311,7 +313,6 @@ function EChartsBarChart({ data }: { data: ChartData[] }) {
 
     window.addEventListener('resize', handleResize);
 
-    // Nettoyage
     return () => {
       window.removeEventListener('resize', handleResize);
       if (chartInstance.current) {
@@ -321,7 +322,6 @@ function EChartsBarChart({ data }: { data: ChartData[] }) {
     };
   }, [data]);
 
-  // Forcer le redimensionnement après le rendu
   useEffect(() => {
     setTimeout(() => {
       if (chartInstance.current) {
@@ -339,17 +339,14 @@ function EChartsDonutChart({ data }: { data: DonutData[] }) {
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
   useEffect(() => {
-    // Initialisation du graphique
     if (chartRef.current) {
-      // Nettoyer l'instance précédente si elle existe
       if (chartInstance.current) {
         chartInstance.current.dispose();
       }
       
-      // Créer une nouvelle instance
       chartInstance.current = echarts.init(chartRef.current);
 
-      const option = {
+      const option: EChartsOption = {
         tooltip: {
           trigger: 'item',
           backgroundColor: '#1c2330',
@@ -402,7 +399,6 @@ function EChartsDonutChart({ data }: { data: DonutData[] }) {
       chartInstance.current.setOption(option);
     }
 
-    // Gestionnaire de redimensionnement
     const handleResize = () => {
       if (chartInstance.current) {
         chartInstance.current.resize();
@@ -411,7 +407,6 @@ function EChartsDonutChart({ data }: { data: DonutData[] }) {
 
     window.addEventListener('resize', handleResize);
 
-    // Nettoyage
     return () => {
       window.removeEventListener('resize', handleResize);
       if (chartInstance.current) {
@@ -421,7 +416,6 @@ function EChartsDonutChart({ data }: { data: DonutData[] }) {
     };
   }, [data]);
 
-  // Forcer le redimensionnement après le rendu
   useEffect(() => {
     setTimeout(() => {
       if (chartInstance.current) {
@@ -437,7 +431,7 @@ function EChartsDonutChart({ data }: { data: DonutData[] }) {
 export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
 
-  const stats = [
+  const stats: StatCardProps[] = [
     {
       label: "Revenus Mensuels",
       value: "8 100",
@@ -663,7 +657,7 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           align-items: center;
           gap: 6px;
           font-size: 13px;
-          color: var(--text-muted);
+          color: #8b949e;
           margin-top: 4px;
         }
 
@@ -677,8 +671,8 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
         .time-range {
           display: flex;
           gap: 4px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
+          background: #161b22;
+          border: 1px solid #21262d;
           padding: 2px;
         }
 
@@ -687,31 +681,31 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           font-size: 12px;
           background: transparent;
           border: none;
-          color: var(--text-secondary);
+          color: #8b949e;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .time-btn:hover {
-          color: var(--text-primary);
+          color: #e6edf3;
         }
 
         .time-btn.active {
-          background: var(--bg-elevated);
-          color: var(--accent-blue);
+          background: #1c2330;
+          color: #388bfd;
         }
 
         .stats-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 1px;
-          background: var(--border);
-          border: 1px solid var(--border);
+          background: #21262d;
+          border: 1px solid #21262d;
           margin-bottom: 24px;
         }
 
         .stat-card {
-          background: var(--bg-panel);
+          background: #0d1117;
           padding: 20px;
           position: relative;
           overflow: hidden;
@@ -737,7 +731,7 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           font-weight: 600;
           letter-spacing: 0.8px;
           text-transform: uppercase;
-          color: var(--text-muted);
+          color: #484f58;
         }
         
         .stat-icon {
@@ -770,13 +764,13 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           font-size: 28px;
           font-weight: 300;
           letter-spacing: -1px;
-          color: var(--text-primary);
+          color: #e6edf3;
           line-height: 1;
         }
         
         .stat-unit {
           font-size: 12px;
-          color: var(--text-muted);
+          color: #484f58;
         }
         
         .stat-change {
@@ -790,12 +784,12 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
         
         .stat-change.up {
           background: rgba(57, 211, 83, 0.15);
-          color: var(--accent-teal);
+          color: #39d353;
         }
         
         .stat-change.down {
           background: rgba(248, 81, 73, 0.15);
-          color: var(--accent-red);
+          color: #f85149;
         }
         
         .stat-stripe {
@@ -813,13 +807,13 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           display: grid;
           grid-template-columns: 2fr 1fr;
           gap: 1px;
-          background: var(--border);
-          border: 1px solid var(--border);
+          background: #21262d;
+          border: 1px solid #21262d;
           margin-bottom: 24px;
         }
 
         .chart-panel {
-          background: var(--bg-panel);
+          background: #0d1117;
           padding: 24px;
           min-height: 400px;
         }
@@ -835,15 +829,16 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           font-size: 14px;
           font-weight: 600;
           margin-bottom: 2px;
+          color: #e6edf3;
         }
 
         .panel-sub {
           font-size: 12px;
-          color: var(--text-muted);
+          color: #8b949e;
         }
 
         .panel-icon {
-          color: var(--text-muted);
+          color: #8b949e;
         }
 
         .chart-legend {
@@ -856,7 +851,7 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           align-items: center;
           gap: 6px;
           font-size: 11px;
-          color: var(--text-muted);
+          color: #8b949e;
         }
 
         .legend-dot {
@@ -880,7 +875,7 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           align-items: center;
           justify-content: space-between;
           padding: 8px 0;
-          border-bottom: 1px solid var(--border);
+          border-bottom: 1px solid #21262d;
         }
 
         .legend-row:last-child {
@@ -895,7 +890,7 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
 
         .legend-label {
           font-size: 12px;
-          color: var(--text-secondary);
+          color: #8b949e;
         }
 
         .legend-value {
@@ -907,12 +902,12 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 1px;
-          background: var(--border);
-          border: 1px solid var(--border);
+          background: #21262d;
+          border: 1px solid #21262d;
         }
 
         .activity-panel, .risk-panel {
-          background: var(--bg-panel);
+          background: #0d1117;
           padding: 24px;
         }
 
@@ -922,14 +917,14 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           gap: 4px;
           background: transparent;
           border: none;
-          color: var(--text-muted);
+          color: #8b949e;
           font-size: 12px;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .view-all:hover {
-          color: var(--accent-blue);
+          color: #388bfd;
         }
 
         .activity-list {
@@ -942,7 +937,7 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           align-items: flex-start;
           gap: 12px;
           padding: 12px 0;
-          border-bottom: 1px solid var(--border);
+          border-bottom: 1px solid #21262d;
           animation: slideInRight 0.3s ease;
           position: relative;
         }
@@ -955,6 +950,7 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           width: 6px;
           height: 6px;
           margin-top: 6px;
+          border-radius: 50%;
         }
 
         .activity-icon {
@@ -981,18 +977,18 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
 
         .activity-text {
           font-size: 13px;
-          color: var(--text-secondary);
+          color: #8b949e;
           line-height: 1.5;
         }
 
         .activity-text strong {
-          color: var(--text-primary);
+          color: #e6edf3;
           font-weight: 500;
         }
 
         .activity-time {
           font-size: 11px;
-          color: var(--text-muted);
+          color: #484f58;
           margin-top: 2px;
         }
 
@@ -1007,11 +1003,11 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           background: rgba(248, 81, 73, 0.15);
           border: 1px solid rgba(248, 81, 73, 0.3);
           font-size: 11px;
-          color: var(--accent-red);
+          color: #f85149;
         }
 
         .alert-icon {
-          color: var(--accent-red);
+          color: #f85149;
         }
 
         .risk-list {
@@ -1023,7 +1019,7 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           align-items: center;
           justify-content: space-between;
           padding: 12px 0;
-          border-bottom: 1px solid var(--border);
+          border-bottom: 1px solid #21262d;
           animation: slideInRight 0.3s ease;
         }
 
@@ -1039,11 +1035,12 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           font-size: 13px;
           font-weight: 500;
           margin-bottom: 2px;
+          color: #e6edf3;
         }
 
         .risk-school {
           font-size: 11px;
-          color: var(--text-muted);
+          color: #8b949e;
           margin-bottom: 2px;
         }
 
@@ -1052,15 +1049,15 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
           align-items: center;
           gap: 4px;
           font-size: 10px;
-          color: var(--accent-amber);
+          color: #e3b341;
         }
 
         .view-all-risk {
           width: 100%;
           padding: 10px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          color: var(--text-secondary);
+          background: #161b22;
+          border: 1px solid #21262d;
+          color: #8b949e;
           font-size: 12px;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -1068,9 +1065,9 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
         }
 
         .view-all-risk:hover {
-          background: var(--bg-elevated);
-          border-color: var(--border-bright);
-          color: var(--text-primary);
+          background: #1c2330;
+          border-color: #30363d;
+          color: #e6edf3;
         }
 
         .btn {
@@ -1087,13 +1084,13 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
 
         .btn-ghost {
           background: transparent;
-          border: 1px solid var(--border);
-          color: var(--text-secondary);
+          border: 1px solid #21262d;
+          color: #8b949e;
         }
 
         .btn-ghost:hover {
-          border-color: var(--border-bright);
-          color: var(--text-primary);
+          border-color: #30363d;
+          color: #e6edf3;
           transform: translateY(-2px);
         }
 
@@ -1110,32 +1107,32 @@ export default function Dashboard({ onNotify = () => {} }: DashboardProps) {
         
         .badge-green {
           background: rgba(57, 211, 83, 0.15);
-          color: var(--accent-teal);
+          color: #39d353;
           border: 1px solid rgba(57, 211, 83, 0.3);
         }
         
         .badge-red {
           background: rgba(248, 81, 73, 0.15);
-          color: var(--accent-red);
+          color: #f85149;
           border: 1px solid rgba(248, 81, 73, 0.3);
         }
         
         .badge-amber {
           background: rgba(227, 179, 65, 0.15);
-          color: var(--accent-amber);
+          color: #e3b341;
           border: 1px solid rgba(227, 179, 65, 0.3);
         }
         
         .badge-blue {
           background: rgba(56, 139, 253, 0.15);
-          color: var(--accent-blue);
+          color: #388bfd;
           border: 1px solid rgba(56, 139, 253, 0.3);
         }
         
         .badge-gray {
-          background: var(--bg-elevated);
-          color: var(--text-muted);
-          border: 1px solid var(--border);
+          background: #1c2330;
+          color: #484f58;
+          border: 1px solid #21262d;
         }
 
         .spin-on-hover:hover {

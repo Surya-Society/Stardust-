@@ -1,28 +1,20 @@
-// ApiPages.tsx (version corrigée)
 import { useState } from 'react';
 import {
-  FiKey, FiPlus, FiCopy, FiX, FiCheck, FiRefreshCw,
+  FiKey, FiPlus, FiCopy, FiRefreshCw,
   FiSearch, FiFilter, FiMoreVertical, FiEye, FiEyeOff,
-  FiClock, FiCalendar, FiActivity, FiShield, FiLock,
-  FiUnlock, FiAlertCircle, FiCheckCircle, FiDownload,
-  FiUpload, FiTrash2, FiEdit2, FiCpu, FiServer, FiCode,
-  FiGrid, FiImage, FiFileText, FiDatabase, FiCloud,
-  FiArchive, FiDownloadCloud, FiUploadCloud, FiUsers,
-  FiStar, FiTrendingUp, FiLayers
+  FiClock, FiCalendar, FiActivity,
+  FiDownload,
+  FiEdit2, FiCode,
+  FiArchive, FiUsers,
+  FiStar, FiLayers
 } from 'react-icons/fi';
 import {
-  HiOutlineCode,
-  HiOutlineKey,
-  HiOutlineShieldCheck,
   HiOutlineChip,
   HiOutlineTemplate,
   HiOutlineDocumentText,
   HiOutlinePhotograph,
-  HiOutlineColorSwatch
 } from 'react-icons/hi';
-import { BiCodeBlock, BiNetworkChart, BiData, BiLock } from 'react-icons/bi';
-import { MdOutlineSecurity, MdOutlineDataUsage } from 'react-icons/md';
-import { VscJson, VscFileCode } from 'react-icons/vsc';
+import { BiCodeBlock, BiLock } from 'react-icons/bi';
 import { SiRust, SiCplusplus, SiC, SiPython, SiJavascript, SiTypescript, SiGo, SiPhp } from 'react-icons/si';
 import { TbBinary } from 'react-icons/tb';
 import { FaJava } from "react-icons/fa";
@@ -319,7 +311,7 @@ function StatusBadge({ status }: { status: Algorithm['status'] }) {
 }
 
 // Carte Algorithme
-function AlgorithmCard({ algo, onAction }: { algo: Algorithm; onAction: (action: string, algo: Algorithm) => void }) {
+function AlgorithmCard({ algo, onAction }: { algo: Algorithm; onAction: (action: string) => void }) {
   const totalDownloads = algo.languages.reduce((acc, l) => acc + l.downloads, 0);
   
   return (
@@ -329,7 +321,7 @@ function AlgorithmCard({ algo, onAction }: { algo: Algorithm; onAction: (action:
           <h3>{algo.name}</h3>
           <StatusBadge status={algo.status} />
         </div>
-        <button className="menu-btn" onClick={() => onAction('menu', algo)}>
+        <button className="menu-btn" onClick={() => onAction('menu')}>
           <FiMoreVertical size={16} />
         </button>
       </div>
@@ -371,10 +363,10 @@ function AlgorithmCard({ algo, onAction }: { algo: Algorithm; onAction: (action:
         <span className="version">v{algo.version}</span>
         <span className="updated">MAJ {algo.updated}</span>
         <div className="actions">
-          <button className="action-btn" onClick={() => onAction('docs', algo)}>
+          <button className="action-btn" onClick={() => onAction('docs')}>
             <FiCode size={14} /> Docs
           </button>
-          <button className="action-btn primary" onClick={() => onAction('download', algo)}>
+          <button className="action-btn primary" onClick={() => onAction('download')}>
             <FiDownload size={14} /> Télécharger
           </button>
         </div>
@@ -384,7 +376,7 @@ function AlgorithmCard({ algo, onAction }: { algo: Algorithm; onAction: (action:
 }
 
 // Carte Template
-function TemplateCard({ template, onAction }: { template: Template; onAction: (action: string, template: Template) => void }) {
+function TemplateCard({ template, onAction }: { template: Template; onAction: (action: string) => void }) {
   return (
     <div className="template-card">
       <div className="preview">
@@ -414,13 +406,13 @@ function TemplateCard({ template, onAction }: { template: Template; onAction: (a
             <span className="customizable">Personnalisable</span>
           )}
           <div className="actions">
-            <button className="action-btn" onClick={() => onAction('preview', template)}>
+            <button className="action-btn" onClick={() => onAction('preview')}>
               <FiEye size={14} /> Aperçu
             </button>
-            <button className="action-btn primary" onClick={() => onAction('edit', template)}>
+            <button className="action-btn primary" onClick={() => onAction('edit')}>
               <FiEdit2 size={14} /> Modifier
             </button>
-            <button className="action-btn" onClick={() => onAction('download', template)}>
+            <button className="action-btn" onClick={() => onAction('download')}>
               <FiDownload size={14} />
             </button>
           </div>
@@ -430,8 +422,8 @@ function TemplateCard({ template, onAction }: { template: Template; onAction: (a
   );
 }
 
-// Carte Clé API (CORRIGÉE)
-function ApiKeyCard({ apiKey, onAction, onCopy }: { apiKey: ApiKey; onAction: (action: string, key: ApiKey) => void; onCopy: (key: string) => void }) {
+// Carte Clé API
+function ApiKeyCard({ apiKey, onAction, onCopy }: { apiKey: ApiKey; onAction: (action: string) => void; onCopy: (key: string) => void }) {
   const [showFullKey, setShowFullKey] = useState(false);
   const displayKey = showFullKey ? apiKey.key : `${apiKey.key.substring(0, 20)}...`;
 
@@ -442,7 +434,7 @@ function ApiKeyCard({ apiKey, onAction, onCopy }: { apiKey: ApiKey; onAction: (a
           <h3>{apiKey.name}</h3>
           {apiKey.algorithm && <span className="algo-tag">{apiKey.algorithm}</span>}
         </div>
-        <button className="menu-btn" onClick={() => onAction('menu', apiKey)}>
+        <button className="menu-btn" onClick={() => onAction('menu')}>
           <FiMoreVertical size={16} />
         </button>
       </div>
@@ -468,10 +460,10 @@ function ApiKeyCard({ apiKey, onAction, onCopy }: { apiKey: ApiKey; onAction: (a
       <div className="card-footer">
         <span className={`status ${apiKey.status}`}>{apiKey.status}</span>
         <div className="actions">
-          <button className="action-btn" onClick={() => onAction('edit', apiKey)}>
+          <button className="action-btn" onClick={() => onAction('edit')}>
             <FiEdit2 size={14} />
           </button>
-          <button className="action-btn" onClick={() => onAction('refresh', apiKey)}>
+          <button className="action-btn" onClick={() => onAction('refresh')}>
             <FiRefreshCw size={14} />
           </button>
         </div>
@@ -485,7 +477,6 @@ export default function ApiPages({ onNotify }: ApiPagesProps) {
   const [activeTab, setActiveTab] = useState<'algorithms' | 'templates' | 'keys'>('algorithms');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const filteredAlgorithms = algorithms.filter(algo =>
     algo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -508,16 +499,21 @@ export default function ApiPages({ onNotify }: ApiPagesProps) {
     onNotify('Clé copiée', 'green');
   };
 
-  const handleAction = (action: string, item: any) => {
+  const handleAction = (action: string) => {
     const messages: Record<string, string> = {
       download: 'Téléchargement démarré',
       edit: 'Modification en cours',
       delete: 'Élément supprimé',
       docs: 'Documentation ouverte',
       preview: 'Aperçu généré',
-      menu: 'Menu ouvert'
+      menu: 'Menu ouvert',
+      refresh: 'Clé régénérée'
     };
     onNotify(messages[action] || 'Action effectuée', 'blue');
+  };
+
+  const handleCreateClick = () => {
+    onNotify('Création d\'un nouvel algorithme', 'blue');
   };
 
   return (
@@ -532,7 +528,7 @@ export default function ApiPages({ onNotify }: ApiPagesProps) {
           <button className="btn btn-ghost" onClick={() => onNotify('Données actualisées', 'green')}>
             <FiRefreshCw size={14} /> Actualiser
           </button>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+          <button className="btn btn-primary" onClick={handleCreateClick}>
             <FiPlus size={14} /> Nouvel algorithme
           </button>
         </div>
@@ -607,7 +603,7 @@ export default function ApiPages({ onNotify }: ApiPagesProps) {
           </div>
         )}
 
-        {/* Clés API - CORRIGÉ */}
+        {/* Clés API */}
         {activeTab === 'keys' && (
           <div className="keys-grid">
             {filteredKeys.map(key => (

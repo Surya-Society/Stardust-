@@ -1,4 +1,3 @@
-// Accueil.tsx
 import { useState, useEffect } from 'react';
 import { 
   FiGrid, FiKey, FiCreditCard, FiUsers, FiMessageCircle,
@@ -28,7 +27,13 @@ interface ToastMessage {
   type: 'green' | 'red' | 'amber' | 'blue';
 }
 
-export default function Accueil() {
+type NotificationType = 'green' | 'red' | 'amber' | 'blue';
+
+interface AccueilProps {
+  onLogout?: () => void;
+}
+
+export default function Accueil({ onLogout }: AccueilProps) {
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [navOpen, setNavOpen] = useState<boolean>(false);
   const [navCollapsed, setNavCollapsed] = useState<boolean>(false);
@@ -39,18 +44,23 @@ export default function Accueil() {
     const handleResize = () => {
       const mobile = window.innerWidth <= 768;
       setIsMobile(mobile);
-      if (!mobile && navCollapsed) {
-        // Sur desktop, on peut garder l'état replié
+      // Fermer le menu mobile lors du redimensionnement vers desktop
+      if (!mobile && navOpen) {
+        setNavOpen(false);
       }
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [navCollapsed]);
+  }, [navOpen]);
 
-  const showNotification = (msg: string, type: ToastMessage['type'] = 'green') => {
+  const showNotification = (msg: string, type: NotificationType = 'green') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleLogout = () => {
+    onLogout?.();
   };
 
   const navItems: NavItem[] = [
@@ -82,15 +92,17 @@ export default function Accueil() {
   };
 
   const toggleNavCollapse = () => {
-    setNavCollapsed(!navCollapsed);
+    if (!isMobile) {
+      setNavCollapsed(!navCollapsed);
+    }
   };
 
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard onNotify={showNotification} />;
       case 'keys':
-        return <KeysPage onNotify={showNotification} />;
+        return <KeysPage/>;
       case 'subscriptions':
         return <SubscriptionsPage onNotify={showNotification} />;
       case 'clients':
@@ -104,7 +116,7 @@ export default function Accueil() {
       case 'settings':
         return <SettingsPage onNotify={showNotification} />;
       default:
-        return <Dashboard />;
+        return <Dashboard onNotify={showNotification} />;
     }
   };
 
@@ -125,19 +137,18 @@ export default function Accueil() {
         <nav className={`nav ${navOpen ? 'open' : ''} ${navCollapsed && !isMobile ? 'collapsed' : ''}`}>
           <div className="nav-header">
             <div className="nav-logo">
-              <div className="nav-logo-mark animate-pulse-slow">N</div>
+              <img src="/LogoNova.png" alt="Nova Logo" className="nav-logo-img" />
               {(!navCollapsed || isMobile) && (
-                <div className="nav-logo-text">
-                  <span>Nova</span> Admin
-                </div>
+                <span className="nav-logo-text">Nova</span>
               )}
             </div>
             
             {!isMobile && (
               <button 
-                className="nav-collapse-btn"
+                className={`nav-collapse-btn ${navCollapsed ? 'collapsed' : ''}`}
                 onClick={toggleNavCollapse}
                 title={navCollapsed ? 'Développer' : 'Réduire'}
+                type="button"
               >
                 {navCollapsed ? <FiChevronRight size={18} /> : <FiChevronLeft size={18} />}
               </button>
@@ -162,8 +173,7 @@ export default function Accueil() {
                     <span className="nav-label-text">{item.label}</span>
                     {item.badge && (
                       <span 
-                        className={`nav-badge ${item.badgeColor === 'green' ? 'green' : ''}`}
-                        style={item.badgeColor === 'amber' ? { background: 'var(--accent-amber)', color: '#000' } : {}}
+                        className={`nav-badge ${item.badgeColor ? item.badgeColor : ''}`}
                       >
                         {item.badge}
                       </span>
@@ -195,7 +205,7 @@ export default function Accueil() {
           </div>
 
           <div className="nav-footer">
-            <button className="nav-user" type="button">
+            <button className="nav-user" type="button" onClick={handleLogout}>
               <div className="nav-avatar">
                 <FiUser size={16} />
               </div>
@@ -222,14 +232,14 @@ export default function Accueil() {
               type="button"
               aria-label="Menu"
             >
-              {isMobile ? <FiMenu size={20} /> : (navCollapsed ? <FiMenu size={20} /> : <FiChevronLeft size={20} />)}
+              <FiMenu size={20} />
             </button>
             
-            <h1 className="topbar-title animate-fade-in">
+            <h1 className="topbar-title">
               {pageTitles[currentPage]}
             </h1>
             
-            <div className="topbar-search animate-fade-in">
+            <div className="topbar-search">
               <FiSearch size={16} className="search-icon" />
               <input 
                 type="text" 
@@ -239,7 +249,7 @@ export default function Accueil() {
             </div>
             
             <button 
-              className="topbar-btn notification-btn animate-fade-in"
+              className="topbar-btn notification-btn"
               onClick={() => showNotification('Aucune nouvelle notification', 'blue')}
               type="button"
               aria-label="Notifications"
@@ -249,7 +259,7 @@ export default function Accueil() {
             </button>
             
             <button 
-              className="topbar-btn user-btn animate-fade-in"
+              className="topbar-btn user-btn"
               type="button"
               aria-label="Profil"
             >
@@ -257,8 +267,8 @@ export default function Accueil() {
             </button>
           </header>
 
-          {/* Zone de contenu avec animation de transition */}
-          <div className="content page-transition">
+          {/* Zone de contenu */}
+          <div className="content">
             {renderPage()}
           </div>
         </main>
@@ -270,7 +280,6 @@ export default function Accueil() {
   );
 }
 
-// Styles globaux améliorés avec animations supplémentaires
 const globalStyles = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap');
 
@@ -287,7 +296,6 @@ const globalStyles = `
     --bg-elevated: #1c2330;
     --border: #21262d;
     --border-bright: #30363d;
-    --accent: #e8f4fd;
     --accent-blue: #388bfd;
     --accent-teal: #39d353;
     --accent-amber: #e3b341;
@@ -300,7 +308,6 @@ const globalStyles = `
     --mono: 'DM Mono', monospace;
     --nav-w: 260px;
     --nav-w-collapsed: 80px;
-    --transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -315,7 +322,7 @@ const globalStyles = `
     min-height: 100vh;
   }
 
-  /* Scrollbar personnalisée */
+  /* Scrollbar */
   ::-webkit-scrollbar { 
     width: 6px; 
     height: 6px; 
@@ -331,7 +338,7 @@ const globalStyles = `
     background: var(--text-muted);
   }
 
-  /* Layout principal */
+  /* Layout */
   .layout { 
     display: flex; 
     min-height: 100vh; 
@@ -357,10 +364,6 @@ const globalStyles = `
   .nav.collapsed { 
     width: var(--nav-w-collapsed);
   }
-  
-  .nav.closed { 
-    transform: translateX(-100%); 
-  }
 
   .nav-header {
     position: relative;
@@ -368,43 +371,35 @@ const globalStyles = `
   }
 
   .nav-logo {
-    padding: 24px 20px;
+    padding: 20px;
     display: flex;
     align-items: center;
     gap: 12px;
+    min-height: 72px;
   }
   
   .nav.collapsed .nav-logo {
-    padding: 24px 0;
+    padding: 20px 0;
     justify-content: center;
   }
   
-  .nav-logo-mark {
-    width: 32px;
-    height: 32px;
-    background: var(--accent-blue);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 14px;
-    color: #fff;
-    border-radius: 6px;
-    transition: transform 0.2s var(--transition-bounce);
+  .nav-logo-img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    transition: transform 0.2s ease;
   }
   
-  .nav-logo-mark:hover {
-    transform: rotate(5deg) scale(1.05);
+  .nav-logo-img:hover {
+    transform: scale(1.05);
   }
   
   .nav-logo-text { 
     font-weight: 600; 
-    font-size: 16px; 
+    font-size: 18px; 
     letter-spacing: -0.3px;
     white-space: nowrap;
-  }
-  .nav-logo-text span { 
-    color: var(--accent-blue); 
+    color: white;
   }
 
   .nav-collapse-btn {
@@ -426,11 +421,14 @@ const globalStyles = `
     z-index: 10;
   }
 
+  .nav-collapse-btn.collapsed {
+    transform: translateY(-50%) rotate(180deg);
+  }
+
   .nav-collapse-btn:hover {
     background: var(--accent-blue);
     border-color: var(--accent-blue);
     color: white;
-    transform: translateY(-50%) scale(1.1);
   }
 
   .nav-section { 
@@ -469,7 +467,6 @@ const globalStyles = `
     color: var(--text-secondary);
     cursor: pointer;
     font-size: 13.5px;
-    font-weight: 400;
     transition: all 0.2s ease;
     position: relative;
     border: none;
@@ -491,10 +488,6 @@ const globalStyles = `
     background: var(--bg-surface);
   }
   
-  .nav.collapsed .nav-item:hover {
-    transform: scale(1.05);
-  }
-  
   .nav-item.active { 
     color: var(--text-primary); 
     background: var(--bg-elevated);
@@ -509,37 +502,26 @@ const globalStyles = `
     width: 3px;
     background: var(--accent-blue);
     border-radius: 0 3px 3px 0;
-    animation: slideInLeft 0.2s var(--transition-smooth);
-  }
-  
-  .nav.collapsed .nav-item.active::before {
-    width: 2px;
   }
 
-  .nav-icon {
-    transition: transform 0.2s ease;
-  }
-  
-  .nav-item:hover .nav-icon {
-    transform: scale(1.1);
-  }
-  
   .nav-badge {
     margin-left: auto;
     background: var(--accent-red);
-    color: #fff;
+    color: white;
     font-size: 10px;
     font-weight: 600;
     padding: 2px 6px;
     min-width: 20px;
     text-align: center;
     border-radius: 12px;
-    animation: pulse 2s infinite;
   }
   
   .nav-badge.green { 
     background: var(--accent-teal); 
-    color: #000; 
+  }
+  
+  .nav-badge.amber { 
+    background: var(--accent-amber); 
   }
 
   .nav-badge-collapsed {
@@ -547,14 +529,13 @@ const globalStyles = `
     top: 2px;
     right: 2px;
     background: var(--accent-red);
-    color: #fff;
+    color: white;
     font-size: 8px;
     font-weight: 600;
     padding: 2px 4px;
     min-width: 16px;
     text-align: center;
     border-radius: 8px;
-    animation: pulse 2s infinite;
   }
 
   .nav-footer {
@@ -586,7 +567,6 @@ const globalStyles = `
   
   .nav-user:hover { 
     background: var(--bg-surface);
-    transform: translateY(-2px);
   }
   
   .nav-avatar {
@@ -596,15 +576,8 @@ const globalStyles = `
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 14px;
-    color: #fff;
+    color: white;
     border-radius: 8px;
-    transition: transform 0.2s var(--transition-bounce);
-  }
-  
-  .nav-user:hover .nav-avatar {
-    transform: rotate(5deg);
   }
   
   .nav-user-info { 
@@ -615,6 +588,7 @@ const globalStyles = `
   .nav-user-name { 
     font-size: 13px; 
     font-weight: 600; 
+    color: var(--text-primary);
   }
   
   .nav-user-role { 
@@ -624,7 +598,7 @@ const globalStyles = `
   
   .nav-logout-icon {
     color: var(--text-muted);
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease;
   }
   
   .nav-user:hover .nav-logout-icon {
@@ -655,12 +629,11 @@ const globalStyles = `
     align-items: center;
     padding: 0 28px;
     gap: 20px;
-    background: var(--bg-panel);
+    background: rgba(13, 17, 23, 0.95);
+    backdrop-filter: blur(8px);
     position: sticky;
     top: 0;
     z-index: 50;
-    backdrop-filter: blur(8px);
-    background: rgba(13, 17, 23, 0.95);
   }
   
   .topbar-title { 
@@ -668,6 +641,7 @@ const globalStyles = `
     font-weight: 500; 
     flex: 1;
     letter-spacing: -0.3px;
+    color: var(--text-primary);
   }
   
   .topbar-search {
@@ -717,18 +691,14 @@ const globalStyles = `
     cursor: pointer;
     color: var(--text-secondary);
     transition: all 0.2s ease;
-    position: relative;
     border-radius: 8px;
+    position: relative;
   }
   
   .topbar-btn:hover { 
     color: var(--text-primary); 
     border-color: var(--border-bright);
-    transform: translateY(-2px);
-  }
-  
-  .notification-btn {
-    animation: float 3s ease-in-out infinite;
+    transform: translateY(-1px);
   }
   
   .topbar-dot {
@@ -740,13 +710,11 @@ const globalStyles = `
     background: var(--accent-red);
     border-radius: 50%;
     border: 2px solid var(--bg-panel);
-    animation: pulse 2s infinite;
   }
   
   .user-btn {
     background: var(--accent-blue);
     color: white;
-    font-weight: 600;
   }
   
   .user-btn:hover {
@@ -781,7 +749,7 @@ const globalStyles = `
 
   /* Zone de contenu */
   .content { 
-    padding: 32px 32px; 
+    padding: 32px; 
     flex: 1;
   }
 
@@ -800,54 +768,10 @@ const globalStyles = `
     display: block; 
   }
 
-  /* Animations globales */
+  /* Animations */
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
-  }
-
-  @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes slideInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
-  }
-
-  .animate-fade-in {
-    animation: slideInUp 0.3s var(--transition-smooth) both;
-  }
-
-  .animate-pulse-slow {
-    animation: pulse 3s ease-in-out infinite;
-  }
-
-  .page-transition {
-    animation: slideInUp 0.4s var(--transition-smooth);
   }
 
   /* Responsive */
@@ -864,7 +788,6 @@ const globalStyles = `
   @media (max-width: 768px) {
     :root { 
       --nav-w: 280px; 
-      --nav-w-collapsed: 280px;
     }
     
     .nav { 
@@ -872,7 +795,7 @@ const globalStyles = `
     }
     
     .nav.collapsed { 
-      width: 280px;
+      width: var(--nav-w);
     }
     
     .nav.open { 
@@ -905,8 +828,13 @@ const globalStyles = `
       display: none; 
     }
     
-    .topbar-title {
-      font-size: 14px;
+    .nav-logo {
+      padding: 16px;
+    }
+    
+    .nav-logo-img {
+      width: 32px;
+      height: 32px;
     }
   }
 
@@ -915,27 +843,12 @@ const globalStyles = `
       padding: 16px; 
     }
     
+    .topbar-title {
+      font-size: 14px;
+    }
+    
     .topbar-btn:not(.menu-btn):not(.user-btn) {
       display: none;
     }
   }
-
-  /* Classes utilitaires */
-  .text-mono { font-family: var(--mono); }
-  .text-accent-blue { color: var(--accent-blue); }
-  .text-accent-teal { color: var(--accent-teal); }
-  .text-accent-amber { color: var(--accent-amber); }
-  .text-accent-red { color: var(--accent-red); }
-  
-  .bg-surface { background: var(--bg-surface); }
-  .bg-elevated { background: var(--bg-elevated); }
-  
-  .border-default { border: 1px solid var(--border); }
-  .border-bright { border: 1px solid var(--border-bright); }
-  
-  .rounded-lg { border-radius: 8px; }
-  .rounded-xl { border-radius: 12px; }
-  
-  .shadow-lg { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
-  .shadow-elevated { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
 `;

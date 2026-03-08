@@ -817,7 +817,7 @@ export default function Abonnements({ onNotify }: AbonnementsProps) {
 
       {/* Grille des abonnements */}
       <div className="subscriptions-grid animate-fade-up delay-2">
-        {filteredSubscriptions.map((sub, index) => (
+        {filteredSubscriptions.map((sub) => (
           <SubscriptionCard
             key={sub.id}
             subscription={sub}

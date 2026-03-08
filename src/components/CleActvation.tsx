@@ -1,5 +1,109 @@
 import { useState } from "react";
 
+// Types
+interface ActivationKey {
+  id: number;
+  key: string;
+  school: string;
+  plan: "Basic" | "Premium" | "Enterprise";
+  status: "active" | "expired" | "suspended" | "revoked";
+  created: string;
+  expires: string;
+  uses: number;
+  maxUses: number;
+  hwLock: boolean;
+  twoFa: boolean;
+  ipRestrict: boolean;
+  fingerprint: string;
+  lastUsed: string;
+  city: string;
+  secScore: number;
+  revocations: number;
+  hash: string;
+  activationMethod: "online" | "usb" | "file";
+  events: Array<{
+    dot: string;
+    event: string;
+    time: string;
+  }>;
+}
+
+interface Toast {
+  msg: string;
+  type: "green" | "red" | "amber" | "blue";
+}
+
+interface FormData {
+  school: string;
+  plan: "Basic" | "Premium" | "Enterprise";
+  expires: string;
+  maxUses: string;
+  hwLock: boolean;
+  twoFa: boolean;
+  ipRestrict: boolean;
+  autoRevoke: boolean;
+  activationMethod: "online" | "usb" | "file";
+  note: string;
+}
+
+interface SecurityOption {
+  key: keyof Pick<FormData, "hwLock" | "twoFa" | "ipRestrict" | "autoRevoke">;
+  icon: string;
+  name: string;
+  desc: string;
+}
+
+interface BadgeProps {
+  status: ActivationKey["status"];
+}
+
+interface SecurityScoreProps {
+  score: number;
+}
+
+interface ToggleProps {
+  on: boolean;
+  onChange: () => void;
+}
+
+interface CheckboxProps {
+  checked: boolean;
+  onChange: () => void;
+}
+
+interface KeyCardProps {
+  k: ActivationKey;
+  selected: boolean;
+  onSelect: () => void;
+  onDetail: (key: ActivationKey) => void;
+  onCopy: (key: string) => void;
+  onSuspend: (id: number) => void;
+  onReactivate: (id: number) => void;
+  onRevoke: (key: ActivationKey) => void;
+}
+
+interface IcoProps {
+  d: string;
+  s?: number;
+  sw?: number;
+}
+
+interface StatItem {
+  label: string;
+  val: number;
+  color: string;
+}
+
+interface AuditItem {
+  label: string;
+  val: string;
+  color: string;
+}
+
+interface CleActivationProps {
+  onNotify?: (message: string, type: string) => void;
+}
+
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
@@ -219,11 +323,12 @@ const CSS = `
 @media(max-width:640px) { .ka-stats{grid-template-columns:repeat(2,1fr)} .ka-toolbar{flex-wrap:wrap} .ka-search{max-width:100%;flex:1 1 100%} }
 `;
 
-const Ico = ({ d, s = 14, sw = 1.5 }) => (
+const Ico = ({ d, s = 14, sw = 1.5 }: IcoProps) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
     <path d={d} />
   </svg>
 );
+
 const I = {
   key:     "M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4",
   plus:    "M12 5v14M5 12h14",
@@ -249,7 +354,7 @@ const I = {
   filter:  "M22 3H2l8 9.46V19l4 2v-8.54L22 3",
 };
 
-const KEYS_DATA = [
+const KEYS_DATA: ActivationKey[] = [
   { id:1, key:"SCO-2025-ABCD-1234", school:"Lycée Victor Hugo", plan:"Enterprise", status:"active", created:"12 Jan 2025", expires:"12 Jan 2026", uses:48, maxUses:150, hwLock:true, twoFa:true, ipRestrict:false, fingerprint:"a3f2b1c9", lastUsed:"Il y a 2h", city:"Paris, FR", secScore:92, revocations:0, hash:"sha256:8f4a", activationMethod:"online", events:[{dot:"#3fb950",event:"Activation en ligne réussie",time:"12 Jan 2025 · 14:23"},{dot:"#388bfd",event:"Renouvellement automatique configuré",time:"12 Jan 2025 · 14:25"},{dot:"#388bfd",event:"48 nouvelles sessions actives",time:"Hier · 09:00"}] },
   { id:2, key:"SCO-2025-EFGH-5678", school:"Collège Jean Moulin", plan:"Enterprise", status:"active", created:"03 Fév 2025", expires:"03 Fév 2026", uses:120, maxUses:200, hwLock:true, twoFa:true, ipRestrict:true, fingerprint:"d7e5f3a2", lastUsed:"Il y a 15min", city:"Lyon, FR", secScore:98, revocations:0, hash:"sha256:2c9e", activationMethod:"usb", events:[{dot:"#3fb950",event:"Activation USB (Ed25519 validé)",time:"03 Fév 2025 · 11:05"},{dot:"#d29922",event:"Restriction IP activée",time:"03 Fév 2025 · 11:10"}] },
   { id:3, key:"SCO-2024-IJKL-9012", school:"École Primaire Pasteur", plan:"Basic", status:"expired", created:"15 Nov 2023", expires:"15 Nov 2024", uses:30, maxUses:50, hwLock:false, twoFa:false, ipRestrict:false, fingerprint:"b1c4d8e0", lastUsed:"Il y a 45j", city:"Bordeaux, FR", secScore:34, revocations:0, hash:"sha256:5f1b", activationMethod:"file", events:[{dot:"#3fb950",event:"Activation via fichier .licpkg",time:"15 Nov 2023 · 09:00"},{dot:"#f85149",event:"Licence expirée — accès bloqué",time:"15 Nov 2024 · 00:00"}] },
@@ -258,21 +363,32 @@ const KEYS_DATA = [
   { id:6, key:"SCO-2025-UVWX-4321", school:"Lycée Carnot", plan:"Premium", status:"active", created:"10 Fév 2025", expires:"10 Fév 2026", uses:67, maxUses:120, hwLock:true, twoFa:false, ipRestrict:false, fingerprint:"c3b2a1d0", lastUsed:"Il y a 1h", city:"Dijon, FR", secScore:61, revocations:0, hash:"sha256:1a3c", activationMethod:"online", events:[{dot:"#3fb950",event:"Activation en ligne réussie",time:"10 Fév 2025 · 10:00"}] },
 ];
 
-const METHOD_LABELS = { online:"En ligne", usb:"Clé USB", file:"Fichier .licpkg" };
-const METHOD_COLORS = { online:"#3fb950", usb:"#388bfd", file:"#d29922" };
-const STATUS_ACCENT = { active:"#3fb950", expired:"#d29922", suspended:"#f85149", revoked:"#f85149" };
+const METHOD_LABELS: Record<ActivationKey["activationMethod"], string> = { online:"En ligne", usb:"Clé USB", file:"Fichier .licpkg" };
+const METHOD_COLORS: Record<ActivationKey["activationMethod"], string> = { online:"#3fb950", usb:"#388bfd", file:"#d29922" };
+const STATUS_ACCENT: Record<ActivationKey["status"], string> = { active:"#3fb950", expired:"#d29922", suspended:"#f85149", revoked:"#f85149" };
 
-function seg() { return Math.random().toString(36).substring(2,6).toUpperCase(); }
-function genKey() { return `SCO-2025-${seg()}-${seg()}`; }
+function seg(): string { return Math.random().toString(36).substring(2,6).toUpperCase(); }
+function genKey(): string { return `SCO-2025-${seg()}-${seg()}`; }
 
-function Badge({ status }) {
-  const M = { active:["ka-badge-green","Actif"], expired:["ka-badge-amber","Expiré"], suspended:["ka-badge-red","Suspendu"], revoked:["ka-badge-red","Révoqué"] };
-  const [cls,lbl] = M[status] || ["ka-badge-gray",status];
-  const dc = {"ka-badge-green":"#3fb950","ka-badge-amber":"#d29922","ka-badge-red":"#f85149","ka-badge-gray":"#484f58"}[cls];
-  return <span className={`ka-badge ${cls}`}><span className="ka-badge-dot" style={{background:dc}}/>{lbl}</span>;
+function Badge({ status }: BadgeProps) {
+  const M: Record<ActivationKey["status"], [string, string]> = {
+    active: ["ka-badge-green","Actif"],
+    expired: ["ka-badge-amber","Expiré"],
+    suspended: ["ka-badge-red","Suspendu"],
+    revoked: ["ka-badge-red","Révoqué"]
+  };
+  const [cls, lbl] = M[status] || ["ka-badge-gray",status];
+  const dotColors: Record<string, string> = {
+    "ka-badge-green": "#3fb950",
+    "ka-badge-amber": "#d29922",
+    "ka-badge-red": "#f85149",
+    "ka-badge-gray": "#484f58"
+  };
+  const dotColor = dotColors[cls];
+  return <span className={`ka-badge ${cls}`}><span className="ka-badge-dot" style={{background:dotColor}}/>{lbl}</span>;
 }
 
-function SecurityScore({ score }) {
+function SecurityScore({ score }: SecurityScoreProps) {
   const color = score >= 80 ? "#3fb950" : score >= 50 ? "#d29922" : "#f85149";
   return (
     <div className="ka-score-wrap">
@@ -282,25 +398,25 @@ function SecurityScore({ score }) {
   );
 }
 
-function Toggle({ on, onChange }) {
+function Toggle({ on, onChange }: ToggleProps) {
   return <div className={`ka-toggle ${on?"on":""}`} onClick={onChange}><div className="ka-toggle-knob"/></div>;
 }
 
-function Checkbox({ checked, onChange }) {
+function Checkbox({ checked, onChange }: CheckboxProps) {
   return (
-    <div className={`ka-checkbox ${checked?"checked":""}`} onClick={e=>{e.stopPropagation();onChange();}}>
+    <div className={`ka-checkbox ${checked?"checked":""}`} onClick={(e) => { e.stopPropagation(); onChange(); }}>
       {checked && <Ico d={I.check} s={10} sw={2.5}/>}
     </div>
   );
 }
 
-function KeyCard({ k, selected, onSelect, onDetail, onCopy, onSuspend, onReactivate, onRevoke }) {
+function KeyCard({ k, selected, onSelect, onDetail, onCopy, onSuspend, onReactivate, onRevoke }: KeyCardProps) {
   const pct = Math.min(k.uses/k.maxUses*100,100);
   const usageColor = pct>85?"#f85149":pct>60?"#d29922":"#388bfd";
   const planCls = k.plan==="Enterprise"?"ka-badge-blue":k.plan==="Premium"?"ka-badge-green":"ka-badge-gray";
 
   return (
-    <div className={`ka-card ${selected?"selected":""}`} onClick={()=>onDetail(k)}>
+    <div className={`ka-card ${selected?"selected":""}`} onClick={() => onDetail(k)}>
       <div className="ka-card-accent" style={{background:STATUS_ACCENT[k.status]||"#484f58"}}/>
 
       <div className="ka-card-head">
@@ -317,7 +433,7 @@ function KeyCard({ k, selected, onSelect, onDetail, onCopy, onSuspend, onReactiv
       <div className="ka-card-key-row">
         <Ico d={I.key} s={11}/>
         <span className="ka-card-key">{k.key}</span>
-        <button className="ka-copy-btn" onClick={e=>{e.stopPropagation();onCopy(k.key);}} title="Copier"><Ico d={I.copy} s={12}/></button>
+        <button className="ka-copy-btn" onClick={(e) => { e.stopPropagation(); onCopy(k.key); }} title="Copier"><Ico d={I.copy} s={12}/></button>
       </div>
 
       <div className="ka-card-meta">
@@ -359,59 +475,164 @@ function KeyCard({ k, selected, onSelect, onDetail, onCopy, onSuspend, onReactiv
           <SecurityScore score={k.secScore}/>
           <span className="ka-hash">{k.fingerprint}</span>
         </div>
-        <div className="ka-card-actions" onClick={e=>e.stopPropagation()}>
-          {k.status==="active" && <button className="ka-btn ka-btn-ghost ka-btn-icon ka-btn-sm" title="Suspendre" onClick={()=>onSuspend(k.id)}><Ico d={I.ban} s={11}/></button>}
-          {k.status==="suspended" && <button className="ka-btn ka-btn-ghost ka-btn-icon ka-btn-sm" title="Réactiver" onClick={()=>onReactivate(k.id)}><Ico d={I.check} s={11}/></button>}
-          <button className="ka-btn ka-btn-danger ka-btn-icon ka-btn-sm" title="Révoquer" onClick={()=>onRevoke(k)}><Ico d={I.trash} s={11}/></button>
+        <div className="ka-card-actions" onClick={e => e.stopPropagation()}>
+          {k.status==="active" && <button className="ka-btn ka-btn-ghost ka-btn-icon ka-btn-sm" title="Suspendre" onClick={() => onSuspend(k.id)}><Ico d={I.ban} s={11}/></button>}
+          {k.status==="suspended" && <button className="ka-btn ka-btn-ghost ka-btn-icon ka-btn-sm" title="Réactiver" onClick={() => onReactivate(k.id)}><Ico d={I.check} s={11}/></button>}
+          <button className="ka-btn ka-btn-danger ka-btn-icon ka-btn-sm" title="Révoquer" onClick={() => onRevoke(k)}><Ico d={I.trash} s={11}/></button>
         </div>
       </div>
     </div>
   );
 }
 
-export default function CleActivation({ onNotify }) {
-  const notify = onNotify || ((m,t)=>console.log(m,t));
-  const [keys,setKeys] = useState(KEYS_DATA);
-  const [search,setSearch] = useState("");
-  const [filterStatus,setFilterStatus] = useState("all");
-  const [filterPlan,setFilterPlan] = useState("all");
-  const [filterMethod,setFilterMethod] = useState("all");
-  const [selected,setSelected] = useState(new Set());
-  const [detailKey,setDetailKey] = useState(null);
-  const [modal,setModal] = useState(null);
-  const [page,setPage] = useState(1);
-  const [previewKey,setPreviewKey] = useState(genKey());
-  const [toast,setToast] = useState(null);
-  const [form,setForm] = useState({school:"",plan:"Enterprise",expires:"",maxUses:"150",hwLock:true,twoFa:true,ipRestrict:false,autoRevoke:false,activationMethod:"online",note:""});
+export default function CleActivation({ onNotify }: CleActivationProps) {
+  const notify = onNotify || ((message: string, type: string) => console.log(message, type));
+  const [keys, setKeys] = useState<ActivationKey[]>(KEYS_DATA);
+  const [search, setSearch] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterPlan, setFilterPlan] = useState<string>("all");
+  const [filterMethod, setFilterMethod] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [detailKey, setDetailKey] = useState<ActivationKey | null>(null);
+  const [modal, setModal] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [previewKey, setPreviewKey] = useState<string>(genKey());
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [form, setForm] = useState<FormData>({
+    school: "",
+    plan: "Enterprise",
+    expires: "",
+    maxUses: "150",
+    hwLock: true,
+    twoFa: true,
+    ipRestrict: false,
+    autoRevoke: false,
+    activationMethod: "online",
+    note: ""
+  });
 
   const PER_PAGE = 9;
 
-  function showToast(msg,type="green") { setToast({msg,type}); setTimeout(()=>setToast(null),3000); notify(msg,type); }
+  function showToast(msg: string, type: Toast["type"] = "green"): void {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+    notify(msg, type);
+  }
 
-  const filtered = keys.filter(k=>{
-    const q=search.toLowerCase();
-    return (!q||k.school.toLowerCase().includes(q)||k.key.toLowerCase().includes(q)||k.fingerprint.includes(q))
-      &&(filterStatus==="all"||k.status===filterStatus)
-      &&(filterPlan==="all"||k.plan===filterPlan)
-      &&(filterMethod==="all"||k.activationMethod===filterMethod);
+  const filtered = keys.filter(k => {
+    const q = search.toLowerCase();
+    return (!q || k.school.toLowerCase().includes(q) || k.key.toLowerCase().includes(q) || k.fingerprint.includes(q))
+      && (filterStatus === "all" || k.status === filterStatus)
+      && (filterPlan === "all" || k.plan === filterPlan)
+      && (filterMethod === "all" || k.activationMethod === filterMethod);
   });
 
-  const totalPages = Math.ceil(filtered.length/PER_PAGE);
-  const paginated = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE);
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  function toggleSelect(id) { setSelected(s=>{const n=new Set(s);n.has(id)?n.delete(id):n.add(id);return n;}); }
-
-  function handleGenerate() {
-    const nk = {id:Date.now(),key:previewKey,school:form.school||"—",plan:form.plan,status:"active",created:new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"}),expires:form.expires||"—",uses:0,maxUses:parseInt(form.maxUses)||150,hwLock:form.hwLock,twoFa:form.twoFa,ipRestrict:form.ipRestrict,fingerprint:Math.random().toString(16).substring(2,10),lastUsed:"Jamais",city:"—",secScore:(form.hwLock?30:0)+(form.twoFa?30:0)+(form.ipRestrict?20:0)+20,revocations:0,hash:"sha256:"+Math.random().toString(16).substring(2,6),activationMethod:form.activationMethod,events:[{dot:"#3fb950",event:`Générée — ${METHOD_LABELS[form.activationMethod]}`,time:"À l'instant"}]};
-    setKeys(k=>[nk,...k]); setModal(null); showToast("Clé générée avec succès","green");
+  function toggleSelect(id: number): void {
+    setSelected(s => {
+      const n = new Set(s);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
   }
-  function handleSuspend(id) { setKeys(k=>k.map(x=>x.id===id?{...x,status:"suspended"}:x)); showToast("Clé suspendue","amber"); if(detailKey?.id===id) setDetailKey(p=>({...p,status:"suspended"})); }
-  function handleReactivate(id) { setKeys(k=>k.map(x=>x.id===id?{...x,status:"active"}:x)); showToast("Clé réactivée","green"); if(detailKey?.id===id) setDetailKey(p=>({...p,status:"active"})); }
-  function handleRevoke(target) { if(typeof target==="number"){setKeys(k=>k.map(x=>x.id===target?{...x,status:"revoked"}:x));}else{setDetailKey(target);setModal("revoke");} }
-  function confirmRevoke() { setKeys(k=>k.map(x=>x.id===detailKey?.id?{...x,status:"revoked"}:x)); showToast("Clé révoquée","red"); setModal(null); setDetailKey(null); }
-  function handleCopy(key) { navigator.clipboard?.writeText(key); showToast("Clé copiée","green"); }
 
-  const stats = { total:keys.length, active:keys.filter(k=>k.status==="active").length, expired:keys.filter(k=>k.status==="expired").length, suspended:keys.filter(k=>k.status==="suspended"||k.status==="revoked").length, secAvg:Math.round(keys.reduce((s,k)=>s+k.secScore,0)/keys.length) };
+  function handleGenerate(): void {
+    const newKey: ActivationKey = {
+      id: Date.now(),
+      key: previewKey,
+      school: form.school || "—",
+      plan: form.plan,
+      status: "active",
+      created: new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }),
+      expires: form.expires || "—",
+      uses: 0,
+      maxUses: parseInt(form.maxUses) || 150,
+      hwLock: form.hwLock,
+      twoFa: form.twoFa,
+      ipRestrict: form.ipRestrict,
+      fingerprint: Math.random().toString(16).substring(2, 10),
+      lastUsed: "Jamais",
+      city: "—",
+      secScore: (form.hwLock ? 30 : 0) + (form.twoFa ? 30 : 0) + (form.ipRestrict ? 20 : 0) + 20,
+      revocations: 0,
+      hash: "sha256:" + Math.random().toString(16).substring(2, 6),
+      activationMethod: form.activationMethod,
+      events: [{
+        dot: "#3fb950",
+        event: `Générée — ${METHOD_LABELS[form.activationMethod]}`,
+        time: "À l'instant"
+      }]
+    };
+    setKeys(k => [newKey, ...k]);
+    setModal(null);
+    showToast("Clé générée avec succès", "green");
+  }
+
+  function handleSuspend(id: number): void {
+    setKeys(k => k.map(x => x.id === id ? { ...x, status: "suspended" } : x));
+    showToast("Clé suspendue", "amber");
+    if (detailKey?.id === id) setDetailKey(p => p ? { ...p, status: "suspended" } : null);
+  }
+
+  function handleReactivate(id: number): void {
+    setKeys(k => k.map(x => x.id === id ? { ...x, status: "active" } : x));
+    showToast("Clé réactivée", "green");
+    if (detailKey?.id === id) setDetailKey(p => p ? { ...p, status: "active" } : null);
+  }
+
+  function handleRevoke(target: number | ActivationKey): void {
+    if (typeof target === "number") {
+      setKeys(k => k.map(x => x.id === target ? { ...x, status: "revoked" } : x));
+    } else {
+      setDetailKey(target);
+      setModal("revoke");
+    }
+  }
+
+  function confirmRevoke(): void {
+    if (detailKey) {
+      setKeys(k => k.map(x => x.id === detailKey.id ? { ...x, status: "revoked" } : x));
+      showToast("Clé révoquée", "red");
+      setModal(null);
+      setDetailKey(null);
+    }
+  }
+
+  function handleCopy(key: string): void {
+    navigator.clipboard?.writeText(key);
+    showToast("Clé copiée", "green");
+  }
+
+  const stats = {
+    total: keys.length,
+    active: keys.filter(k => k.status === "active").length,
+    expired: keys.filter(k => k.status === "expired").length,
+    suspended: keys.filter(k => k.status === "suspended" || k.status === "revoked").length,
+    secAvg: Math.round(keys.reduce((s, k) => s + k.secScore, 0) / keys.length)
+  };
+
+  const securityOptions: SecurityOption[] = [
+    { key: "hwLock", icon: I.chip, name: "Hardware Lock", desc: "Lie la clé à l'empreinte BIOS/UUID" },
+    { key: "twoFa", icon: I.fingerp, name: "2FA TOTP", desc: "Authentification obligatoire à chaque activation" },
+    { key: "ipRestrict", icon: I.network, name: "Restriction IP", desc: "Limite l'accès à une plage IP définie" },
+    { key: "autoRevoke", icon: I.warn, name: "Révocation auto", desc: "Révoque si détection de clonage ou anomalie" }
+  ];
+
+  const statItems: StatItem[] = [
+    { label: "Total", val: stats.total, color: "#8b949e" },
+    { label: "Actives", val: stats.active, color: "#3fb950" },
+    { label: "Expirées", val: stats.expired, color: "#d29922" },
+    { label: "Suspendues", val: stats.suspended, color: "#f85149" },
+    { label: "Score sécu. moy.", val: stats.secAvg, color: stats.secAvg >= 80 ? "#3fb950" : stats.secAvg >= 50 ? "#d29922" : "#f85149" }
+  ];
+
+  const auditItems: AuditItem[] = [
+    { label: "Score global", val: `${stats.secAvg}/100`, color: stats.secAvg >= 80 ? "#3fb950" : "#d29922" },
+    { label: "HW Lock actif", val: `${keys.filter(k => k.hwLock).length}/${keys.length}`, color: "#388bfd" },
+    { label: "2FA actif", val: `${keys.filter(k => k.twoFa).length}/${keys.length}`, color: "#3fb950" }
+  ];
 
   return (
     <div className="ka-root">
@@ -427,19 +648,19 @@ export default function CleActivation({ onNotify }) {
           </div>
         </div>
         <div className="ka-topbar-actions">
-          <button className="ka-btn ka-btn-ghost" onClick={()=>setModal("audit")}><Ico d={I.shield} s={13}/> Audit sécurité</button>
-          <button className="ka-btn ka-btn-ghost" onClick={()=>showToast("Export CSV…","blue")}><Ico d={I.export} s={13}/> Exporter</button>
-          <button className="ka-btn ka-btn-primary" onClick={()=>{setPreviewKey(genKey());setModal("generate");}}><Ico d={I.plus} s={13}/> Générer une clé</button>
+          <button className="ka-btn ka-btn-ghost" onClick={() => setModal("audit")}><Ico d={I.shield} s={13}/> Audit sécurité</button>
+          <button className="ka-btn ka-btn-ghost" onClick={() => showToast("Export CSV…", "blue")}><Ico d={I.export} s={13}/> Exporter</button>
+          <button className="ka-btn ka-btn-primary" onClick={() => { setPreviewKey(genKey()); setModal("generate"); }}><Ico d={I.plus} s={13}/> Générer une clé</button>
         </div>
       </div>
 
       {/* STATS */}
       <div className="ka-stats ka-enter ka-d1">
-        {[{label:"Total",val:stats.total,color:"#8b949e"},{label:"Actives",val:stats.active,color:"#3fb950"},{label:"Expirées",val:stats.expired,color:"#d29922"},{label:"Suspendues",val:stats.suspended,color:"#f85149"},{label:"Score sécu. moy.",val:stats.secAvg,color:stats.secAvg>=80?"#3fb950":stats.secAvg>=50?"#d29922":"#f85149"}].map((s,i)=>(
+        {statItems.map((s, i) => (
           <div className="ka-stat" key={i}>
             <div className="ka-stat-label">{s.label}</div>
-            <div className="ka-stat-val" style={{color:s.color}}>{s.val}</div>
-            <div className="ka-stat-bar" style={{background:s.color}}/>
+            <div className="ka-stat-val" style={{ color: s.color }}>{s.val}</div>
+            <div className="ka-stat-bar" style={{ background: s.color }}/>
           </div>
         ))}
       </div>
@@ -448,114 +669,139 @@ export default function CleActivation({ onNotify }) {
       <div className="ka-toolbar ka-enter ka-d2">
         <div className="ka-search">
           <Ico d={I.search} s={13}/>
-          <input placeholder="Rechercher clé, établissement, fingerprint…" value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}}/>
+          <input placeholder="Rechercher clé, établissement, fingerprint…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}/>
         </div>
-        <select className="ka-filter-select" value={filterStatus} onChange={e=>{setFilterStatus(e.target.value);setPage(1);}}>
+        <select className="ka-filter-select" value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }}>
           <option value="all">Tous statuts</option><option value="active">Actives</option><option value="expired">Expirées</option><option value="suspended">Suspendues</option>
         </select>
-        <select className="ka-filter-select" value={filterPlan} onChange={e=>{setFilterPlan(e.target.value);setPage(1);}}>
+        <select className="ka-filter-select" value={filterPlan} onChange={e => { setFilterPlan(e.target.value); setPage(1); }}>
           <option value="all">Tous plans</option><option value="Basic">Basic</option><option value="Premium">Premium</option><option value="Enterprise">Enterprise</option>
         </select>
-        <select className="ka-filter-select" value={filterMethod} onChange={e=>{setFilterMethod(e.target.value);setPage(1);}}>
+        <select className="ka-filter-select" value={filterMethod} onChange={e => { setFilterMethod(e.target.value); setPage(1); }}>
           <option value="all">Toutes méthodes</option><option value="online">En ligne</option><option value="usb">Clé USB</option><option value="file">Fichier</option>
         </select>
         <div className="ka-toolbar-spacer"/>
-        <span style={{fontSize:11,color:"var(--t3)",fontFamily:"var(--mono)"}}>{filtered.length} résultat{filtered.length!==1?"s":""}</span>
+        <span style={{ fontSize: 11, color: "var(--t3)", fontFamily: "var(--mono)" }}>{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
       {/* BULK BAR */}
-      {selected.size>0&&(
+      {selected.size > 0 && (
         <div className="ka-bulk-bar">
-          <span className="ka-bulk-count">{selected.size} sélectionné{selected.size>1?"s":""}</span>
+          <span className="ka-bulk-count">{selected.size} sélectionné{selected.size > 1 ? "s" : ""}</span>
           <div className="ka-bulk-sep"/>
-          <button className="ka-btn ka-btn-ghost ka-btn-sm" onClick={()=>{selected.forEach(id=>handleSuspend(id));setSelected(new Set());}}><Ico d={I.ban} s={12}/> Suspendre</button>
-          <button className="ka-btn ka-btn-danger ka-btn-sm" onClick={()=>{selected.forEach(id=>setKeys(k=>k.map(x=>x.id===id?{...x,status:"revoked"}:x)));showToast(`${selected.size} clé(s) révoquées`,"red");setSelected(new Set());}}><Ico d={I.trash} s={12}/> Révoquer</button>
-          <button className="ka-btn ka-btn-ghost ka-btn-sm" onClick={()=>showToast("Export sélection…","blue")}><Ico d={I.export} s={12}/> Exporter</button>
+          <button className="ka-btn ka-btn-ghost ka-btn-sm" onClick={() => { selected.forEach(id => handleSuspend(id)); setSelected(new Set()); }}><Ico d={I.ban} s={12}/> Suspendre</button>
+          <button className="ka-btn ka-btn-danger ka-btn-sm" onClick={() => { selected.forEach(id => setKeys(k => k.map(x => x.id === id ? { ...x, status: "revoked" } : x))); showToast(`${selected.size} clé(s) révoquées`, "red"); setSelected(new Set()); }}><Ico d={I.trash} s={12}/> Révoquer</button>
+          <button className="ka-btn ka-btn-ghost ka-btn-sm" onClick={() => showToast("Export sélection…", "blue")}><Ico d={I.export} s={12}/> Exporter</button>
           <div className="ka-toolbar-spacer"/>
-          <button className="ka-btn ka-btn-ghost ka-btn-sm" onClick={()=>setSelected(new Set())}><Ico d={I.close} s={12}/> Désélectionner</button>
+          <button className="ka-btn ka-btn-ghost ka-btn-sm" onClick={() => setSelected(new Set())}><Ico d={I.close} s={12}/> Désélectionner</button>
         </div>
       )}
 
       {/* CARD GRID */}
       <div className="ka-enter ka-d3">
-        {paginated.length===0?(
+        {paginated.length === 0 ? (
           <div className="ka-empty">
             <Ico d={I.search} s={32}/>
             <div className="ka-empty-title">Aucune clé trouvée</div>
             <div className="ka-empty-sub">Modifiez vos filtres ou générez une nouvelle clé</div>
           </div>
-        ):(
+        ) : (
           <div className="ka-grid">
-            {paginated.map(k=>(
-              <KeyCard key={k.id} k={k} selected={selected.has(k.id)} onSelect={()=>toggleSelect(k.id)} onDetail={setDetailKey} onCopy={handleCopy} onSuspend={handleSuspend} onReactivate={handleReactivate} onRevoke={handleRevoke}/>
+            {paginated.map(k => (
+              <KeyCard
+                key={k.id}
+                k={k}
+                selected={selected.has(k.id)}
+                onSelect={() => toggleSelect(k.id)}
+                onDetail={setDetailKey}
+                onCopy={handleCopy}
+                onSuspend={handleSuspend}
+                onReactivate={handleReactivate}
+                onRevoke={handleRevoke}
+              />
             ))}
           </div>
         )}
-        {totalPages>1&&(
+        {totalPages > 1 && (
           <div className="ka-pagination">
-            <span className="ka-pag-info">{(page-1)*PER_PAGE+1}–{Math.min(page*PER_PAGE,filtered.length)} sur {filtered.length}</span>
+            <span className="ka-pag-info">{(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} sur {filtered.length}</span>
             <div className="ka-pag-btns">
-              <button className="ka-pag-btn" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1}>‹</button>
-              {Array.from({length:totalPages},(_,i)=>(
-                <button key={i} className={`ka-pag-btn ${page===i+1?"active":""}`} onClick={()=>setPage(i+1)}>{i+1}</button>
+              <button className="ka-pag-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>‹</button>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button key={i} className={`ka-pag-btn ${page === i + 1 ? "active" : ""}`} onClick={() => setPage(i + 1)}>{i + 1}</button>
               ))}
-              <button className="ka-pag-btn" onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages}>›</button>
+              <button className="ka-pag-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>›</button>
             </div>
           </div>
         )}
       </div>
 
       {/* DETAIL PANEL */}
-      {detailKey&&(
+      {detailKey && (
         <>
-          <div style={{position:"fixed",inset:0,zIndex:199}} onClick={()=>setDetailKey(null)}/>
+          <div style={{ position: "fixed", inset: 0, zIndex: 199 }} onClick={() => setDetailKey(null)}/>
           <div className="ka-detail">
             <div className="ka-detail-head">
               <div>
-                <div style={{fontSize:13,fontWeight:600}}>{detailKey.school}</div>
-                <div style={{fontSize:11,color:"var(--t3)",fontFamily:"var(--mono)",marginTop:2}}>{detailKey.key}</div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{detailKey.school}</div>
+                <div style={{ fontSize: 11, color: "var(--t3)", fontFamily: "var(--mono)", marginTop: 2 }}>{detailKey.key}</div>
               </div>
-              <button className="ka-close" onClick={()=>setDetailKey(null)}><Ico d={I.close} s={14}/></button>
+              <button className="ka-close" onClick={() => setDetailKey(null)}><Ico d={I.close} s={14}/></button>
             </div>
             <div className="ka-detail-body">
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,padding:"12px 14px",background:"var(--surface)",border:"1px solid var(--border)"}}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)" }}>
                 <Badge status={detailKey.status}/>
-                <div style={{textAlign:"right"}}>
-                  <div style={{fontSize:10,color:"var(--t3)",marginBottom:4,letterSpacing:"0.8px",textTransform:"uppercase"}}>Score sécurité</div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 10, color: "var(--t3)", marginBottom: 4, letterSpacing: "0.8px", textTransform: "uppercase" }}>Score sécurité</div>
                   <SecurityScore score={detailKey.secScore}/>
                 </div>
               </div>
               <div className="ka-detail-section">
                 <div className="ka-detail-section-title">Informations</div>
-                {[["Plan",detailKey.plan],["Créée le",detailKey.created],["Expiration",detailKey.expires],["Utilisation",`${detailKey.uses} / ${detailKey.maxUses}`],["Dernier accès",detailKey.lastUsed],["Localisation",detailKey.city],["Méthode",METHOD_LABELS[detailKey.activationMethod]],["Fingerprint",detailKey.fingerprint],["Hash",detailKey.hash],["Révocations",detailKey.revocations]].map(([k,v])=>(
+                {[
+                  ["Plan", detailKey.plan],
+                  ["Créée le", detailKey.created],
+                  ["Expiration", detailKey.expires],
+                  ["Utilisation", `${detailKey.uses} / ${detailKey.maxUses}`],
+                  ["Dernier accès", detailKey.lastUsed],
+                  ["Localisation", detailKey.city],
+                  ["Méthode", METHOD_LABELS[detailKey.activationMethod]],
+                  ["Fingerprint", detailKey.fingerprint],
+                  ["Hash", detailKey.hash],
+                  ["Révocations", detailKey.revocations]
+                ].map(([k, v]) => (
                   <div className="ka-detail-row" key={k}><span className="ka-detail-key">{k}</span><span className="ka-detail-val">{v}</span></div>
                 ))}
               </div>
               <div className="ka-detail-section">
                 <div className="ka-detail-section-title">Protections actives</div>
-                {[{icon:I.chip,label:"Hardware Lock",on:detailKey.hwLock},{icon:I.fingerp,label:"2FA TOTP",on:detailKey.twoFa},{icon:I.network,label:"Restriction IP",on:detailKey.ipRestrict}].map(p=>(
+                {[
+                  { icon: I.chip, label: "Hardware Lock", on: detailKey.hwLock },
+                  { icon: I.fingerp, label: "2FA TOTP", on: detailKey.twoFa },
+                  { icon: I.network, label: "Restriction IP", on: detailKey.ipRestrict }
+                ].map(p => (
                   <div className="ka-audit-row" key={p.label}>
-                    <div className="ka-audit-check"><Ico d={p.icon} s={13}/><span style={{color:p.on?"var(--t1)":"var(--t3)"}}>{p.label}</span></div>
-                    <span className={`ka-badge ${p.on?"ka-badge-green":"ka-badge-gray"}`}>{p.on?"Actif":"Inactif"}</span>
+                    <div className="ka-audit-check"><Ico d={p.icon} s={13}/><span style={{ color: p.on ? "var(--t1)" : "var(--t3)" }}>{p.label}</span></div>
+                    <span className={`ka-badge ${p.on ? "ka-badge-green" : "ka-badge-gray"}`}>{p.on ? "Actif" : "Inactif"}</span>
                   </div>
                 ))}
               </div>
               <div className="ka-detail-section">
                 <div className="ka-detail-section-title">Historique d'activité</div>
                 <div className="ka-timeline">
-                  {detailKey.events.map((e,i)=>(
+                  {detailKey.events.map((e, i) => (
                     <div className="ka-tl-item" key={i}>
-                      <div className="ka-tl-line"><div className="ka-tl-dot" style={{background:e.dot}}/><div className="ka-tl-connector"/></div>
+                      <div className="ka-tl-line"><div className="ka-tl-dot" style={{ background: e.dot }}/><div className="ka-tl-connector"/></div>
                       <div className="ka-tl-content"><div className="ka-tl-event">{e.event}</div><div className="ka-tl-time">{e.time}</div></div>
                     </div>
                   ))}
                 </div>
               </div>
-              <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                {detailKey.status==="active"&&<button className="ka-btn ka-btn-ghost" style={{width:"100%",justifyContent:"center"}} onClick={()=>{handleSuspend(detailKey.id);setDetailKey(null);}}><Ico d={I.ban} s={13}/> Suspendre</button>}
-                {detailKey.status==="suspended"&&<button className="ka-btn ka-btn-primary" style={{width:"100%",justifyContent:"center"}} onClick={()=>{handleReactivate(detailKey.id);setDetailKey(null);}}><Ico d={I.check} s={13}/> Réactiver</button>}
-                <button className="ka-btn ka-btn-ghost" style={{width:"100%",justifyContent:"center"}} onClick={()=>handleCopy(detailKey.key)}><Ico d={I.copy} s={13}/> Copier la clé</button>
-                <button className="ka-btn ka-btn-danger" style={{width:"100%",justifyContent:"center"}} onClick={()=>setModal("revoke")}><Ico d={I.trash} s={13}/> Révoquer définitivement</button>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {detailKey.status === "active" && <button className="ka-btn ka-btn-ghost" style={{ width: "100%", justifyContent: "center" }} onClick={() => { handleSuspend(detailKey.id); setDetailKey(null); }}><Ico d={I.ban} s={13}/> Suspendre</button>}
+                {detailKey.status === "suspended" && <button className="ka-btn ka-btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={() => { handleReactivate(detailKey.id); setDetailKey(null); }}><Ico d={I.check} s={13}/> Réactiver</button>}
+                <button className="ka-btn ka-btn-ghost" style={{ width: "100%", justifyContent: "center" }} onClick={() => handleCopy(detailKey.key)}><Ico d={I.copy} s={13}/> Copier la clé</button>
+                <button className="ka-btn ka-btn-danger" style={{ width: "100%", justifyContent: "center" }} onClick={() => setModal("revoke")}><Ico d={I.trash} s={13}/> Révoquer définitivement</button>
               </div>
             </div>
           </div>
@@ -563,41 +809,41 @@ export default function CleActivation({ onNotify }) {
       )}
 
       {/* MODAL GÉNÉRER */}
-      {modal==="generate"&&(
-        <div className="ka-overlay" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
+      {modal === "generate" && (
+        <div className="ka-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
           <div className="ka-modal">
             <div className="ka-modal-head">
-              <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <div style={{width:28,height:28,background:"var(--blue-dim)",border:"1px solid var(--blue-border)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--blue)"}}><Ico d={I.key} s={14}/></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 28, height: 28, background: "var(--blue-dim)", border: "1px solid var(--blue-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)" }}><Ico d={I.key} s={14}/></div>
                 <span className="ka-modal-title">Générer une clé d'activation</span>
               </div>
-              <button className="ka-close" onClick={()=>setModal(null)}><Ico d={I.close} s={14}/></button>
+              <button className="ka-close" onClick={() => setModal(null)}><Ico d={I.close} s={14}/></button>
             </div>
             <div className="ka-modal-body">
               <div className="ka-field">
                 <div className="ka-label"><Ico d={I.globe} s={11}/> Établissement</div>
-                <input className="ka-input" placeholder="Nom de l'établissement" value={form.school} onChange={e=>setForm({...form,school:e.target.value})}/>
+                <input className="ka-input" placeholder="Nom de l'établissement" value={form.school} onChange={e => setForm({ ...form, school: e.target.value })}/>
               </div>
               <div className="ka-field-row">
                 <div className="ka-field">
                   <div className="ka-label">Plan</div>
-                  <select className="ka-select" value={form.plan} onChange={e=>setForm({...form,plan:e.target.value})}>
+                  <select className="ka-select" value={form.plan} onChange={e => setForm({ ...form, plan: e.target.value as FormData["plan"] })}>
                     <option value="Basic">Basic — 99€/mois</option><option value="Premium">Premium — 299€/mois</option><option value="Enterprise">Enterprise — 599€/mois</option>
                   </select>
                 </div>
                 <div className="ka-field">
                   <div className="ka-label">Max utilisateurs</div>
-                  <input className="ka-input" type="number" value={form.maxUses} onChange={e=>setForm({...form,maxUses:e.target.value})}/>
+                  <input className="ka-input" type="number" value={form.maxUses} onChange={e => setForm({ ...form, maxUses: e.target.value })}/>
                 </div>
               </div>
               <div className="ka-field-row">
                 <div className="ka-field">
                   <div className="ka-label"><Ico d={I.clock} s={11}/> Expiration</div>
-                  <input className="ka-input" type="date" value={form.expires} onChange={e=>setForm({...form,expires:e.target.value})}/>
+                  <input className="ka-input" type="date" value={form.expires} onChange={e => setForm({ ...form, expires: e.target.value })}/>
                 </div>
                 <div className="ka-field">
                   <div className="ka-label">Méthode d'activation</div>
-                  <select className="ka-select" value={form.activationMethod} onChange={e=>setForm({...form,activationMethod:e.target.value})}>
+                  <select className="ka-select" value={form.activationMethod} onChange={e => setForm({ ...form, activationMethod: e.target.value as FormData["activationMethod"] })}>
                     <option value="online">En ligne</option><option value="usb">Clé USB</option><option value="file">Fichier .licpkg</option>
                   </select>
                 </div>
@@ -605,13 +851,17 @@ export default function CleActivation({ onNotify }) {
               <div className="ka-field">
                 <div className="ka-label"><Ico d={I.shield} s={11}/> Sécurité avancée</div>
                 <div className="ka-sec-opts">
-                  {[{key:"hwLock",icon:I.chip,name:"Hardware Lock",desc:"Lie la clé à l'empreinte BIOS/UUID"},{key:"twoFa",icon:I.fingerp,name:"2FA TOTP",desc:"Authentification obligatoire à chaque activation"},{key:"ipRestrict",icon:I.network,name:"Restriction IP",desc:"Limite l'accès à une plage IP définie"},{key:"autoRevoke",icon:I.warn,name:"Révocation auto",desc:"Révoque si détection de clonage ou anomalie"}].map(opt=>(
-                    <div key={opt.key} className={`ka-sec-opt ${form[opt.key]?"enabled":""}`} onClick={()=>setForm(f=>({...f,[opt.key]:!f[opt.key]}))}>
+                  {securityOptions.map(opt => (
+                    <div
+                      key={opt.key}
+                      className={`ka-sec-opt ${form[opt.key] ? "enabled" : ""}`}
+                      onClick={() => setForm(f => ({ ...f, [opt.key]: !f[opt.key] }))}
+                    >
                       <div className="ka-sec-opt-left">
                         <div className="ka-sec-opt-icon"><Ico d={opt.icon} s={14}/></div>
                         <div><div className="ka-sec-opt-name">{opt.name}</div><div className="ka-sec-opt-desc">{opt.desc}</div></div>
                       </div>
-                      <Toggle on={form[opt.key]} onChange={()=>{}}/>
+                      <Toggle on={form[opt.key]} onChange={() => {}}/>
                     </div>
                   ))}
                 </div>
@@ -620,16 +870,16 @@ export default function CleActivation({ onNotify }) {
                 <div className="ka-label"><Ico d={I.hash} s={11}/> Aperçu de la clé</div>
                 <div className="ka-key-preview-box">
                   <span className="ka-key-preview-val">{previewKey}</span>
-                  <button className="ka-key-preview-refresh" onClick={()=>setPreviewKey(genKey())}><Ico d={I.refresh} s={14}/></button>
+                  <button className="ka-key-preview-refresh" onClick={() => setPreviewKey(genKey())}><Ico d={I.refresh} s={14}/></button>
                 </div>
               </div>
               <div className="ka-field">
                 <div className="ka-label">Note interne (optionnel)</div>
-                <textarea className="ka-textarea" rows={2} placeholder="Remarque, contexte, référence commande…" value={form.note} onChange={e=>setForm({...form,note:e.target.value})}/>
+                <textarea className="ka-textarea" rows={2} placeholder="Remarque, contexte, référence commande…" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })}/>
               </div>
             </div>
             <div className="ka-modal-foot">
-              <button className="ka-btn ka-btn-ghost" onClick={()=>setModal(null)}>Annuler</button>
+              <button className="ka-btn ka-btn-ghost" onClick={() => setModal(null)}>Annuler</button>
               <button className="ka-btn ka-btn-primary" onClick={handleGenerate} disabled={!form.school}><Ico d={I.check} s={13}/> Générer et envoyer</button>
             </div>
           </div>
@@ -637,28 +887,34 @@ export default function CleActivation({ onNotify }) {
       )}
 
       {/* MODAL RÉVOQUER */}
-      {modal==="revoke"&&(
-        <div className="ka-overlay" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
-          <div className="ka-modal" style={{maxWidth:420}}>
+      {modal === "revoke" && (
+        <div className="ka-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
+          <div className="ka-modal" style={{ maxWidth: 420 }}>
             <div className="ka-modal-head">
-              <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <div style={{width:28,height:28,background:"var(--red-dim)",border:"1px solid var(--red-border)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--red)"}}><Ico d={I.warn} s={14}/></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 28, height: 28, background: "var(--red-dim)", border: "1px solid var(--red-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)" }}><Ico d={I.warn} s={14}/></div>
                 <span className="ka-modal-title">Confirmer la révocation</span>
               </div>
-              <button className="ka-close" onClick={()=>setModal(null)}><Ico d={I.close} s={14}/></button>
+              <button className="ka-close" onClick={() => setModal(null)}><Ico d={I.close} s={14}/></button>
             </div>
             <div className="ka-modal-body">
-              <div style={{padding:"12px 14px",background:"var(--red-dim)",border:"1px solid var(--red-border)",marginBottom:16}}>
-                <div style={{fontSize:12,color:"var(--red)",fontWeight:500,marginBottom:4}}>Action irréversible</div>
-                <div style={{fontSize:12,color:"var(--t2)"}}>La clé <span style={{fontFamily:"var(--mono)"}}>{detailKey?.key}</span> sera révoquée. L'établissement {detailKey?.school} sera déconnecté immédiatement.</div>
+              <div style={{ padding: "12px 14px", background: "var(--red-dim)", border: "1px solid var(--red-border)", marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: "var(--red)", fontWeight: 500, marginBottom: 4 }}>Action irréversible</div>
+                <div style={{ fontSize: 12, color: "var(--t2)" }}>La clé <span style={{ fontFamily: "var(--mono)" }}>{detailKey?.key}</span> sera révoquée. L'établissement {detailKey?.school} sera déconnecté immédiatement.</div>
               </div>
               <div className="ka-field">
                 <div className="ka-label">Raison de la révocation</div>
-                <select className="ka-select"><option>Non-paiement</option><option>Abus détecté</option><option>Clé compromise</option><option>Résiliation client</option><option>Autre</option></select>
+                <select className="ka-select">
+                  <option>Non-paiement</option>
+                  <option>Abus détecté</option>
+                  <option>Clé compromise</option>
+                  <option>Résiliation client</option>
+                  <option>Autre</option>
+                </select>
               </div>
             </div>
             <div className="ka-modal-foot">
-              <button className="ka-btn ka-btn-ghost" onClick={()=>setModal(null)}>Annuler</button>
+              <button className="ka-btn ka-btn-ghost" onClick={() => setModal(null)}>Annuler</button>
               <button className="ka-btn ka-btn-danger" onClick={confirmRevoke}><Ico d={I.trash} s={13}/> Révoquer définitivement</button>
             </div>
           </div>
@@ -666,60 +922,64 @@ export default function CleActivation({ onNotify }) {
       )}
 
       {/* MODAL AUDIT */}
-      {modal==="audit"&&(
-        <div className="ka-overlay" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
+      {modal === "audit" && (
+        <div className="ka-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
           <div className="ka-modal">
             <div className="ka-modal-head">
-              <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <div style={{width:28,height:28,background:"var(--green-dim)",border:"1px solid var(--green-border)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--green)"}}><Ico d={I.shield} s={14}/></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 28, height: 28, background: "var(--green-dim)", border: "1px solid var(--green-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--green)" }}><Ico d={I.shield} s={14}/></div>
                 <span className="ka-modal-title">Rapport d'audit sécurité</span>
               </div>
-              <button className="ka-close" onClick={()=>setModal(null)}><Ico d={I.close} s={14}/></button>
+              <button className="ka-close" onClick={() => setModal(null)}><Ico d={I.close} s={14}/></button>
             </div>
             <div className="ka-modal-body">
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:1,background:"var(--border)",border:"1px solid var(--border)",marginBottom:20}}>
-                {[{label:"Score global",val:`${stats.secAvg}/100`,color:stats.secAvg>=80?"#3fb950":"#d29922"},{label:"HW Lock actif",val:`${keys.filter(k=>k.hwLock).length}/${keys.length}`,color:"#388bfd"},{label:"2FA actif",val:`${keys.filter(k=>k.twoFa).length}/${keys.length}`,color:"#3fb950"}].map(s=>(
-                  <div key={s.label} style={{background:"var(--panel)",padding:"14px 16px"}}>
-                    <div style={{fontSize:10,fontWeight:600,letterSpacing:"0.8px",textTransform:"uppercase",color:"var(--t3)",marginBottom:6}}>{s.label}</div>
-                    <div style={{fontSize:22,fontWeight:300,color:s.color}}>{s.val}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "var(--border)", border: "1px solid var(--border)", marginBottom: 20 }}>
+                {auditItems.map(s => (
+                  <div key={s.label} style={{ background: "var(--panel)", padding: "14px 16px" }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "var(--t3)", marginBottom: 6 }}>{s.label}</div>
+                    <div style={{ fontSize: 22, fontWeight: 300, color: s.color }}>{s.val}</div>
                   </div>
                 ))}
               </div>
-              <div style={{border:"1px solid var(--border)"}}>
-                {keys.map((k,i)=>(
-                  <div key={k.id} style={{display:"flex",alignItems:"center",padding:"10px 14px",borderBottom:i<keys.length-1?"1px solid var(--border)":"none",background:"var(--panel)",gap:12}}>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:12,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k.school}</div>
-                      <div style={{fontSize:10,color:"var(--t3)",fontFamily:"var(--mono)"}}>{k.key}</div>
+              <div style={{ border: "1px solid var(--border)" }}>
+                {keys.map((k, i) => (
+                  <div key={k.id} style={{ display: "flex", alignItems: "center", padding: "10px 14px", borderBottom: i < keys.length - 1 ? "1px solid var(--border)" : "none", background: "var(--panel)", gap: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{k.school}</div>
+                      <div style={{ fontSize: 10, color: "var(--t3)", fontFamily: "var(--mono)" }}>{k.key}</div>
                     </div>
-                    <div style={{display:"flex",gap:4}}>
-                      <span style={{opacity:k.hwLock?1:0.2}}><Ico d={I.chip} s={12}/></span>
-                      <span style={{opacity:k.twoFa?1:0.2}}><Ico d={I.fingerp} s={12}/></span>
-                      <span style={{opacity:k.ipRestrict?1:0.2}}><Ico d={I.lock} s={12}/></span>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <span style={{ opacity: k.hwLock ? 1 : 0.2 }}><Ico d={I.chip} s={12}/></span>
+                      <span style={{ opacity: k.twoFa ? 1 : 0.2 }}><Ico d={I.fingerp} s={12}/></span>
+                      <span style={{ opacity: k.ipRestrict ? 1 : 0.2 }}><Ico d={I.lock} s={12}/></span>
                     </div>
                     <SecurityScore score={k.secScore}/>
                   </div>
                 ))}
               </div>
-              {keys.some(k=>k.secScore<50)&&(
-                <div style={{marginTop:16,padding:"12px 14px",background:"var(--amber-dim)",border:"1px solid var(--amber-border)"}}>
-                  <div style={{fontSize:12,color:"var(--amber)",fontWeight:500,marginBottom:4,display:"flex",alignItems:"center",gap:6}}><Ico d={I.warn} s={13}/> {keys.filter(k=>k.secScore<50).length} clé(s) à risque</div>
-                  <div style={{fontSize:12,color:"var(--t2)"}}>Activez le Hardware Lock et le 2FA pour les clés dont le score est inférieur à 50.</div>
+              {keys.some(k => k.secScore < 50) && (
+                <div style={{ marginTop: 16, padding: "12px 14px", background: "var(--amber-dim)", border: "1px solid var(--amber-border)" }}>
+                  <div style={{ fontSize: 12, color: "var(--amber)", fontWeight: 500, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}><Ico d={I.warn} s={13}/> {keys.filter(k => k.secScore < 50).length} clé(s) à risque</div>
+                  <div style={{ fontSize: 12, color: "var(--t2)" }}>Activez le Hardware Lock et le 2FA pour les clés dont le score est inférieur à 50.</div>
                 </div>
               )}
             </div>
             <div className="ka-modal-foot">
-              <button className="ka-btn ka-btn-ghost" onClick={()=>setModal(null)}>Fermer</button>
-              <button className="ka-btn ka-btn-primary" onClick={()=>{showToast("Rapport exporté","green");setModal(null);}}><Ico d={I.download} s={13}/> Exporter le rapport</button>
+              <button className="ka-btn ka-btn-ghost" onClick={() => setModal(null)}>Fermer</button>
+              <button className="ka-btn ka-btn-primary" onClick={() => { showToast("Rapport exporté", "green"); setModal(null); }}><Ico d={I.download} s={13}/> Exporter le rapport</button>
             </div>
           </div>
         </div>
       )}
 
       {/* TOAST */}
-      {toast&&(
+      {toast && (
         <div className="ka-toast">
-          <div className="ka-toast-dot" style={{background:toast.type==="green"?"#3fb950":toast.type==="red"?"#f85149":toast.type==="amber"?"#d29922":"#388bfd"}}/>
+          <div className="ka-toast-dot" style={{
+            background: toast.type === "green" ? "#3fb950" :
+                        toast.type === "red" ? "#f85149" :
+                        toast.type === "amber" ? "#d29922" : "#388bfd"
+          }}/>
           {toast.msg}
         </div>
       )}

@@ -1,58 +1,71 @@
-// App.tsx
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Accueil from "./interfaces/Accueil";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Accueil      from "./interfaces/Accueil";
+import Login        from "./interfaces/Connexion";
 import SplashScreen from "./components/splashscreen";
 
+const SPLASH_FALLBACK_MS = 4000;
+
 const App: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [fadeOut, setFadeOut] = useState(false);
+  const [loading,         setLoading]         = useState(true);
+  const [fadeOut,         setFadeOut]         = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Restaurer l'auth si token présent
+    const token = sessionStorage.getItem("nova-auth-token");
+    if (token) setIsAuthenticated(true);
 
-    const hasVisited = sessionStorage.getItem('nova-has-visited');
-    
-    if (hasVisited) {
-      // Si déjà visité dans cette session, on passe directement
-      setFadeOut(true);
-      setTimeout(() => {
-        setLoading(false);
-      }, 6000);
-    } else {
-      // Première visite, on marque la session
-      sessionStorage.setItem('nova-has-visited', 'true');
-      // Le splash screen va s'afficher pendant 6 secondes
-    }
+    // Le splash s'affiche TOUJOURS (premier chargement ET refresh).
+    // Timeout de secours si SplashScreen n'appelle pas onFinish.
+    const fallback = setTimeout(() => dismissSplash(), SPLASH_FALLBACK_MS);
+    return () => clearTimeout(fallback);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSplashFinish = () => {
+  function dismissSplash() {
     setFadeOut(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 6000);
+    setTimeout(() => setLoading(false), 300);
+  }
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+    sessionStorage.setItem("nova-auth-token", "dummy-token");
   };
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem("nova-auth-token");
+  };
+
+  // ── Splash ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className={`transition-opacity duration-300 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
-        <SplashScreen onFinish={handleSplashFinish} />
+      <div style={{ transition: "opacity 0.3s" }} className={fadeOut ? "opacity-0" : "opacity-100"}>
+        <SplashScreen onFinish={dismissSplash} />
       </div>
     );
   }
 
+  // ── App ───────────────────────────────────────────────────────────────────
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Accueil />} />
+        <Route
+          path="/login"
+          element={isAuthenticated ? <Navigate to="/Accueil" replace /> : <Login onLogin={handleLogin} />}
+        />
+        <Route
+          path="/Accueil"
+          element={isAuthenticated ? <Accueil onLogout={handleLogout} /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/"
+          element={isAuthenticated ? <Navigate to="/Accueil" replace /> : <Navigate to="/login" replace />}
+        />
         <Route
           path="*"
-          element={
-            <div className="flex items-center justify-center min-h-screen">
-              <div className="text-center">
-                <p className="text-gray-600">Page non trouvée</p>
-              </div>
-            </div>
-          }
+          element={isAuthenticated ? <Navigate to="/Accueil" replace /> : <Navigate to="/login" replace />}
         />
       </Routes>
     </Router>

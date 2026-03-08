@@ -1,4 +1,3 @@
-// Toast.tsx
 import { useEffect, useState } from 'react';
 import {
   FiCheckCircle,
@@ -6,19 +5,8 @@ import {
   FiInfo,
   FiXCircle,
   FiX,
-  FiBell,
-  FiCheck,
-  FiClock,
-  FiStar
+  FiBell
 } from 'react-icons/fi';
-import {
-  HiOutlineCheckCircle,
-  HiOutlineExclamationCircle,
-  HiOutlineInformationCircle,
-  HiOutlineXCircle
-} from 'react-icons/hi';
-import { MdOutlineWarning, MdOutlineError, MdCheckCircleOutline } from 'react-icons/md';
-import { BsCheckCircle, BsExclamationCircle, BsInfoCircle, BsXCircle } from 'react-icons/bs';
 
 export interface ToastProps {
   message: string;
@@ -29,6 +17,14 @@ export interface ToastProps {
   showIcon?: boolean;
   showCloseButton?: boolean;
   progress?: boolean;
+}
+
+interface ToastStyle extends React.CSSProperties {
+  '--toast-bg'?: string;
+  '--toast-border'?: string;
+  '--toast-icon'?: string;
+  '--toast-progress'?: string;
+  '--toast-glow'?: string;
 }
 
 export default function Toast({ 
@@ -46,6 +42,7 @@ export default function Toast({
   const [progressValue, setProgressValue] = useState(100);
 
   useEffect(() => {
+    let animationFrame: number;
     const startTime = Date.now();
     const endTime = startTime + duration;
 
@@ -60,13 +57,18 @@ export default function Toast({
       }
       
       setProgressValue(newProgress);
-      requestAnimationFrame(updateProgress);
+      animationFrame = requestAnimationFrame(updateProgress);
     };
 
     if (progress) {
-      const animationFrame = requestAnimationFrame(updateProgress);
-      return () => cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(updateProgress);
     }
+
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
   }, [duration, progress]);
 
   useEffect(() => {
@@ -88,7 +90,7 @@ export default function Toast({
   if (!isVisible) return null;
 
   const getIcon = () => {
-    const iconProps = { size: 20, className: 'toast-icon' };
+    const iconProps = { size: 20 };
     
     switch (type) {
       case 'green':
@@ -110,40 +112,40 @@ export default function Toast({
         return {
           bg: 'linear-gradient(135deg, rgba(57, 211, 83, 0.1) 0%, rgba(57, 211, 83, 0.05) 100%)',
           border: 'rgba(57, 211, 83, 0.3)',
-          icon: 'var(--accent-teal)',
-          progress: 'var(--accent-teal)',
+          icon: '#39d353',
+          progress: '#39d353',
           glow: '0 0 20px rgba(57, 211, 83, 0.2)'
         };
       case 'red':
         return {
           bg: 'linear-gradient(135deg, rgba(248, 81, 73, 0.1) 0%, rgba(248, 81, 73, 0.05) 100%)',
           border: 'rgba(248, 81, 73, 0.3)',
-          icon: 'var(--accent-red)',
-          progress: 'var(--accent-red)',
+          icon: '#f85149',
+          progress: '#f85149',
           glow: '0 0 20px rgba(248, 81, 73, 0.2)'
         };
       case 'amber':
         return {
           bg: 'linear-gradient(135deg, rgba(227, 179, 65, 0.1) 0%, rgba(227, 179, 65, 0.05) 100%)',
           border: 'rgba(227, 179, 65, 0.3)',
-          icon: 'var(--accent-amber)',
-          progress: 'var(--accent-amber)',
+          icon: '#e3b341',
+          progress: '#e3b341',
           glow: '0 0 20px rgba(227, 179, 65, 0.2)'
         };
       case 'blue':
         return {
           bg: 'linear-gradient(135deg, rgba(56, 139, 253, 0.1) 0%, rgba(56, 139, 253, 0.05) 100%)',
           border: 'rgba(56, 139, 253, 0.3)',
-          icon: 'var(--accent-blue)',
-          progress: 'var(--accent-blue)',
+          icon: '#388bfd',
+          progress: '#388bfd',
           glow: '0 0 20px rgba(56, 139, 253, 0.2)'
         };
       default:
         return {
           bg: 'linear-gradient(135deg, rgba(139, 148, 158, 0.1) 0%, rgba(139, 148, 158, 0.05) 100%)',
           border: 'rgba(139, 148, 158, 0.3)',
-          icon: 'var(--text-secondary)',
-          progress: 'var(--text-secondary)',
+          icon: '#8b949e',
+          progress: '#8b949e',
           glow: '0 0 20px rgba(139, 148, 158, 0.2)'
         };
     }
@@ -151,77 +153,68 @@ export default function Toast({
 
   const colors = getGradientColors();
 
-  const getPositionStyles = () => {
+  const getPositionStyles = (): React.CSSProperties => {
     switch (position) {
       case 'top-left':
-        return { top: '24px', left: '24px' };
+        return { top: 24, left: 24 };
       case 'top-right':
-        return { top: '24px', right: '24px' };
+        return { top: 24, right: 24 };
       case 'top-center':
-        return { top: '24px', left: '50%', transform: 'translateX(-50%)' };
+        return { top: 24, left: '50%', transform: 'translateX(-50%)' };
       case 'bottom-left':
-        return { bottom: '24px', left: '24px' };
+        return { bottom: 24, left: 24 };
       case 'bottom-center':
-        return { bottom: '24px', left: '50%', transform: 'translateX(-50%)' };
+        return { bottom: 24, left: '50%', transform: 'translateX(-50%)' };
       case 'bottom-right':
       default:
-        return { bottom: '24px', right: '24px' };
+        return { bottom: 24, right: 24 };
     }
   };
 
   const getAnimationStyles = () => {
-    const baseAnimation = isExiting ? 'exit' : 'enter';
-    
-    switch (position) {
-      case 'top-left':
-        return {
-          enter: 'slideInLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          exit: 'slideOutLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards'
-        };
-      case 'top-right':
-        return {
-          enter: 'slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          exit: 'slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards'
-        };
-      case 'top-center':
-        return {
-          enter: 'slideInDown 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          exit: 'slideOutUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards'
-        };
-      case 'bottom-left':
-        return {
-          enter: 'slideInLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          exit: 'slideOutLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards'
-        };
-      case 'bottom-center':
-        return {
-          enter: 'slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          exit: 'slideOutDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards'
-        };
-      case 'bottom-right':
-      default:
-        return {
-          enter: 'slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          exit: 'slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards'
-        };
+    if (isExiting) {
+      switch (position) {
+        case 'top-left':
+        case 'bottom-left':
+          return { animation: 'slideOutLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards' };
+        case 'top-center':
+          return { animation: 'slideOutUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards' };
+        case 'bottom-center':
+          return { animation: 'slideOutDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards' };
+        case 'top-right':
+        case 'bottom-right':
+        default:
+          return { animation: 'slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards' };
+      }
+    } else {
+      switch (position) {
+        case 'top-left':
+        case 'bottom-left':
+          return { animation: 'slideInLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1)' };
+        case 'top-center':
+          return { animation: 'slideInDown 0.3s cubic-bezier(0.4, 0, 0.2, 1)' };
+        case 'bottom-center':
+          return { animation: 'slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1)' };
+        case 'top-right':
+        case 'bottom-right':
+        default:
+          return { animation: 'slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)' };
+      }
     }
   };
 
-  const animations = getAnimationStyles();
+  const toastStyle: ToastStyle = {
+    ...getPositionStyles(),
+    ...getAnimationStyles(),
+    '--toast-bg': colors.bg,
+    '--toast-border': colors.border,
+    '--toast-icon': colors.icon,
+    '--toast-progress': colors.progress,
+    '--toast-glow': colors.glow
+  };
 
   return (
-    <div 
-      className={`toast toast-${type}`}
-      style={{
-        ...getPositionStyles(),
-        '--toast-bg': colors.bg,
-        '--toast-border': colors.border,
-        '--toast-icon': colors.icon,
-        '--toast-progress': colors.progress,
-        '--toast-glow': colors.glow,
-        animation: isExiting ? animations.exit : animations.enter
-      } as React.CSSProperties}
-    >
+    <div className="toast" style={toastStyle}>
       <div className="toast-content">
         {showIcon && (
           <div className="toast-icon-wrapper" style={{ color: colors.icon }}>
@@ -263,7 +256,7 @@ export default function Toast({
           z-index: 9999;
           min-width: 320px;
           max-width: 400px;
-          background: var(--bg-elevated);
+          background: #1c2330;
           border: 1px solid var(--toast-border);
           border-radius: 12px;
           overflow: hidden;
@@ -291,10 +284,6 @@ export default function Toast({
           animation: iconPop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .toast-icon {
-          animation: iconSpin 0.3s ease;
-        }
-
         .toast-message-wrapper {
           flex: 1;
         }
@@ -302,14 +291,14 @@ export default function Toast({
         .toast-message {
           font-size: 13px;
           font-weight: 500;
-          color: var(--text-primary);
+          color: #e6edf3;
           line-height: 1.5;
           margin-bottom: 2px;
         }
 
         .toast-time {
           font-size: 10px;
-          color: var(--text-muted);
+          color: #484f58;
         }
 
         .toast-close {
@@ -322,14 +311,14 @@ export default function Toast({
           background: transparent;
           border: none;
           border-radius: 6px;
-          color: var(--text-muted);
+          color: #484f58;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .toast-close:hover {
           background: rgba(255, 255, 255, 0.1);
-          color: var(--text-primary);
+          color: #e6edf3;
           transform: rotate(90deg);
         }
 
@@ -341,7 +330,6 @@ export default function Toast({
         .toast-progress-bar {
           height: 100%;
           transition: width 0.1s linear;
-          animation: progressGlow 2s ease-in-out infinite;
         }
 
         @keyframes slideInRight {
@@ -446,42 +434,6 @@ export default function Toast({
           }
         }
 
-        @keyframes iconSpin {
-          0% {
-            transform: rotate(-180deg);
-          }
-          100% {
-            transform: rotate(0);
-          }
-        }
-
-        @keyframes progressGlow {
-          0%, 100% {
-            filter: brightness(1);
-          }
-          50% {
-            filter: brightness(1.3);
-          }
-        }
-
-        /* Types de toast avec variations de couleurs */
-        .toast-green .toast-icon-wrapper {
-          background: rgba(57, 211, 83, 0.15);
-        }
-
-        .toast-red .toast-icon-wrapper {
-          background: rgba(248, 81, 73, 0.15);
-        }
-
-        .toast-amber .toast-icon-wrapper {
-          background: rgba(227, 179, 65, 0.15);
-        }
-
-        .toast-blue .toast-icon-wrapper {
-          background: rgba(56, 139, 253, 0.15);
-        }
-
-        /* Responsive */
         @media (max-width: 480px) {
           .toast {
             min-width: auto;
@@ -533,7 +485,6 @@ export function useToast() {
     
     setToasts(prev => [...prev, toast]);
 
-    // Auto-suppression après la durée
     setTimeout(() => {
       removeToast(id);
     }, options?.duration || 3000);

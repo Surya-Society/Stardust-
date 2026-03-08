@@ -2,37 +2,22 @@
 import { useState } from 'react';
 import {
   FiBox, FiPlus, FiSearch, FiFilter, FiMoreVertical,
-  FiDownload, FiRefreshCw, FiEdit2, FiTrash2,
-  FiEye, FiStar, FiUsers, FiCalendar, FiClock,
-  FiCheckCircle, FiXCircle, FiAlertCircle, FiGlobe,
-  FiSmartphone, FiMonitor, FiTablet, FiCpu,
-  FiTrendingUp, FiTrendingDown, FiDownload as FiDownloadIcon,
-  FiUpload, FiCopy, FiShare2, FiUser, FiUserCheck,
-  FiUserX, FiBookOpen, FiMessageCircle, FiFlag,
-  FiThumbsUp, FiThumbsDown
+  FiDownload, FiRefreshCw,
+  FiEye,FiUsers, FiCalendar, FiClock,
+  FiCheckCircle, FiXCircle, FiAlertCircle, FiMonitor,FiCpu,
+  FiUserCheck,
+  FiUserX, FiFlag,
 } from 'react-icons/fi';
 import {
   HiOutlineComputerDesktop,
-  HiOutlineDevicePhoneMobile,
-  HiOutlineDeviceTablet,
-  HiOutlineCloud,
-  HiOutlineCog,
   HiOutlineBookOpen,
-  HiOutlineChat,
-  HiOutlineUsers
 } from 'react-icons/hi2';
 import { 
   SiApple, 
-  SiAndroid, 
-  SiReact,
-  SiDocker,
-  SiKubernetes,
-  SiExpo,
-  SiFlutter
+  SiAndroid,
 } from 'react-icons/si';
-import { BsWindows, BsBrowserChrome, BsPeople } from 'react-icons/bs';
-import { MdOutlineWeb, MdOutlineSchool, MdOutlineForum } from 'react-icons/md';
-import { FaChalkboardTeacher, FaUserGraduate } from 'react-icons/fa';
+import { BsWindows, BsBrowserChrome } from 'react-icons/bs';
+import { FaChalkboardTeacher } from 'react-icons/fa';
 import { RiParentLine } from 'react-icons/ri';
 
 // Types

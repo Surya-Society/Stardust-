@@ -4,22 +4,21 @@ import {
   FiUsers, FiPlus, FiSearch, FiMail, FiPhone,
   FiCalendar, FiMoreVertical, FiEdit2, FiTrash2,
   FiUserCheck, FiUserX, FiUserMinus, FiFilter,
-  FiDownload, FiRefreshCw, FiStar, FiBriefcase,
-  FiMapPin, FiClock, FiCheckCircle, FiXCircle,
+  FiRefreshCw, FiStar,
+  FiClock, FiCheckCircle, FiXCircle,
   FiAlertCircle, FiEye, FiMessageSquare, FiFileText,
-  FiCreditCard, FiImage, FiLayout, FiPrinter,
-  FiHelpCircle, FiThumbsUp, FiThumbsDown, FiFlag,
-  FiArchive, FiInbox, FiSend, FiCheck, FiX , FiMinus
+  FiThumbsUp, FiThumbsDown, FiFlag,
+  FiInbox, FiSend, FiCheck, FiX , FiMinus
 } from 'react-icons/fi';
 import {
   HiOutlineBuildingOffice,
   HiOutlineUserGroup,
-  HiOutlineDocumentText
+
 } from 'react-icons/hi2';
 import { HiOutlineViewGrid } from "react-icons/hi";
 import { HiOutlineCollection } from "react-icons/hi";
-import { MdOutlineWorkOutline, MdOutlineFeedback } from 'react-icons/md';
-import { BsEnvelopePaper, BsChatDots, BsFileEarmarkText } from 'react-icons/bs';
+import { MdOutlineWorkOutline,} from 'react-icons/md';
+import { BsChatDots, } from 'react-icons/bs';
 import { RiCustomerServiceLine } from 'react-icons/ri';
 
 // Types pour les clients
@@ -620,7 +619,7 @@ export default function Clients({ onNotify }: ClientsProps) {
     }
   };
 
-  const handleSendMessage = (message: string) => {
+  const handleSendMessage = () => {
     onNotify('Message envoyé', 'green');
     // Ici vous ajouteriez la logique pour sauvegarder le message
   };
