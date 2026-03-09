@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect ,useRef } from 'react';
 import { 
   FiGrid, FiKey, FiCreditCard, FiUsers, FiMessageCircle,
   FiCode, FiBox, FiSettings, FiLogOut, FiBell, FiSearch,
-  FiMenu, FiUser, FiChevronLeft, FiChevronRight
+  FiMenu, FiUser, FiChevronLeft, FiChevronRight , FiShield
 } from 'react-icons/fi';
 import Dashboard         from '../components/Dashboard';
 import KeysPage          from '../components/CleActvation';
@@ -13,6 +13,8 @@ import ApiPage           from '../components/ClesApi';
 import Applications      from '../components/Applications';
 import SettingsPage      from '../components/Parametres';
 import Toast             from '../components/Toast';
+import AdminPage         from '../components/Admin';
+import ProfileModal      from '../components/ProfilModal';
 
 interface NavItem {
   id: string;
@@ -39,6 +41,8 @@ export default function Accueil({ onLogout }: AccueilProps) {
   const [navCollapsed, setNavCollapsed] = useState<boolean>(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
+   const [profileOpen,  setProfileOpen]  = useState<boolean>(false); // ← nouveau
+  const userBtnRef = useRef<HTMLButtonElement>(null);   
 
   useEffect(() => {
     const handleResize = () => {
@@ -68,9 +72,10 @@ export default function Accueil({ onLogout }: AccueilProps) {
     { id: 'keys', icon: FiKey, label: 'Clés d\'activation', badge: '5' },
     { id: 'subscriptions', icon: FiCreditCard, label: 'Abonnements', badge: '1', badgeColor: 'amber' },
     { id: 'clients', icon: FiUsers, label: 'Clients' },
-    { id: 'comments', icon: FiMessageCircle, label: 'Avis', badge: '4', badgeColor: 'green' },
+    { id: 'comments', icon: FiMessageCircle, label: 'Site web', badge: '4', badgeColor: 'green' },
     { id: 'api', icon: FiCode, label: 'Clés API' },
     { id: 'apps', icon: FiBox, label: 'Applications' },
+    { id: 'admin', icon: FiShield, label: 'Administration' },
   ];
 
   const pageTitles: Record<string, string> = {
@@ -82,6 +87,7 @@ export default function Accueil({ onLogout }: AccueilProps) {
     api: 'Clés API',
     apps: 'Applications',
     settings: 'Paramètres',
+    admin: 'Administration',
   };
 
   const navigateTo = (pageId: string) => {
@@ -115,6 +121,8 @@ export default function Accueil({ onLogout }: AccueilProps) {
         return <Applications onNotify={showNotification} />;
       case 'settings':
         return <SettingsPage onNotify={showNotification} />;
+      case 'admin':
+        return <AdminPage />;
       default:
         return <Dashboard onNotify={showNotification} />;
     }
@@ -258,10 +266,13 @@ export default function Accueil({ onLogout }: AccueilProps) {
               <span className="topbar-dot" />
             </button>
             
-            <button 
-              className="topbar-btn user-btn"
+           <button
+              ref={userBtnRef}
+              className={`topbar-btn user-btn ${profileOpen ? 'user-btn-active' : ''}`}
               type="button"
               aria-label="Profil"
+              aria-expanded={profileOpen}
+              onClick={() => setProfileOpen(v => !v)}
             >
               <span className="user-initials">A</span>
             </button>
@@ -275,6 +286,13 @@ export default function Accueil({ onLogout }: AccueilProps) {
 
         {/* Toast de notification */}
         {toast && <Toast message={toast.msg} type={toast.type} />}
+
+         <ProfileModal
+          isOpen={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          onLogout={handleLogout}
+          anchorRef={userBtnRef}
+        />
       </div>
     </>
   );
