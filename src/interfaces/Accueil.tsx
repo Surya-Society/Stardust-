@@ -1,8 +1,8 @@
-import { useState, useEffect ,useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   FiGrid, FiKey, FiCreditCard, FiUsers, FiMessageCircle,
   FiCode, FiBox, FiSettings, FiLogOut, FiBell, FiSearch,
-  FiMenu, FiUser, FiChevronLeft, FiChevronRight , FiShield
+  FiMenu, FiUser, FiChevronLeft, FiChevronRight, FiShield, FiDollarSign
 } from 'react-icons/fi';
 import Dashboard         from '../components/Dashboard';
 import KeysPage          from '../components/CleActvation';
@@ -15,6 +15,7 @@ import SettingsPage      from '../components/Parametres';
 import Toast             from '../components/Toast';
 import AdminPage         from '../components/Admin';
 import ProfileModal      from '../components/ProfilModal';
+import FinanceSection    from '../components/FinanceSection';
 
 interface NavItem {
   id: string;
@@ -41,14 +42,15 @@ export default function Accueil({ onLogout }: AccueilProps) {
   const [navCollapsed, setNavCollapsed] = useState<boolean>(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
-   const [profileOpen,  setProfileOpen]  = useState<boolean>(false); // ← nouveau
-  const userBtnRef = useRef<HTMLButtonElement>(null);   
+  const [profileOpen, setProfileOpen] = useState<boolean>(false);
+  
+  // Correction: Type explicite pour le ref
+  const userBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth <= 768;
       setIsMobile(mobile);
-      // Fermer le menu mobile lors du redimensionnement vers desktop
       if (!mobile && navOpen) {
         setNavOpen(false);
       }
@@ -73,6 +75,7 @@ export default function Accueil({ onLogout }: AccueilProps) {
     { id: 'subscriptions', icon: FiCreditCard, label: 'Abonnements', badge: '1', badgeColor: 'amber' },
     { id: 'clients', icon: FiUsers, label: 'Clients' },
     { id: 'comments', icon: FiMessageCircle, label: 'Site web', badge: '4', badgeColor: 'green' },
+    { id: 'finance', icon: FiDollarSign, label: 'Finance', badge: 'Nouveau', badgeColor: 'green' },
     { id: 'api', icon: FiCode, label: 'Clés API' },
     { id: 'apps', icon: FiBox, label: 'Applications' },
     { id: 'admin', icon: FiShield, label: 'Administration' },
@@ -84,6 +87,7 @@ export default function Accueil({ onLogout }: AccueilProps) {
     subscriptions: 'Abonnements',
     clients: 'Clients',
     comments: 'Avis Clients',
+    finance: 'Finance',
     api: 'Clés API',
     apps: 'Applications',
     settings: 'Paramètres',
@@ -108,13 +112,15 @@ export default function Accueil({ onLogout }: AccueilProps) {
       case 'dashboard':
         return <Dashboard onNotify={showNotification} />;
       case 'keys':
-        return <KeysPage/>;
+        return <KeysPage />;
       case 'subscriptions':
         return <SubscriptionsPage onNotify={showNotification} />;
       case 'clients':
         return <ClientsPage onNotify={showNotification} />;
       case 'comments':
         return <CommentsPage />;
+      case 'finance':
+        return <FinanceSection language="fr" />;
       case 'api':
         return <ApiPage onNotify={showNotification} />;
       case 'apps':
@@ -244,7 +250,7 @@ export default function Accueil({ onLogout }: AccueilProps) {
             </button>
             
             <h1 className="topbar-title">
-              {pageTitles[currentPage]}
+              {pageTitles[currentPage] || 'Nova'}
             </h1>
             
             <div className="topbar-search">
@@ -266,7 +272,7 @@ export default function Accueil({ onLogout }: AccueilProps) {
               <span className="topbar-dot" />
             </button>
             
-           <button
+            <button
               ref={userBtnRef}
               className={`topbar-btn user-btn ${profileOpen ? 'user-btn-active' : ''}`}
               type="button"
@@ -287,12 +293,15 @@ export default function Accueil({ onLogout }: AccueilProps) {
         {/* Toast de notification */}
         {toast && <Toast message={toast.msg} type={toast.type} />}
 
-         <ProfileModal
-          isOpen={profileOpen}
-          onClose={() => setProfileOpen(false)}
-          onLogout={handleLogout}
-          anchorRef={userBtnRef}
-        />
+        {/* Modal de profil - avec vérification de null */}
+        {userBtnRef.current && (
+          <ProfileModal
+            isOpen={profileOpen}
+            onClose={() => setProfileOpen(false)}
+            onLogout={handleLogout}
+            anchorRef={userBtnRef as React.RefObject<HTMLButtonElement>}
+          />
+        )}
       </div>
     </>
   );
