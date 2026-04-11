@@ -54,34 +54,39 @@ const subscriptions: Subscription[] = [
 function StatusBadge({ status }: StatusBadgeProps) {
   const statusConfig = {
     paid: { 
-      class: 'badge-success', 
+      bg: 'bg-[rgba(57,211,83,0.15)]', 
+      text: 'text-[#39d353]', 
+      border: 'border-[rgba(57,211,83,0.3)]',
       label: 'Payé', 
-      icon: FiCheckCircle,
-      color: 'var(--accent-teal)'
+      icon: FiCheckCircle
     },
     overdue: { 
-      class: 'badge-danger', 
+      bg: 'bg-[rgba(248,81,73,0.15)]', 
+      text: 'text-[#f85149]', 
+      border: 'border-[rgba(248,81,73,0.3)]',
       label: 'En retard', 
-      icon: FiAlertCircle,
-      color: 'var(--accent-red)'
+      icon: FiAlertCircle
     },
     cancelled: { 
-      class: 'badge-neutral', 
+      bg: 'bg-[#1c2330]', 
+      text: 'text-[#484f58]', 
+      border: 'border-[#21262d]',
       label: 'Annulé', 
-      icon: FiXCircle,
-      color: 'var(--text-muted)'
+      icon: FiXCircle
     },
     suspended: { 
-      class: 'badge-warning', 
+      bg: 'bg-[rgba(227,179,65,0.15)]', 
+      text: 'text-[#e3b341]', 
+      border: 'border-[rgba(227,179,65,0.3)]',
       label: 'Suspendu', 
-      icon: FiPauseCircle,
-      color: 'var(--accent-amber)'
+      icon: FiPauseCircle
     },
     pending: { 
-      class: 'badge-info', 
+      bg: 'bg-[rgba(56,139,253,0.15)]', 
+      text: 'text-[#388bfd]', 
+      border: 'border-[rgba(56,139,253,0.3)]',
       label: 'En attente', 
-      icon: FiClock,
-      color: 'var(--accent-blue)'
+      icon: FiClock
     }
   };
 
@@ -89,67 +94,9 @@ function StatusBadge({ status }: StatusBadgeProps) {
   const Icon = config.icon;
 
   return (
-    <span className={`badge ${config.class}`}>
-      <Icon size={12} className="badge-icon" />
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium tracking-[0.3px] whitespace-nowrap border animate-[badgeAppear_0.3s_ease] ${config.bg} ${config.text} ${config.border}`}>
+      <Icon size={12} className="animate-[iconSpin_0.3s_ease]" />
       {config.label}
-      <style>{`
-        .badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 4px 10px;
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.3px;
-          animation: badgeAppear 0.3s ease;
-          white-space: nowrap;
-          border: 1px solid transparent;
-        }
-        
-        .badge-icon {
-          animation: iconSpin 0.3s ease;
-        }
-        
-        .badge-success { 
-          background: rgba(57, 211, 83, 0.15); 
-          color: var(--accent-teal);
-          border-color: rgba(57, 211, 83, 0.3);
-        }
-        
-        .badge-danger { 
-          background: rgba(248, 81, 73, 0.15); 
-          color: var(--accent-red);
-          border-color: rgba(248, 81, 73, 0.3);
-        }
-        
-        .badge-warning { 
-          background: rgba(227, 179, 65, 0.15); 
-          color: var(--accent-amber);
-          border-color: rgba(227, 179, 65, 0.3);
-        }
-        
-        .badge-info { 
-          background: rgba(56, 139, 253, 0.15); 
-          color: var(--accent-blue);
-          border-color: rgba(56, 139, 253, 0.3);
-        }
-        
-        .badge-neutral { 
-          background: var(--bg-elevated); 
-          color: var(--text-muted);
-          border-color: var(--border);
-        }
-        
-        @keyframes badgeAppear {
-          0% { transform: scale(0.8); opacity: 0; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        
-        @keyframes iconSpin {
-          0% { transform: rotate(-180deg); opacity: 0; }
-          100% { transform: rotate(0); opacity: 1; }
-        }
-      `}</style>
     </span>
   );
 }
@@ -157,131 +104,24 @@ function StatusBadge({ status }: StatusBadgeProps) {
 // Composant Carte statistique (sans border-radius)
 function StatCard({ label, value, unit = '', color, icon: Icon, trend }: StatCardProps) {
   return (
-    <div className="stat-card" style={{ borderLeftColor: color }}>
-      <div className="stat-header">
-        <span className="stat-label">{label}</span>
-        <div className="stat-icon" style={{ background: `${color}20`, color }}>
+    <div className={`bg-[#0d1117] p-5 relative overflow-hidden border-l-[3px] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] animate-[statAppear_0.5s_ease]`} style={{ borderLeftColor: color }}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[11px] font-semibold tracking-[0.8px] uppercase text-[#484f58]">{label}</span>
+        <div className="w-8 h-8 flex items-center justify-center transition-transform duration-300 group-hover:rotate-5 group-hover:scale-110" style={{ background: `${color}20`, color }}>
           <Icon size={18} />
         </div>
       </div>
-      <div className="stat-value-group">
-        <span className="stat-value">{value}</span>
-        {unit && <span className="stat-unit">{unit}</span>}
+      <div className="flex items-baseline gap-1 mb-2">
+        <span className="text-[32px] font-light tracking-[-1px] text-[#e6edf3] leading-none">{value}</span>
+        {unit && <span className="text-sm text-[#484f58]">{unit}</span>}
       </div>
       {trend && (
-        <div className={`stat-trend ${trend.positive ? 'positive' : 'negative'}`}>
+        <div className={`flex items-center gap-1 text-xs ${trend.positive ? 'text-[#39d353]' : 'text-[#f85149]'}`}>
           <FiTrendingUp size={12} style={{ transform: trend.positive ? 'none' : 'rotate(180deg)' }} />
           <span>{trend.value}% ce mois</span>
         </div>
       )}
-      <div className="stat-stripe" style={{ background: color }} />
-      
-      <style>{`
-        .stat-card {
-          background: var(--bg-panel);
-          padding: 20px;
-          position: relative;
-          overflow: hidden;
-          border-left: 3px solid transparent;
-          transition: all 0.3s ease;
-          animation: statAppear 0.5s ease;
-        }
-        
-        .stat-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        .stat-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 12px;
-        }
-        
-        .stat-label {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.8px;
-          text-transform: uppercase;
-          color: var(--text-muted);
-        }
-        
-        .stat-icon {
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: transform 0.3s ease;
-        }
-        
-        .stat-card:hover .stat-icon {
-          transform: rotate(5deg) scale(1.1);
-        }
-        
-        .stat-value-group {
-          display: flex;
-          align-items: baseline;
-          gap: 4px;
-          margin-bottom: 8px;
-        }
-        
-        .stat-value {
-          font-size: 32px;
-          font-weight: 300;
-          letter-spacing: -1px;
-          color: var(--text-primary);
-          line-height: 1;
-        }
-        
-        .stat-unit {
-          font-size: 14px;
-          color: var(--text-muted);
-        }
-        
-        .stat-trend {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 12px;
-        }
-        
-        .stat-trend.positive {
-          color: var(--accent-teal);
-        }
-        
-        .stat-trend.negative {
-          color: var(--accent-red);
-        }
-        
-        .stat-stripe {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 2px;
-          transform: scaleX(0);
-          transform-origin: left;
-          animation: stripeExpand 0.5s ease forwards 0.2s;
-        }
-        
-        @keyframes statAppear {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes stripeExpand {
-          from { transform: scaleX(0); }
-          to { transform: scaleX(1); }
-        }
-      `}</style>
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 animate-[stripeExpand_0.5s_ease_forwards_0.2s]" style={{ background: color, transformOrigin: 'left' }} />
     </div>
   );
 }
@@ -289,48 +129,18 @@ function StatCard({ label, value, unit = '', color, icon: Icon, trend }: StatCar
 // Composant Plan badge (sans border-radius)
 function PlanBadge({ plan }: { plan: Subscription['plan'] }) {
   const planConfig = {
-    Basic: { class: 'plan-basic', icon: FiCreditCard },
-    Premium: { class: 'plan-premium', icon: FiTrendingUp },
-    Enterprise: { class: 'plan-enterprise', icon: BiBuildings }
+    Basic: { bg: 'bg-[#1c2330]', text: 'text-[#484f58]', border: 'border-[#21262d]', icon: FiCreditCard },
+    Premium: { bg: 'bg-[rgba(57,211,83,0.15)]', text: 'text-[#39d353]', border: 'border-[rgba(57,211,83,0.3)]', icon: FiTrendingUp },
+    Enterprise: { bg: 'bg-[rgba(56,139,253,0.15)]', text: 'text-[#388bfd]', border: 'border-[rgba(56,139,253,0.3)]', icon: BiBuildings }
   };
 
   const config = planConfig[plan];
   const Icon = config.icon;
 
   return (
-    <span className={`plan-badge ${config.class}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium whitespace-nowrap border ${config.bg} ${config.text} ${config.border}`}>
       <Icon size={12} />
       {plan}
-      <style>{`
-        .plan-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 4px 10px;
-          font-size: 11px;
-          font-weight: 500;
-          white-space: nowrap;
-          border: 1px solid transparent;
-        }
-        
-        .plan-basic {
-          background: var(--bg-elevated);
-          color: var(--text-muted);
-          border-color: var(--border);
-        }
-        
-        .plan-premium {
-          background: rgba(57, 211, 83, 0.15);
-          color: var(--accent-teal);
-          border-color: rgba(57, 211, 83, 0.3);
-        }
-        
-        .plan-enterprise {
-          background: rgba(56, 139, 253, 0.15);
-          color: var(--accent-blue);
-          border-color: rgba(56, 139, 253, 0.3);
-        }
-      `}</style>
     </span>
   );
 }
@@ -338,57 +148,57 @@ function PlanBadge({ plan }: { plan: Subscription['plan'] }) {
 // Composant Carte d'abonnement
 function SubscriptionCard({ subscription, onAction }: { subscription: Subscription; onAction: (action: string, school: string) => void }) {
   return (
-    <div className="subscription-card">
-      <div className="card-header">
-        <div className="school-info">
-          <div className="school-avatar">
+    <div className="bg-[#0d1117] border border-[#21262d] flex flex-col transition-all duration-300 hover:-translate-y-0.5 hover:border-[#30363d] hover:shadow-[0_8px_20px_rgba(0,0,0,0.2)] animate-[cardAppear_0.3s_ease_forwards] opacity-0">
+      <div className="p-4 border-b border-[#21262d] flex items-start justify-between">
+        <div className="flex gap-3">
+          <div className="w-10 h-10 bg-[#1c2330] border border-[#21262d] flex items-center justify-center font-semibold text-base text-[#388bfd] transition-all duration-200 group-hover:border-[#388bfd] group-hover:scale-105">
             {subscription.school.charAt(0)}
           </div>
           <div>
-            <h3 className="school-name">{subscription.school}</h3>
+            <h3 className="text-[15px] font-semibold mb-1">{subscription.school}</h3>
             <PlanBadge plan={subscription.plan} />
           </div>
         </div>
         <button 
-          className="card-menu"
+          className="bg-transparent border border-[#21262d] w-8 h-8 flex items-center justify-center text-[#8b949e] cursor-pointer transition-all duration-200 hover:bg-[#161b22] hover:border-[#30363d] hover:text-[#e6edf3]"
           onClick={() => onAction('menu', subscription.school)}
         >
           <FiMoreVertical size={16} />
         </button>
       </div>
 
-      <div className="card-content">
-        <div className="amount-section">
-          <span className="amount-label">Montant</span>
-          <span className="amount-value">{subscription.amount}</span>
+      <div className="p-4 flex-1">
+        <div className="mb-4 pb-4 border-b border-[#21262d]">
+          <span className="block text-[11px] uppercase tracking-[0.8px] text-[#484f58] mb-1">Montant</span>
+          <span className="text-lg font-semibold text-[#e6edf3] font-['DM_Mono']">{subscription.amount}</span>
         </div>
 
-        <div className="card-stats">
-          <div className="stat-item">
-            <FiUsers size={14} />
-            <div>
-              <span className="stat-label">Utilisateurs</span>
-              <span className="stat-value">{subscription.users}</span>
+        <div className="flex flex-col gap-3 mb-4">
+          <div className="flex items-center gap-3 text-[#8b949e]">
+            <FiUsers size={14} className="text-[#484f58]" />
+            <div className="flex-1">
+              <span className="block text-[11px] text-[#484f58] mb-0.5">Utilisateurs</span>
+              <span className="text-[13px] font-medium text-[#e6edf3]">{subscription.users}</span>
             </div>
           </div>
-          <div className="stat-item">
-            <FiCalendar size={14} />
-            <div>
-              <span className="stat-label">Prochaine facturation</span>
-              <span className="stat-value">{subscription.nextBilling}</span>
+          <div className="flex items-center gap-3 text-[#8b949e]">
+            <FiCalendar size={14} className="text-[#484f58]" />
+            <div className="flex-1">
+              <span className="block text-[11px] text-[#484f58] mb-0.5">Prochaine facturation</span>
+              <span className="text-[13px] font-medium text-[#e6edf3]">{subscription.nextBilling}</span>
             </div>
           </div>
         </div>
 
-        <div className="status-section">
+        <div className="mt-3">
           <StatusBadge status={subscription.status} />
         </div>
       </div>
 
-      <div className="card-footer">
-        <div className="card-actions">
+      <div className="p-4 border-t border-[#21262d] bg-[#161b22]">
+        <div className="flex flex-wrap gap-2">
           <button 
-            className="action-btn view"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#21262d] bg-[#0d1117] text-[#8b949e] text-xs cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#388bfd] hover:border-[#388bfd] hover:text-white"
             onClick={() => onAction('view', subscription.school)}
             title="Voir les détails"
           >
@@ -398,7 +208,7 @@ function SubscriptionCard({ subscription, onAction }: { subscription: Subscripti
           
           {subscription.status === 'overdue' && (
             <button 
-              className="action-btn remind"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#21262d] bg-[#0d1117] text-[#8b949e] text-xs cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#e3b341] hover:border-[#e3b341] hover:text-black"
               onClick={() => onAction('remind', subscription.school)}
               title="Envoyer un rappel"
             >
@@ -409,7 +219,7 @@ function SubscriptionCard({ subscription, onAction }: { subscription: Subscripti
           
           {subscription.status === 'paid' && (
             <button 
-              className="action-btn suspend"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#21262d] bg-[#0d1117] text-[#8b949e] text-xs cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f85149] hover:border-[#f85149] hover:text-white"
               onClick={() => onAction('suspend', subscription.school)}
               title="Suspendre l'abonnement"
             >
@@ -420,7 +230,7 @@ function SubscriptionCard({ subscription, onAction }: { subscription: Subscripti
           
           {subscription.status === 'suspended' && (
             <button 
-              className="action-btn reactivate"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#21262d] bg-[#0d1117] text-[#8b949e] text-xs cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#39d353] hover:border-[#39d353] hover:text-black"
               onClick={() => onAction('reactivate', subscription.school)}
               title="Réactiver l'abonnement"
             >
@@ -430,7 +240,7 @@ function SubscriptionCard({ subscription, onAction }: { subscription: Subscripti
           )}
           
           <button 
-            className="action-btn edit"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#21262d] bg-[#0d1117] text-[#8b949e] text-xs cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#388bfd] hover:border-[#388bfd] hover:text-white"
             onClick={() => onAction('edit', subscription.school)}
             title="Modifier"
           >
@@ -438,7 +248,7 @@ function SubscriptionCard({ subscription, onAction }: { subscription: Subscripti
           </button>
           
           <button 
-            className="action-btn delete"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#21262d] bg-[#0d1117] text-[#8b949e] text-xs cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f85149] hover:border-[#f85149] hover:text-white"
             onClick={() => onAction('delete', subscription.school)}
             title="Supprimer"
           >
@@ -446,223 +256,6 @@ function SubscriptionCard({ subscription, onAction }: { subscription: Subscripti
           </button>
         </div>
       </div>
-
-      <style>{`
-        .subscription-card {
-          background: var(--bg-panel);
-          border: 1px solid var(--border);
-          display: flex;
-          flex-direction: column;
-          transition: all 0.3s ease;
-          animation: cardAppear 0.3s ease forwards;
-          opacity: 0;
-        }
-        
-        .subscription-card:hover {
-          transform: translateY(-2px);
-          border-color: var(--border-bright);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-        
-        @keyframes cardAppear {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .card-header {
-          padding: 16px;
-          border-bottom: 1px solid var(--border);
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-        }
-        
-        .school-info {
-          display: flex;
-          gap: 12px;
-        }
-        
-        .school-avatar {
-          width: 40px;
-          height: 40px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-          font-size: 16px;
-          color: var(--accent-blue);
-          transition: all 0.2s ease;
-        }
-        
-        .subscription-card:hover .school-avatar {
-          border-color: var(--accent-blue);
-          transform: scale(1.05);
-        }
-        
-        .school-name {
-          font-size: 15px;
-          font-weight: 600;
-          margin-bottom: 4px;
-        }
-        
-        .card-menu {
-          background: transparent;
-          border: 1px solid var(--border);
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--text-secondary);
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        
-        .card-menu:hover {
-          background: var(--bg-surface);
-          border-color: var(--border-bright);
-          color: var(--text-primary);
-        }
-        
-        .card-content {
-          padding: 16px;
-          flex: 1;
-        }
-        
-        .amount-section {
-          margin-bottom: 16px;
-          padding-bottom: 16px;
-          border-bottom: 1px solid var(--border);
-        }
-        
-        .amount-label {
-          display: block;
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 0.8px;
-          color: var(--text-muted);
-          margin-bottom: 4px;
-        }
-        
-        .amount-value {
-          font-size: 18px;
-          font-weight: 600;
-          color: var(--text-primary);
-          font-family: var(--mono);
-        }
-        
-        .card-stats {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          margin-bottom: 16px;
-        }
-        
-        .stat-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          color: var(--text-secondary);
-        }
-        
-        .stat-item svg {
-          color: var(--text-muted);
-        }
-        
-        .stat-item div {
-          flex: 1;
-        }
-        
-        .stat-item .stat-label {
-          display: block;
-          font-size: 11px;
-          color: var(--text-muted);
-          margin-bottom: 2px;
-        }
-        
-        .stat-item .stat-value {
-          font-size: 13px;
-          font-weight: 500;
-          color: var(--text-primary);
-        }
-        
-        .status-section {
-          margin-top: 12px;
-        }
-        
-        .card-footer {
-          padding: 16px;
-          border-top: 1px solid var(--border);
-          background: var(--bg-surface);
-        }
-        
-        .card-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        
-        .action-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          border: 1px solid var(--border);
-          background: var(--bg-panel);
-          color: var(--text-secondary);
-          font-size: 12px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        
-        .action-btn:hover {
-          transform: translateY(-2px);
-        }
-        
-        .action-btn.view:hover {
-          background: var(--accent-blue);
-          border-color: var(--accent-blue);
-          color: white;
-        }
-        
-        .action-btn.remind:hover {
-          background: var(--accent-amber);
-          border-color: var(--accent-amber);
-          color: black;
-        }
-        
-        .action-btn.suspend:hover {
-          background: var(--accent-red);
-          border-color: var(--accent-red);
-          color: white;
-        }
-        
-        .action-btn.reactivate:hover {
-          background: var(--accent-teal);
-          border-color: var(--accent-teal);
-          color: black;
-        }
-        
-        .action-btn.edit:hover {
-          background: var(--accent-blue);
-          border-color: var(--accent-blue);
-          color: white;
-        }
-        
-        .action-btn.delete:hover {
-          background: var(--accent-red);
-          border-color: var(--accent-red);
-          color: white;
-        }
-      `}</style>
     </div>
   );
 }
@@ -713,31 +306,31 @@ export default function Abonnements({ onNotify }: AbonnementsProps) {
   };
 
   return (
-    <div className="subscriptions-page">
+    <div className="animate-[pageEnter_0.4s_ease]">
       {/* En-tête */}
-      <div className="section-header animate-fade-up">
+      <div className="flex items-center justify-between mb-6 opacity-0 animate-[slideUp_0.4s_ease_forwards]">
         <div>
-          <h2 className="section-title">Gestion des Abonnements</h2>
-          <p className="section-sub">
+          <h2 className="text-xl font-semibold tracking-[-0.5px] mb-1">Gestion des Abonnements</h2>
+          <p className="flex items-center gap-1.5 text-[13px] text-[#484f58]">
             <FiCreditCard size={12} />
             {stats.total} abonnements · {stats.active} actifs
           </p>
         </div>
-        <div className="header-actions">
-          <button className="btn btn-ghost" onClick={() => onNotify('Synchronisation en cours...', 'blue')}>
-            <FiRefreshCw size={14} className="btn-icon-spin" /> Synchroniser
+        <div className="flex gap-2">
+          <button className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium cursor-pointer transition-all duration-200 border border-transparent bg-transparent border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:-translate-y-0.5" onClick={() => onNotify('Synchronisation en cours...', 'blue')}>
+            <FiRefreshCw size={14} className="hover:animate-spin" /> Synchroniser
           </button>
-          <button className="btn btn-primary" onClick={() => onNotify('Création d\'un nouvel abonnement', 'blue')}>
+          <button className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium cursor-pointer transition-all duration-200 border border-transparent bg-[#388bfd] text-white border-[#388bfd] hover:bg-[#58a6ff] hover:border-[#58a6ff] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(56,139,253,0.3)]" onClick={() => onNotify('Création d\'un nouvel abonnement', 'blue')}>
             <FiPlus size={14} /> Nouvel abonnement
           </button>
-          <button className="btn btn-ghost" onClick={() => onNotify('Export en cours...', 'blue')}>
+          <button className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium cursor-pointer transition-all duration-200 border border-transparent bg-transparent border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:-translate-y-0.5" onClick={() => onNotify('Export en cours...', 'blue')}>
             <FiDownload size={14} /> Exporter
           </button>
         </div>
       </div>
 
       {/* Statistiques */}
-      <div className="stats-grid animate-fade-up delay-1">
+      <div className="grid grid-cols-4 gap-px bg-[#21262d] border border-[#21262d] mb-6 max-[1100px]:grid-cols-2 max-[480px]:grid-cols-1">
         <StatCard
           label="MRR"
           value={stats.mrr.toLocaleString()}
@@ -770,23 +363,23 @@ export default function Abonnements({ onNotify }: AbonnementsProps) {
       </div>
 
       {/* Filtres et recherche */}
-      <div className="filters-section animate-fade-up delay-1">
-        <div className="search-box">
-          <FiSearch className="search-icon" size={16} />
+      <div className="flex gap-4 mb-6 flex-wrap max-[768px]:flex-col">
+        <div className="flex-1 min-w-[280px] relative">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" size={16} />
           <input
             type="text"
             placeholder="Rechercher un établissement..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
+            className="w-full h-10 pl-10 pr-3 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-[13px] transition-all duration-200 focus:border-[#388bfd] focus:shadow-[0_0_0_3px_rgba(56,139,253,0.1)] focus:outline-none"
           />
         </div>
 
-        <div className="filters-group">
-          <div className="filter">
-            <FiFilter className="filter-icon" size={14} />
+        <div className="flex gap-2 max-[768px]:w-full">
+          <div className="relative min-w-[160px] max-[768px]:flex-1">
+            <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58] pointer-events-none" size={14} />
             <select 
-              className="filter-select"
+              className="w-full h-10 pl-9 pr-3 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-[13px] cursor-pointer appearance-none transition-all duration-200 focus:border-[#388bfd] focus:outline-none"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
@@ -799,10 +392,10 @@ export default function Abonnements({ onNotify }: AbonnementsProps) {
             </select>
           </div>
 
-          <div className="filter">
-            <FiCreditCard className="filter-icon" size={14} />
+          <div className="relative min-w-[160px] max-[768px]:flex-1">
+            <FiCreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58] pointer-events-none" size={14} />
             <select 
-              className="filter-select"
+              className="w-full h-10 pl-9 pr-3 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-[13px] cursor-pointer appearance-none transition-all duration-200 focus:border-[#388bfd] focus:outline-none"
               value={filterPlan}
               onChange={(e) => setFilterPlan(e.target.value)}
             >
@@ -816,8 +409,8 @@ export default function Abonnements({ onNotify }: AbonnementsProps) {
       </div>
 
       {/* Grille des abonnements */}
-      <div className="subscriptions-grid animate-fade-up delay-2">
-        {filteredSubscriptions.map((sub) => (
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-px bg-[#21262d] border border-[#21262d] mb-6 max-[768px]:grid-cols-1">
+        {filteredSubscriptions.map((sub, index) => (
           <SubscriptionCard
             key={sub.id}
             subscription={sub}
@@ -828,345 +421,74 @@ export default function Abonnements({ onNotify }: AbonnementsProps) {
 
       {/* Message si aucun résultat */}
       {filteredSubscriptions.length === 0 && (
-        <div className="empty-state">
-          <FiCreditCard size={48} />
-          <h3>Aucun abonnement trouvé</h3>
-          <p>Essayez de modifier vos filtres de recherche</p>
+        <div className="text-center p-12 bg-[#0d1117] border border-[#21262d] text-[#484f58]">
+          <FiCreditCard size={48} className="mx-auto mb-4 opacity-50" />
+          <h3 className="text-base font-medium mb-2 text-[#8b949e]">Aucun abonnement trouvé</h3>
+          <p className="text-[13px]">Essayez de modifier vos filtres de recherche</p>
         </div>
       )}
 
       {/* Pagination simple */}
-      <div className="pagination-section">
-        <span className="pagination-info">
+      <div className="flex items-center justify-between py-4 max-[768px]:flex-col max-[768px]:gap-3 max-[768px]:items-start">
+        <span className="text-xs text-[#484f58]">
           Affichage de {filteredSubscriptions.length} sur {subscriptions.length} abonnements
         </span>
-        <div className="pagination">
-          <button className="pagination-btn" disabled>Précédent</button>
-          <button className="pagination-btn active">1</button>
-          <button className="pagination-btn">2</button>
-          <button className="pagination-btn">3</button>
-          <button className="pagination-btn">Suivant</button>
+        <div className="flex gap-1.5">
+          <button className="px-3 py-1.5 bg-transparent border border-[#21262d] text-[#8b949e] text-xs cursor-pointer transition-all duration-200 hover:bg-[#1c2330] hover:border-[#30363d] hover:text-[#e6edf3] disabled:opacity-50 disabled:cursor-not-allowed" disabled>Précédent</button>
+          <button className="px-3 py-1.5 bg-[#388bfd] border border-[#388bfd] text-white text-xs cursor-pointer transition-all duration-200">1</button>
+          <button className="px-3 py-1.5 bg-transparent border border-[#21262d] text-[#8b949e] text-xs cursor-pointer transition-all duration-200 hover:bg-[#1c2330] hover:border-[#30363d] hover:text-[#e6edf3]">2</button>
+          <button className="px-3 py-1.5 bg-transparent border border-[#21262d] text-[#8b949e] text-xs cursor-pointer transition-all duration-200 hover:bg-[#1c2330] hover:border-[#30363d] hover:text-[#e6edf3]">3</button>
+          <button className="px-3 py-1.5 bg-transparent border border-[#21262d] text-[#8b949e] text-xs cursor-pointer transition-all duration-200 hover:bg-[#1c2330] hover:border-[#30363d] hover:text-[#e6edf3]">Suivant</button>
         </div>
       </div>
 
       <style>{`
-        .subscriptions-page {
-          animation: pageEnter 0.4s ease;
-        }
-
-        .section-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 24px;
-        }
-
-        .section-title {
-          font-size: 20px;
-          font-weight: 600;
-          letter-spacing: -0.5px;
-          margin-bottom: 4px;
-        }
-
-        .section-sub {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 13px;
-          color: var(--text-muted);
-        }
-
-        .header-actions {
-          display: flex;
-          gap: 8px;
-        }
-
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 1px;
-          background: var(--border);
-          border: 1px solid var(--border);
-          margin-bottom: 24px;
-        }
-
-        .filters-section {
-          display: flex;
-          gap: 16px;
-          margin-bottom: 24px;
-          flex-wrap: wrap;
-        }
-
-        .search-box {
-          flex: 1;
-          min-width: 280px;
-          position: relative;
-        }
-
-        .search-icon {
-          position: absolute;
-          left: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: var(--text-muted);
-        }
-
-        .search-input {
-          width: 100%;
-          height: 40px;
-          padding: 0 12px 0 40px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          color: var(--text-primary);
-          font-size: 13px;
-          transition: all 0.2s ease;
-        }
-
-        .search-input:focus {
-          border-color: var(--accent-blue);
-          box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.1);
-          outline: none;
-        }
-
-        .filters-group {
-          display: flex;
-          gap: 8px;
-        }
-
-        .filter {
-          position: relative;
-          min-width: 160px;
-        }
-
-        .filter-icon {
-          position: absolute;
-          left: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: var(--text-muted);
-          pointer-events: none;
-        }
-
-        .filter-select {
-          width: 100%;
-          height: 40px;
-          padding: 0 12px 0 36px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          color: var(--text-primary);
-          font-size: 13px;
-          cursor: pointer;
-          appearance: none;
-          transition: all 0.2s ease;
-        }
-
-        .filter-select:focus {
-          border-color: var(--accent-blue);
-          outline: none;
-        }
-
-        .subscriptions-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 1px;
-          background: var(--border);
-          border: 1px solid var(--border);
-          margin-bottom: 24px;
-        }
-
-        .empty-state {
-          text-align: center;
-          padding: 48px;
-          background: var(--bg-panel);
-          border: 1px solid var(--border);
-          color: var(--text-muted);
-        }
-
-        .empty-state svg {
-          margin-bottom: 16px;
-          opacity: 0.5;
-        }
-
-        .empty-state h3 {
-          font-size: 16px;
-          font-weight: 500;
-          margin-bottom: 8px;
-          color: var(--text-secondary);
-        }
-
-        .empty-state p {
-          font-size: 13px;
-        }
-
-        .pagination-section {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 16px 0;
-        }
-
-        .pagination-info {
-          font-size: 12px;
-          color: var(--text-muted);
-        }
-
-        .pagination {
-          display: flex;
-          gap: 6px;
-        }
-
-        .pagination-btn {
-          padding: 6px 12px;
-          background: transparent;
-          border: 1px solid var(--border);
-          color: var(--text-secondary);
-          font-size: 12px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .pagination-btn:hover:not(:disabled) {
-          background: var(--bg-elevated);
-          border-color: var(--border-bright);
-          color: var(--text-primary);
-        }
-
-        .pagination-btn.active {
-          background: var(--accent-blue);
-          border-color: var(--accent-blue);
-          color: white;
-        }
-
-        .pagination-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
         @keyframes pageEnter {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-
-        .animate-fade-up {
-          opacity: 0;
-          animation: slideUp 0.4s ease forwards;
-        }
-
         @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          border: 1px solid transparent;
+        @keyframes badgeAppear {
+          from { transform: scale(0.8); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
         }
-
-        .btn-primary {
-          background: var(--accent-blue);
-          color: white;
-          border-color: var(--accent-blue);
+        @keyframes iconSpin {
+          from { transform: rotate(-180deg); opacity: 0; }
+          to { transform: rotate(0); opacity: 1; }
         }
-
-        .btn-primary:hover {
-          background: #58a6ff;
-          border-color: #58a6ff;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(56, 139, 253, 0.3);
+        @keyframes statAppear {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-
-        .btn-ghost {
-          background: transparent;
-          border: 1px solid var(--border);
-          color: var(--text-secondary);
+        @keyframes stripeExpand {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
         }
-
-        .btn-ghost:hover {
-          border-color: var(--border-bright);
-          color: var(--text-primary);
-          transform: translateY(-2px);
+        @keyframes cardAppear {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-
-        .btn-icon-spin:hover {
+        .group\\:hover\\:rotate-5:hover {
+          transform: rotate(5deg);
+        }
+        .group\\:hover\\:scale-110:hover {
+          transform: scale(1.1);
+        }
+        .group\\:hover\\:border-\\[\\#388bfd\\]:hover {
+          border-color: #388bfd;
+        }
+        .group\\:hover\\:scale-105:hover {
+          transform: scale(1.05);
+        }
+        .hover\\:animate-spin:hover {
           animation: spin 1s ease infinite;
         }
-
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 1100px) {
-          .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        @media (max-width: 768px) {
-          .section-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 12px;
-          }
-
-          .header-actions {
-            width: 100%;
-            flex-wrap: wrap;
-          }
-
-          .filters-section {
-            flex-direction: column;
-          }
-
-          .filters-group {
-            width: 100%;
-          }
-
-          .filter {
-            flex: 1;
-          }
-
-          .subscriptions-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .pagination-section {
-            flex-direction: column;
-            gap: 12px;
-            align-items: flex-start;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .stats-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .filters-group {
-            flex-direction: column;
-          }
         }
       `}</style>
     </div>

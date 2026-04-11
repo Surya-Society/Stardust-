@@ -16,8 +16,6 @@ const App: React.FC = () => {
     const token = sessionStorage.getItem("nova-auth-token");
     if (token) setIsAuthenticated(true);
 
-    // Le splash s'affiche TOUJOURS (premier chargement ET refresh).
-    // Timeout de secours si SplashScreen n'appelle pas onFinish.
     const fallback = setTimeout(() => dismissSplash(), SPLASH_FALLBACK_MS);
     return () => clearTimeout(fallback);
   // eslint-disable-next-line react-hooks/exhaustive-deps

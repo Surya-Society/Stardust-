@@ -137,303 +137,6 @@ interface ParametresProps {
   onNotify?: (message: string, type: 'green' | 'red' | 'amber' | 'blue') => void;
 }
 
-// CSS
-const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-
-.pm-root {
-  --bg: #090c10;
-  --panel: #0d1117;
-  --surface: #161b22;
-  --elevated: #1c2330;
-  --border: #21262d;
-  --border-hi: #30363d;
-  --blue: #388bfd;
-  --blue-dim: rgba(56,139,253,0.08);
-  --blue-border: rgba(56,139,253,0.25);
-  --green: #3fb950;
-  --green-dim: rgba(63,185,80,0.08);
-  --green-border: rgba(63,185,80,0.25);
-  --amber: #d29922;
-  --amber-dim: rgba(210,153,34,0.08);
-  --amber-border: rgba(210,153,34,0.25);
-  --red: #f85149;
-  --red-dim: rgba(248,81,73,0.08);
-  --red-border: rgba(248,81,73,0.25);
-  --t1: #e6edf3;
-  --t2: #8b949e;
-  --t3: #484f58;
-  --font: 'IBM Plex Sans', sans-serif;
-  --mono: 'IBM Plex Mono', monospace;
-  font-family: var(--font);
-  font-size: 13px;
-  color: var(--t1);
-  -webkit-font-smoothing: antialiased;
-}
-.pm-root * { box-sizing: border-box; margin: 0; padding: 0; }
-
-.pm-layout { display: flex; gap: 0; min-height: 600px; }
-
-.pm-nav {
-  width: 220px;
-  flex-shrink: 0;
-  background: var(--panel);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  position: sticky; top: 0;
-}
-.pm-nav-header {
-  padding: 16px 16px 12px;
-  border-bottom: 1px solid var(--border);
-}
-.pm-nav-title {
-  font-size: 10px; font-weight: 600; letter-spacing: 1.2px;
-  text-transform: uppercase; color: var(--t3);
-}
-.pm-nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 16px;
-  cursor: pointer; transition: all .15s;
-  color: var(--t2); font-size: 12.5px; font-weight: 400;
-  position: relative; border-bottom: 1px solid transparent;
-  user-select: none;
-}
-.pm-nav-item:hover { background: var(--surface); color: var(--t1); }
-.pm-nav-item.active {
-  background: var(--surface); color: var(--t1); font-weight: 500;
-}
-.pm-nav-item.active::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-  width: 2px; background: var(--blue);
-}
-.pm-nav-icon { width: 14px; height: 14px; flex-shrink: 0; }
-.pm-nav-badge {
-  margin-left: auto; font-size: 10px; font-weight: 600;
-  padding: 1px 5px; background: var(--red-dim);
-  color: var(--red); border: 1px solid var(--red-border);
-}
-.pm-nav-group {
-  padding: 12px 0 4px;
-}
-.pm-nav-group-label {
-  padding: 0 16px 6px;
-  font-size: 10px; font-weight: 600; letter-spacing: 1px;
-  text-transform: uppercase; color: var(--t3);
-}
-
-.pm-content { flex: 1; min-width: 0; padding: 24px 28px; }
-
-.pm-header {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  margin-bottom: 24px; padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-}
-.pm-header-left {}
-.pm-header-title {
-  font-size: 18px; font-weight: 600; letter-spacing: -0.4px;
-  display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
-}
-.pm-header-icon {
-  width: 30px; height: 30px;
-  background: var(--blue-dim); border: 1px solid var(--blue-border);
-  display: flex; align-items: center; justify-content: center; color: var(--blue);
-}
-.pm-header-sub { font-size: 12px; color: var(--t3); font-family: var(--mono); }
-.pm-header-actions { display: flex; gap: 8px; }
-
-.pm-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  height: 32px; padding: 0 13px;
-  font-family: var(--font); font-size: 12px; font-weight: 500;
-  cursor: pointer; transition: all .15s; border: none; white-space: nowrap;
-}
-.pm-btn-primary { background: var(--blue); color: #fff; }
-.pm-btn-primary:hover { background: #58a6ff; }
-.pm-btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--t2); }
-.pm-btn-ghost:hover { border-color: var(--border-hi); color: var(--t1); background: var(--surface); }
-.pm-btn-danger { background: var(--red-dim); border: 1px solid var(--red-border); color: var(--red); }
-.pm-btn-danger:hover { background: rgba(248,81,73,.15); }
-.pm-btn-sm { height: 28px; padding: 0 10px; font-size: 11px; }
-.pm-btn:disabled { opacity: .4; cursor: not-allowed; }
-
-.pm-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  margin-bottom: 1px;
-}
-.pm-card-header {
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-}
-.pm-card-title {
-  font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;
-}
-.pm-card-sub { font-size: 11px; color: var(--t3); margin-top: 2px; }
-.pm-card-body { padding: 0; }
-
-.pm-field {
-  display: grid; grid-template-columns: 220px 1fr;
-  padding: 13px 20px;
-  border-bottom: 1px solid var(--border);
-  align-items: center; gap: 20px;
-}
-.pm-field:last-child { border-bottom: none; }
-.pm-field-label {
-  font-size: 12.5px; font-weight: 500; color: var(--t2);
-}
-.pm-field-desc { font-size: 11px; color: var(--t3); margin-top: 2px; }
-.pm-field-control { display: flex; align-items: center; gap: 8px; }
-
-.pm-input, .pm-select, .pm-textarea {
-  background: var(--bg); border: 1px solid var(--border);
-  padding: 7px 11px; color: var(--t1);
-  font-family: var(--font); font-size: 13px; outline: none;
-  transition: border-color .15s; width: 100%;
-}
-.pm-input:focus, .pm-select:focus, .pm-textarea:focus { border-color: var(--blue); }
-.pm-input::placeholder { color: var(--t3); }
-.pm-select { cursor: pointer; appearance: none; }
-.pm-select option { background: var(--panel); }
-.pm-textarea { resize: vertical; min-height: 64px; }
-.pm-input-w300 { max-width: 300px; }
-.pm-input-w200 { max-width: 200px; }
-.pm-input-mono { font-family: var(--mono); font-size: 12px; }
-
-.pm-toggle {
-  width: 34px; height: 19px;
-  background: var(--elevated); border: 1px solid var(--border);
-  position: relative; cursor: pointer; flex-shrink: 0;
-  transition: background .2s, border-color .2s;
-}
-.pm-toggle.on { background: var(--blue); border-color: var(--blue); }
-.pm-toggle-knob {
-  position: absolute; top: 2px; left: 2px;
-  width: 13px; height: 13px; background: var(--t2);
-  transition: transform .2s, background .2s;
-}
-.pm-toggle.on .pm-toggle-knob { transform: translateX(15px); background: #fff; }
-.pm-toggle-label { font-size: 12.5px; color: var(--t1); user-select: none; }
-
-.pm-info {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 12px 16px; margin: 0 20px 16px;
-  border-left: 2px solid;
-}
-.pm-info-blue { background: var(--blue-dim); border-color: var(--blue); }
-.pm-info-amber { background: var(--amber-dim); border-color: var(--amber); }
-.pm-info-green { background: var(--green-dim); border-color: var(--green); }
-.pm-info-red { background: var(--red-dim); border-color: var(--red); }
-.pm-info-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
-.pm-info-blue .pm-info-title { color: var(--blue); }
-.pm-info-amber .pm-info-title { color: var(--amber); }
-.pm-info-green .pm-info-title { color: var(--green); }
-.pm-info-red .pm-info-title { color: var(--red); }
-.pm-info-text { font-size: 12px; color: var(--t2); }
-
-.pm-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 2px 8px; font-size: 11px; font-weight: 500;
-}
-.pm-badge-green { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
-.pm-badge-amber { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-border); }
-.pm-badge-red   { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red-border); }
-.pm-badge-blue  { background: var(--blue-dim);  color: var(--blue);  border: 1px solid var(--blue-border); }
-.pm-badge-gray  { background: var(--surface); color: var(--t3); border: 1px solid var(--border); }
-
-.pm-list-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 11px 20px; border-bottom: 1px solid var(--border);
-  transition: background .1s;
-}
-.pm-list-item:last-child { border-bottom: none; }
-.pm-list-item:hover { background: var(--surface); }
-.pm-list-item-left { display: flex; align-items: center; gap: 12px; }
-.pm-list-item-icon {
-  width: 28px; height: 28px;
-  background: var(--surface); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center; color: var(--t2); flex-shrink: 0;
-}
-.pm-list-item-name { font-size: 13px; font-weight: 500; }
-.pm-list-item-sub { font-size: 11px; color: var(--t3); margin-top: 2px; font-family: var(--mono); }
-.pm-list-item-actions { display: flex; gap: 6px; }
-
-.pm-console {
-  background: var(--bg); padding: 14px 20px;
-  font-family: var(--mono); font-size: 11.5px; line-height: 1.8;
-  max-height: 220px; overflow-y: auto;
-  border-top: 1px solid var(--border);
-}
-.pm-log-info   { color: var(--t2); }
-.pm-log-warn   { color: var(--amber); }
-.pm-log-error  { color: var(--red); }
-.pm-log-ts     { color: var(--t3); margin-right: 8px; }
-
-.pm-stats-row {
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  border-bottom: 1px solid var(--border);
-}
-.pm-stat-cell {
-  padding: 16px 20px; border-right: 1px solid var(--border);
-}
-.pm-stat-cell:last-child { border-right: none; }
-.pm-stat-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; }
-.pm-stat-val { font-size: 22px; font-weight: 300; letter-spacing: -0.5px; }
-
-.pm-section-actions {
-  padding: 14px 20px;
-  border-top: 1px solid var(--border);
-  display: flex; gap: 8px; justify-content: flex-end;
-  background: var(--bg);
-}
-
-.pm-ip-list { padding: 14px 20px; display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--border); }
-.pm-ip-chip {
-  display: flex; align-items: center; gap: 6px;
-  background: var(--surface); border: 1px solid var(--border);
-  padding: 4px 10px; font-family: var(--mono); font-size: 12px; color: var(--t2);
-}
-.pm-ip-chip button {
-  background: none; border: none; color: var(--t3); cursor: pointer;
-  display: flex; align-items: center; transition: color .15s;
-}
-.pm-ip-chip button:hover { color: var(--red); }
-.pm-ip-add { display: flex; gap: 8px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
-
-.pm-color-row { display: flex; align-items: center; gap: 10px; }
-.pm-color-swatch {
-  width: 28px; height: 28px;
-  border: 1px solid var(--border); cursor: pointer;
-  position: relative;
-}
-.pm-color-swatch input[type=color] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-}
-
-.pm-network-opts { display: flex; gap: 6px; }
-.pm-network-opt {
-  flex: 1; padding: 8px 10px;
-  background: var(--surface); border: 1px solid var(--border);
-  color: var(--t2); font-size: 12px; text-align: center;
-  cursor: pointer; transition: all .15s;
-}
-.pm-network-opt:hover { border-color: var(--border-hi); color: var(--t1); }
-.pm-network-opt.active { background: var(--blue-dim); border-color: var(--blue-border); color: var(--blue); }
-
-@keyframes pmEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.pm-enter { animation: pmEnter .25s cubic-bezier(.4,0,.2,1) both; }
-
-@media (max-width: 768px) {
-  .pm-layout { flex-direction: column; }
-  .pm-nav { width: 100%; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); position: static; }
-  .pm-nav-group { display: flex; padding: 0; }
-  .pm-nav-group-label { display: none; }
-  .pm-nav-item { white-space: nowrap; padding: 12px 14px; }
-  .pm-field { grid-template-columns: 1fr; gap: 8px; }
-}
-`;
-
 // Icons Component
 function Ico({ icon: Icon, size = 14, className = "", style = {} }: IcoProps) {
   return <Icon size={size} className={className} style={style} />;
@@ -442,11 +145,11 @@ function Ico({ icon: Icon, size = 14, className = "", style = {} }: IcoProps) {
 // Toggle Component
 function Toggle({ on, onChange, label = "" }: ToggleProps) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <div className={`pm-toggle ${on ? "on" : ""}`} onClick={onChange}>
-        <div className="pm-toggle-knob" />
+    <div className="flex items-center gap-2.5">
+      <div className={`w-[34px] h-[19px] bg-[#1c2330] border border-[#21262d] relative cursor-pointer flex-shrink-0 transition-colors duration-200 ${on ? "!bg-[#388bfd] !border-[#388bfd]" : ""}`} onClick={onChange}>
+        <div className={`absolute top-0.5 left-0.5 w-[13px] h-[13px] bg-[#8b949e] transition-transform duration-200 ${on ? "translate-x-[15px] bg-white" : ""}`} />
       </div>
-      {label && <span className="pm-toggle-label">{label}</span>}
+      {label && <span className="text-[12.5px] text-[#e6edf3] select-none">{label}</span>}
     </div>
   );
 }
@@ -454,12 +157,12 @@ function Toggle({ on, onChange, label = "" }: ToggleProps) {
 // Field Component
 function Field({ label, desc = "", children }: FieldProps) {
   return (
-    <div className="pm-field">
+    <div className="grid grid-cols-[220px_1fr] gap-5 py-3 px-5 border-b border-[#21262d] items-center max-[768px]:grid-cols-1 max-[768px]:gap-2">
       <div>
-        <div className="pm-field-label">{label}</div>
-        {desc && <div className="pm-field-desc">{desc}</div>}
+        <div className="text-[12.5px] font-medium text-[#8b949e]">{label}</div>
+        {desc && <div className="text-[11px] text-[#484f58] mt-0.5">{desc}</div>}
       </div>
-      <div className="pm-field-control">{children}</div>
+      <div className="flex items-center gap-2">{children}</div>
     </div>
   );
 }
@@ -467,14 +170,14 @@ function Field({ label, desc = "", children }: FieldProps) {
 // Card Component
 function Card({ title, icon: Icon, sub = "", children, actions = null }: CardProps) {
   return (
-    <div className="pm-card pm-enter" style={{ marginBottom: 16 }}>
-      <div className="pm-card-header">
+    <div className="bg-[#0d1117] border border-[#21262d] mb-4 animate-[pmEnter_0.25s_cubic-bezier(0.4,0,0.2,1)_both]">
+      <div className="px-5 py-3.5 border-b border-[#21262d] flex items-center justify-between">
         <div>
-          <div className="pm-card-title">
+          <div className="text-[13px] font-semibold flex items-center gap-2">
             {Icon && <Ico icon={Icon} size={14} />}
             {title}
           </div>
-          {sub && <div className="pm-card-sub">{sub}</div>}
+          {sub && <div className="text-[11px] text-[#484f58] mt-0.5">{sub}</div>}
         </div>
         {actions}
       </div>
@@ -492,13 +195,19 @@ function InfoBanner({ type = "blue", title, text }: InfoBannerProps) {
     red: FiAlertCircle
   };
   const Icon = iconMap[type];
+  const colors = {
+    blue: { bg: "bg-[rgba(56,139,253,0.08)]", border: "border-l-[#388bfd]" },
+    amber: { bg: "bg-[rgba(210,153,34,0.08)]", border: "border-l-[#d29922]" },
+    green: { bg: "bg-[rgba(57,211,83,0.08)]", border: "border-l-[#3fb950]" },
+    red: { bg: "bg-[rgba(248,81,73,0.08)]", border: "border-l-[#f85149]" }
+  };
 
   return (
-    <div className={`pm-info pm-info-${type}`} style={{ margin: "12px 20px" }}>
+    <div className={`flex items-start gap-2.5 p-3 my-3 mx-5 border-l-2 ${colors[type].bg} ${colors[type].border}`}>
       <Ico icon={Icon} size={14} style={{ color: `var(--${type})` }} />
       <div>
-        {title && <div className="pm-info-title">{title}</div>}
-        <div className="pm-info-text">{text}</div>
+        {title && <div className="text-xs font-semibold mb-0.5" style={{ color: `var(--${type})` }}>{title}</div>}
+        <div className="text-xs text-[#8b949e]">{text}</div>
       </div>
     </div>
   );
@@ -531,34 +240,34 @@ function TabGeneral({ s, set, notify }: TabProps) {
     <>
       <Card title="Informations générales" icon={FiSettings}>
         <Field label="Nom de la plateforme">
-          <input className="pm-input pm-input-w300" value={s.platformName} onChange={e => set("platformName", e.target.value)} />
+          <input className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd]" value={s.platformName} onChange={e => set("platformName", e.target.value)} />
         </Field>
         <Field label="Email de contact">
-          <input className="pm-input pm-input-w300" type="email" value={s.contactEmail} onChange={e => set("contactEmail", e.target.value)} />
+          <input className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd]" type="email" value={s.contactEmail} onChange={e => set("contactEmail", e.target.value)} />
         </Field>
         <Field label="Email support">
-          <input className="pm-input pm-input-w300" type="email" value={s.supportEmail} onChange={e => set("supportEmail", e.target.value)} />
+          <input className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd]" type="email" value={s.supportEmail} onChange={e => set("supportEmail", e.target.value)} />
         </Field>
       </Card>
       <Card title="Localisation" icon={FiGlobe}>
         <Field label="Fuseau horaire">
-          <select className="pm-select pm-input-w300" value={s.timezone} onChange={e => set("timezone", e.target.value)}>
+          <select className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd] cursor-pointer appearance-none" value={s.timezone} onChange={e => set("timezone", e.target.value)}>
             {["Europe/Paris", "Europe/London", "America/New_York", "America/Los_Angeles", "Asia/Tokyo"].map(tz => <option key={tz}>{tz}</option>)}
           </select>
         </Field>
         <Field label="Langue">
-          <select className="pm-select pm-input-w300" value={s.language} onChange={e => set("language", e.target.value)}>
+          <select className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd] cursor-pointer appearance-none" value={s.language} onChange={e => set("language", e.target.value)}>
             <option value="fr">Français</option><option value="en">English</option><option value="es">Español</option>
           </select>
         </Field>
         <Field label="Format de date">
-          <select className="pm-select pm-input-w300" value={s.dateFormat} onChange={e => set("dateFormat", e.target.value)}>
+          <select className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd] cursor-pointer appearance-none" value={s.dateFormat} onChange={e => set("dateFormat", e.target.value)}>
             {["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"].map(f => <option key={f}>{f}</option>)}
           </select>
         </Field>
-        <div className="pm-section-actions">
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Annulé", "amber")}>Annuler</button>
-          <button className="pm-btn pm-btn-primary" onClick={() => notify("Paramètres généraux sauvegardés", "green")}>
+        <div className="flex justify-end gap-2 p-4 pt-3 border-t border-[#21262d] bg-[#090c10]">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Annulé", "amber")}>Annuler</button>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => notify("Paramètres généraux sauvegardés", "green")}>
             <Ico icon={FiSave} size={12} /> Sauvegarder
           </button>
         </div>
@@ -571,16 +280,16 @@ function TabAppearance({ s, set, notify }: TabProps) {
   return (
     <Card title="Thème et affichage" icon={FiBell}>
       <Field label="Thème" desc="Apparence globale de l'interface">
-        <select className="pm-select pm-input-w300" value={s.theme} onChange={e => set("theme", e.target.value as SettingsState['theme'])}>
+        <select className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd] cursor-pointer appearance-none" value={s.theme} onChange={e => set("theme", e.target.value as SettingsState['theme'])}>
           <option value="dark">Sombre</option><option value="light">Clair</option><option value="system">Système</option>
         </select>
       </Field>
       <Field label="Couleur d'accentuation" desc="Teinte principale des éléments actifs">
-        <div className="pm-color-row">
-          <div className="pm-color-swatch" style={{ background: s.accentColor }}>
-            <input type="color" value={s.accentColor} onChange={e => set("accentColor", e.target.value)} />
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 border border-[#21262d] cursor-pointer relative" style={{ background: s.accentColor }}>
+            <input type="color" value={s.accentColor} onChange={e => set("accentColor", e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
           </div>
-          <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--t2)" }}>{s.accentColor}</span>
+          <span className="font-mono text-xs text-[#8b949e]">{s.accentColor}</span>
         </div>
       </Field>
       <Field label="Mode compact" desc="Réduit l'espacement des éléments">
@@ -589,8 +298,8 @@ function TabAppearance({ s, set, notify }: TabProps) {
       <Field label="Afficher les avatars" desc="Initiales ou photos de profil">
         <Toggle on={s.showAvatars} onChange={() => set("showAvatars", !s.showAvatars)} label={s.showAvatars ? "Activé" : "Désactivé"} />
       </Field>
-      <div className="pm-section-actions">
-        <button className="pm-btn pm-btn-primary" onClick={() => notify("Apparence mise à jour", "green")}>
+      <div className="flex justify-end gap-2 p-4 pt-3 border-t border-[#21262d] bg-[#090c10]">
+        <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => notify("Apparence mise à jour", "green")}>
           <Ico icon={FiSave} size={12} /> Sauvegarder
         </button>
       </div>
@@ -606,10 +315,10 @@ function TabNotifications({ s, set, notify }: TabProps) {
           <Toggle on={s.emailNotifications} onChange={() => set("emailNotifications", !s.emailNotifications)} label={s.emailNotifications ? "Activé" : "Désactivé"} />
         </Field>
         <Field label="Webhook Slack" desc="URL d'intégration Slack">
-          <input className="pm-input pm-input-w300 pm-input-mono" placeholder="https://hooks.slack.com/services/…" value={s.slackWebhook} onChange={e => set("slackWebhook", e.target.value)} />
+          <input className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 font-mono text-xs text-[#e6edf3] outline-none focus:border-[#388bfd]" placeholder="https://hooks.slack.com/services/…" value={s.slackWebhook} onChange={e => set("slackWebhook", e.target.value)} />
         </Field>
         <Field label="Webhook Discord" desc="URL d'intégration Discord">
-          <input className="pm-input pm-input-w300 pm-input-mono" placeholder="https://discord.com/api/webhooks/…" value={s.discordWebhook} onChange={e => set("discordWebhook", e.target.value)} />
+          <input className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 font-mono text-xs text-[#e6edf3] outline-none focus:border-[#388bfd]" placeholder="https://discord.com/api/webhooks/…" value={s.discordWebhook} onChange={e => set("discordWebhook", e.target.value)} />
         </Field>
       </Card>
       <Card title="Événements déclencheurs" icon={FiZap}>
@@ -617,9 +326,9 @@ function TabNotifications({ s, set, notify }: TabProps) {
         <Field label="Nouvelle inscription"><Toggle on={s.notifySignup} onChange={() => set("notifySignup", !s.notifySignup)} label={s.notifySignup ? "Activé" : "Désactivé"} /></Field>
         <Field label="Anomalie système"><Toggle on={s.notifySystem} onChange={() => set("notifySystem", !s.notifySystem)} label={s.notifySystem ? "Activé" : "Désactivé"} /></Field>
         <Field label="Expiration de licence" desc="Alerte 30 jours avant expiration"><Toggle on={s.notifyExpiry} onChange={() => set("notifyExpiry", !s.notifyExpiry)} label={s.notifyExpiry ? "Activé" : "Désactivé"} /></Field>
-        <div className="pm-section-actions">
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Test envoyé sur Slack", "blue")}><Ico icon={FiZap} size={12} /> Tester</button>
-          <button className="pm-btn pm-btn-primary" onClick={() => notify("Notifications sauvegardées", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
+        <div className="flex justify-end gap-2 p-4 pt-3 border-t border-[#21262d] bg-[#090c10]">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Test envoyé sur Slack", "blue")}><Ico icon={FiZap} size={12} /> Tester</button>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => notify("Notifications sauvegardées", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
         </div>
       </Card>
     </>
@@ -637,41 +346,39 @@ function TabSecurity({ s, set, notify }: TabProps) {
           <Toggle on={s.twoFactorAuth} onChange={() => set("twoFactorAuth", !s.twoFactorAuth)} label={s.twoFactorAuth ? "Activé" : "Désactivé"} />
         </Field>
         <Field label="Durée de session" desc="Déconnexion automatique après inactivité">
-          <select className="pm-select pm-input-w200" value={s.sessionTimeout} onChange={e => set("sessionTimeout", e.target.value)}>
+          <select className="w-full max-w-[200px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd] cursor-pointer appearance-none" value={s.sessionTimeout} onChange={e => set("sessionTimeout", e.target.value)}>
             {["2", "4", "8", "12", "24"].map(h => <option key={h} value={h}>{h} heures</option>)}
           </select>
         </Field>
         <Field label="Politique mot de passe" desc="Complexité minimale exigée">
-          <select className="pm-select pm-input-w200" value={s.passwordPolicy} onChange={e => set("passwordPolicy", e.target.value)}>
-            <option value="basic">Basique (6 car.)</option>
-            <option value="medium">Moyen (8 car. + chiffre)</option>
-            <option value="strong">Fort (12 car. + symboles)</option>
+          <select className="w-full max-w-[200px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd] cursor-pointer appearance-none" value={s.passwordPolicy} onChange={e => set("passwordPolicy", e.target.value)}>
+            <option value="basic">Basique (6 car.)</option><option value="medium">Moyen (8 car. + chiffre)</option><option value="strong">Fort (12 car. + symboles)</option>
           </select>
         </Field>
         <Field label="Tentatives max de connexion" desc="Avant blocage du compte">
-          <input className="pm-input pm-input-w200" type="number" min="3" max="20" value={s.maxLoginAttempts} onChange={e => set("maxLoginAttempts", parseInt(e.target.value))} />
+          <input className="w-full max-w-[200px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd]" type="number" min="3" max="20" value={s.maxLoginAttempts} onChange={e => set("maxLoginAttempts", parseInt(e.target.value))} />
         </Field>
       </Card>
 
       <Card title="Restriction d'accès IP" icon={FiLock} sub="Seules ces plages IP peuvent accéder au dashboard">
-        <div className="pm-ip-list">
+        <div className="flex flex-wrap gap-1.5 p-3.5 border-b border-[#21262d]">
           {ips.map(ip => (
-            <div className="pm-ip-chip" key={ip}>
+            <div key={ip} className="flex items-center gap-1.5 bg-[#161b22] border border-[#21262d] px-2.5 py-1 font-mono text-xs text-[#8b949e]">
               {ip}
-              <button onClick={() => setIps(ips.filter(i => i !== ip))}><Ico icon={FiX} size={10} /></button>
+              <button onClick={() => setIps(ips.filter(i => i !== ip))} className="bg-none border-none text-[#484f58] cursor-pointer flex items-center transition-colors hover:text-[#f85149]"><Ico icon={FiX} size={10} /></button>
             </div>
           ))}
-          {ips.length === 0 && <span style={{ fontSize: 12, color: "var(--t3)" }}>Aucune restriction — accès depuis toutes les IP</span>}
+          {ips.length === 0 && <span className="text-xs text-[#484f58]">Aucune restriction — accès depuis toutes les IP</span>}
         </div>
-        <div className="pm-ip-add">
-          <input className="pm-input pm-input-mono" style={{ maxWidth: 220 }} placeholder="192.168.1.0/24" value={ipInput} onChange={e => setIpInput(e.target.value)}
+        <div className="flex gap-2 p-3 border-b border-[#21262d]">
+          <input className="bg-[#090c10] border border-[#21262d] px-3 py-1.5 font-mono text-xs text-[#e6edf3] outline-none focus:border-[#388bfd] max-w-[220px]" placeholder="192.168.1.0/24" value={ipInput} onChange={e => setIpInput(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && ipInput) { setIps([...ips, ipInput]); setIpInput(""); }}} />
-          <button className="pm-btn pm-btn-ghost" onClick={() => { if (ipInput) { setIps([...ips, ipInput]); setIpInput(""); }}}>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => { if (ipInput) { setIps([...ips, ipInput]); setIpInput(""); }}}>
             <Ico icon={FiPlus} size={12} /> Ajouter
           </button>
         </div>
-        <div className="pm-section-actions">
-          <button className="pm-btn pm-btn-primary" onClick={() => notify("Paramètres sécurité sauvegardés", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
+        <div className="flex justify-end gap-2 p-4 pt-3 border-t border-[#21262d] bg-[#090c10]">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => notify("Paramètres sécurité sauvegardés", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
         </div>
       </Card>
 
@@ -680,21 +387,21 @@ function TabSecurity({ s, set, notify }: TabProps) {
           { id: "USB-A3F2B1", name: "Clé Licence Principale", lastUsed: "Aujourd'hui 14:23" },
           { id: "USB-D7E5F3", name: "Clé Admin Backup", lastUsed: "15 Jan 2026" },
         ].map(usb => (
-          <div className="pm-list-item" key={usb.id}>
-            <div className="pm-list-item-left">
-              <div className="pm-list-item-icon"><Ico icon={FiServer} size={14} /></div>
+          <div key={usb.id} className="flex items-center justify-between p-2.5 px-5 border-b border-[#21262d] hover:bg-[#161b22] transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 bg-[#161b22] border border-[#21262d] flex items-center justify-center text-[#8b949e] flex-shrink-0"><Ico icon={FiServer} size={14} /></div>
               <div>
-                <div className="pm-list-item-name">{usb.name}</div>
-                <div className="pm-list-item-sub">ID: {usb.id} · Dernière utilis. : {usb.lastUsed}</div>
+                <div className="text-[13px] font-medium">{usb.name}</div>
+                <div className="text-[11px] text-[#484f58] font-mono">ID: {usb.id} · Dernière utilis. : {usb.lastUsed}</div>
               </div>
             </div>
-            <div className="pm-list-item-actions">
-              <button className="pm-btn pm-btn-danger pm-btn-sm" onClick={() => notify("Clé USB révoquée", "red")}><Ico icon={FiTrash2} size={11} /> Révoquer</button>
+            <div className="flex gap-1.5">
+              <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:bg-[rgba(248,81,73,0.08)] hover:border-[rgba(248,81,73,0.25)] hover:text-[#f85149]" onClick={() => notify("Clé USB révoquée", "red")}><Ico icon={FiTrash2} size={11} /> Révoquer</button>
             </div>
           </div>
         ))}
-        <div style={{ padding: "12px 20px", borderTop: "1px solid var(--border)" }}>
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Branchez une clé USB pour l'enregistrer", "blue")}><Ico icon={FiPlus} size={12} /> Enregistrer une clé USB</button>
+        <div className="p-3 pt-2.5 border-t border-[#21262d]">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Branchez une clé USB pour l'enregistrer", "blue")}><Ico icon={FiPlus} size={12} /> Enregistrer une clé USB</button>
         </div>
       </Card>
     </>
@@ -712,23 +419,23 @@ function TabRoles({ notify }: TabWithoutStateProps) {
   return (
     <Card title="Rôles & Permissions" icon={FiUsers} sub="Gestion des droits d'accès par rôle">
       {roles.map(r => (
-        <div className="pm-list-item" key={r.name}>
-          <div className="pm-list-item-left">
-            <div className="pm-list-item-icon" style={{ borderColor: r.color + "40", color: r.color }}>
+        <div key={r.name} className="flex items-center justify-between p-2.5 px-5 border-b border-[#21262d] hover:bg-[#161b22] transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 bg-[#161b22] border border-[#21262d] flex items-center justify-center flex-shrink-0" style={{ borderColor: r.color + "40", color: r.color }}>
               <Ico icon={FiUsers} size={13} style={{ color: r.color }} />
             </div>
             <div>
-              <div className="pm-list-item-name">{r.name}</div>
-              <div className="pm-list-item-sub">{r.permissions} · {r.users} utilisateur{r.users > 1 ? "s" : ""}</div>
+              <div className="text-[13px] font-medium">{r.name}</div>
+              <div className="text-[11px] text-[#484f58]">{r.permissions} · {r.users} utilisateur{r.users > 1 ? "s" : ""}</div>
             </div>
           </div>
-          <div className="pm-list-item-actions">
-            <button className="pm-btn pm-btn-ghost pm-btn-sm" onClick={() => notify(`Édition du rôle ${r.name}`, "blue")}>Éditer</button>
+          <div className="flex gap-1.5">
+            <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify(`Édition du rôle ${r.name}`, "blue")}>Éditer</button>
           </div>
         </div>
       ))}
-      <div style={{ padding: "12px 20px", borderTop: "1px solid var(--border)" }}>
-        <button className="pm-btn pm-btn-ghost" onClick={() => notify("Créer un nouveau rôle", "blue")}><Ico icon={FiPlus} size={12} /> Créer un rôle</button>
+      <div className="p-3 pt-2.5 border-t border-[#21262d]">
+        <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Créer un nouveau rôle", "blue")}><Ico icon={FiPlus} size={12} /> Créer un rôle</button>
       </div>
     </Card>
   );
@@ -743,32 +450,31 @@ function TabApi({ s, set, notify }: TabProps) {
           <Toggle on={s.apiEnabled} onChange={() => set("apiEnabled", !s.apiEnabled)} label={s.apiEnabled ? "Activée" : "Désactivée"} />
         </Field>
         <Field label="Rate limit" desc="Requêtes max par minute par clé">
-          <input className="pm-input pm-input-w200" type="number" value={s.rateLimit} onChange={e => set("rateLimit", parseInt(e.target.value))} />
+          <input className="w-full max-w-[200px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd]" type="number" value={s.rateLimit} onChange={e => set("rateLimit", parseInt(e.target.value))} />
         </Field>
         <Field label="Autoriser CORS" desc="Cross-Origin Resource Sharing">
           <Toggle on={s.allowCors} onChange={() => set("allowCors", !s.allowCors)} label={s.allowCors ? "Activé" : "Désactivé"} />
         </Field>
         <Field label="URL Webhook globale" desc="Recevra tous les événements plateforme">
-          <input className="pm-input pm-input-w300 pm-input-mono" placeholder="https://…" value={s.webhookUrl} onChange={e => set("webhookUrl", e.target.value)} />
+          <input className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 font-mono text-xs text-[#e6edf3] outline-none focus:border-[#388bfd]" placeholder="https://…" value={s.webhookUrl} onChange={e => set("webhookUrl", e.target.value)} />
         </Field>
       </Card>
       <Card title="Clé API maître" icon={FiKey} sub="Clé d'accès super-admin pour intégrations critiques">
         <InfoBanner type="amber" title="Attention" text="Cette clé dispose d'un accès complet en lecture/écriture. Ne la divulguez jamais." />
         <Field label="Clé secrète">
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input className="pm-input pm-input-mono" style={{ maxWidth: 280 }}
-              type={showKey ? "text" : "password"} readOnly value="sk_live_xK9mP2...4rQwBz8s" />
-            <button className="pm-btn pm-btn-ghost pm-btn-sm" onClick={() => setShowKey(!showKey)}>
+          <div className="flex gap-2 items-center">
+            <input className="bg-[#090c10] border border-[#21262d] px-3 py-1.5 font-mono text-xs text-[#e6edf3] outline-none focus:border-[#388bfd] max-w-[280px]" type={showKey ? "text" : "password"} readOnly value="sk_live_xK9mP2...4rQwBz8s" />
+            <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => setShowKey(!showKey)}>
               {showKey ? <Ico icon={FiEyeOff} size={12} /> : <Ico icon={FiEye} size={12} />} {showKey ? "Masquer" : "Afficher"}
             </button>
-            <button className="pm-btn pm-btn-ghost pm-btn-sm" onClick={() => { navigator.clipboard?.writeText("sk_live_xK9mP2...4rQwBz8s"); notify("Clé copiée", "green"); }}>
+            <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => { navigator.clipboard?.writeText("sk_live_xK9mP2...4rQwBz8s"); notify("Clé copiée", "green"); }}>
               <Ico icon={FiCopy} size={12} /> Copier
             </button>
           </div>
         </Field>
-        <div className="pm-section-actions">
-          <button className="pm-btn pm-btn-danger" onClick={() => notify("Clé régénérée — ancienne clé invalidée", "red")}><Ico icon={FiRefreshCw} size={12} /> Régénérer</button>
-          <button className="pm-btn pm-btn-primary" onClick={() => notify("Config API sauvegardée", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
+        <div className="flex justify-end gap-2 p-4 pt-3 border-t border-[#21262d] bg-[#090c10]">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:bg-[rgba(248,81,73,0.08)] hover:border-[rgba(248,81,73,0.25)] hover:text-[#f85149]" onClick={() => notify("Clé régénérée — ancienne clé invalidée", "red")}><Ico icon={FiRefreshCw} size={12} /> Régénérer</button>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => notify("Config API sauvegardée", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
         </div>
       </Card>
     </>
@@ -786,38 +492,35 @@ function TabSync({ s, set, notify }: TabProps) {
           <Toggle on={s.autoSync} onChange={() => set("autoSync", !s.autoSync)} label={s.autoSync ? "Activée" : "Désactivée"} />
         </Field>
         <Field label="Réseau autorisé" desc="Conditions réseau pour la synchronisation">
-          <div className="pm-network-opts">
+          <div className="flex gap-1.5">
             {[["always", "Toujours"], ["wifi", "Wi-Fi uniquement"], ["manual", "Manuel"]].map(([v, l]) => (
-              <div key={v} className={`pm-network-opt ${network === v ? "active" : ""}`} onClick={() => setNetwork(v)}>{l}</div>
+              <div key={v} className={`flex-1 py-2 px-2.5 bg-[#161b22] border border-[#21262d] text-[#8b949e] text-xs text-center cursor-pointer transition-all duration-150 hover:border-[#30363d] hover:text-[#e6edf3] ${network === v ? "bg-[rgba(56,139,253,0.08)] border-[rgba(56,139,253,0.25)] text-[#388bfd]" : ""}`} onClick={() => setNetwork(v)}>{l}</div>
             ))}
           </div>
         </Field>
         <Field label="Bande passante max" desc="Limite de débit en KB/s (0 = illimité)">
-          <input className="pm-input pm-input-w200 pm-input-mono" type="number" defaultValue="0" placeholder="KB/s" />
+          <input className="w-full max-w-[200px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 font-mono text-xs text-[#e6edf3] outline-none focus:border-[#388bfd]" type="number" defaultValue="0" placeholder="KB/s" />
         </Field>
         <Field label="Résolution de conflits" desc="Stratégie en cas de modification simultanée">
-          <select className="pm-select pm-input-w200">
-            <option>Automatique (LWW)</option>
-            <option>Manuel</option>
-            <option>Règles personnalisées</option>
+          <select className="w-full max-w-[200px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd] cursor-pointer appearance-none">
+            <option>Automatique (LWW)</option><option>Manuel</option><option>Règles personnalisées</option>
           </select>
         </Field>
       </Card>
 
-      <Card title="Synchronisation manuelle" icon={FiZap}
-        actions={syncing ? <span style={{ fontSize: 11, color: "var(--blue)", fontFamily: "var(--mono)" }}>Sync en cours…</span> : null}>
-        <div style={{ padding: "14px 20px", display: "flex", gap: 8 }}>
-          <button className="pm-btn pm-btn-primary" disabled={syncing} onClick={() => { setSyncing(true); setTimeout(() => { setSyncing(false); notify("Synchronisation terminée — 245 enregistrements", "green"); }, 2500); }}>
+      <Card title="Synchronisation manuelle" icon={FiZap} actions={syncing ? <span className="text-[11px] text-[#388bfd] font-mono">Sync en cours…</span> : null}>
+        <div className="p-3.5 flex gap-2">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" disabled={syncing} onClick={() => { setSyncing(true); setTimeout(() => { setSyncing(false); notify("Synchronisation terminée — 245 enregistrements", "green"); }, 2500); }}>
             <Ico icon={FiRefreshCw} size={12} /> Synchroniser maintenant
           </button>
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Dry-run : 89 enregistrements seraient synchronisés", "blue")}>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Dry-run : 89 enregistrements seraient synchronisés", "blue")}>
             <Ico icon={FiZap} size={12} /> Test à blanc (dry-run)
           </button>
         </div>
       </Card>
 
       <Card title="Journal de synchronisation" icon={FiActivity}>
-        <div className="pm-console">
+        <div className="bg-[#090c10] p-3.5 font-mono text-[11.5px] leading-relaxed max-h-[220px] overflow-y-auto border-t border-[#21262d]">
           {[
             { level: 'info' as const, timestamp: "2026-03-08 14:32", message: "Synchronisation démarrée — 245 enregistrements" },
             { level: 'info' as const, timestamp: "2026-03-08 14:32", message: "Synchronisation terminée en 1.4s" },
@@ -825,7 +528,7 @@ function TabSync({ s, set, notify }: TabProps) {
             { level: 'info' as const, timestamp: "2026-03-07 14:35", message: "Synchronisation démarrée — 89 enregistrements" },
             { level: 'info' as const, timestamp: "2026-03-07 14:35", message: "Synchronisation terminée en 0.8s" },
           ].map((l, i) => (
-            <div key={i} className={`pm-log-${l.level}`}><span className="pm-log-ts">[{l.timestamp}]</span>{l.message}</div>
+            <div key={i} className={`${l.level === 'info' ? 'text-[#8b949e]' : l.level === 'warn' ? 'text-[#d29922]' : 'text-[#f85149]'}`}><span className="text-[#484f58] mr-2">[{l.timestamp}]</span>{l.message}</div>
           ))}
         </div>
       </Card>
@@ -837,28 +540,28 @@ function TabBackup({ notify }: TabWithoutStateProps) {
   return (
     <>
       <Card title="Sauvegarde rapide" icon={FiHardDrive}>
-        <div style={{ padding: "16px 20px", display: "flex", gap: 8 }}>
-          <button className="pm-btn pm-btn-primary" onClick={() => notify("Export complet en cours…", "blue")}><Ico icon={FiDownload} size={12} /> Export complet</button>
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Export incrémental en cours…", "blue")}><Ico icon={FiDownload} size={12} /> Export incrémental</button>
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Export SQL en cours…", "blue")}><Ico icon={FiDownload} size={12} /> Export SQL</button>
+        <div className="p-4 flex gap-2">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => notify("Export complet en cours…", "blue")}><Ico icon={FiDownload} size={12} /> Export complet</button>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Export incrémental en cours…", "blue")}><Ico icon={FiDownload} size={12} /> Export incrémental</button>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Export SQL en cours…", "blue")}><Ico icon={FiDownload} size={12} /> Export SQL</button>
         </div>
       </Card>
 
       <Card title="Planification automatique" icon={FiActivity}>
         <Field label="Sauvegardes automatiques"><Toggle on={true} onChange={() => {}} label="Activées" /></Field>
         <Field label="Fréquence">
-          <select className="pm-select pm-input-w200">
+          <select className="w-full max-w-[200px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd] cursor-pointer appearance-none">
             <option>Quotidien</option><option>Hebdomadaire</option><option>Mensuel</option>
           </select>
         </Field>
         <Field label="Heure d'exécution">
-          <input className="pm-input pm-input-w200 pm-input-mono" type="time" defaultValue="02:00" />
+          <input className="w-full max-w-[200px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 font-mono text-xs text-[#e6edf3] outline-none focus:border-[#388bfd]" type="time" defaultValue="02:00" />
         </Field>
         <Field label="Rétention" desc="Nombre de sauvegardes conservées">
-          <input className="pm-input pm-input-w200 pm-input-mono" type="number" defaultValue="30" />
+          <input className="w-full max-w-[200px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 font-mono text-xs text-[#e6edf3] outline-none focus:border-[#388bfd]" type="number" defaultValue="30" />
         </Field>
-        <div className="pm-section-actions">
-          <button className="pm-btn pm-btn-primary" onClick={() => notify("Planification sauvegardée", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
+        <div className="flex justify-end gap-2 p-4 pt-3 border-t border-[#21262d] bg-[#090c10]">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => notify("Planification sauvegardée", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
         </div>
       </Card>
 
@@ -867,19 +570,19 @@ function TabBackup({ notify }: TabWithoutStateProps) {
           { path: "C:\\Backups\\Scolarys", lastBackup: "08 Mar 2026 · 02:00", size: "2.3 GB" },
           { path: "D:\\Archives\\Scolarys", lastBackup: "07 Mar 2026 · 02:00", size: "2.1 GB" },
         ].map(loc => (
-          <div className="pm-list-item" key={loc.path}>
-            <div className="pm-list-item-left">
-              <div className="pm-list-item-icon"><Ico icon={FiHardDrive} size={13} /></div>
+          <div key={loc.path} className="flex items-center justify-between p-2.5 px-5 border-b border-[#21262d] hover:bg-[#161b22] transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 bg-[#161b22] border border-[#21262d] flex items-center justify-center text-[#8b949e] flex-shrink-0"><Ico icon={FiHardDrive} size={13} /></div>
               <div>
-                <div className="pm-list-item-name" style={{ fontFamily: "var(--mono)", fontSize: 12 }}>{loc.path}</div>
-                <div className="pm-list-item-sub">{loc.lastBackup} · {loc.size}</div>
+                <div className="font-mono text-xs">{loc.path}</div>
+                <div className="text-[11px] text-[#484f58]">{loc.lastBackup} · {loc.size}</div>
               </div>
             </div>
-            <button className="pm-btn pm-btn-danger pm-btn-sm"><Ico icon={FiTrash2} size={11} /></button>
+            <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:bg-[rgba(248,81,73,0.08)] hover:border-[rgba(248,81,73,0.25)] hover:text-[#f85149]"><Ico icon={FiTrash2} size={11} /></button>
           </div>
         ))}
-        <div style={{ padding: "12px 20px", borderTop: "1px solid var(--border)" }}>
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Sélectionner un emplacement", "blue")}><Ico icon={FiPlus} size={12} /> Ajouter un emplacement</button>
+        <div className="p-3 pt-2.5 border-t border-[#21262d]">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Sélectionner un emplacement", "blue")}><Ico icon={FiPlus} size={12} /> Ajouter un emplacement</button>
         </div>
       </Card>
     </>
@@ -889,18 +592,18 @@ function TabBackup({ notify }: TabWithoutStateProps) {
 function TabBilling({ s, set, notify }: TabProps) {
   return (
     <Card title="Informations de facturation" icon={FiCreditCard}>
-      <Field label="Nom de l'entreprise"><input className="pm-input pm-input-w300" value={s.companyName} onChange={e => set("companyName", e.target.value)} /></Field>
-      <Field label="Numéro de TVA"><input className="pm-input pm-input-w300 pm-input-mono" value={s.vatNumber} onChange={e => set("vatNumber", e.target.value)} /></Field>
+      <Field label="Nom de l'entreprise"><input className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd]" value={s.companyName} onChange={e => set("companyName", e.target.value)} /></Field>
+      <Field label="Numéro de TVA"><input className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 font-mono text-xs text-[#e6edf3] outline-none focus:border-[#388bfd]" value={s.vatNumber} onChange={e => set("vatNumber", e.target.value)} /></Field>
       <Field label="Adresse de facturation">
-        <textarea className="pm-textarea pm-input-w300" value={s.address} onChange={e => set("address", e.target.value)} />
+        <textarea className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd] resize-vertical min-h-[64px]" value={s.address} onChange={e => set("address", e.target.value)} />
       </Field>
-      <Field label="Email de facturation"><input className="pm-input pm-input-w300" type="email" value={s.billingEmail} onChange={e => set("billingEmail", e.target.value)} /></Field>
+      <Field label="Email de facturation"><input className="w-full max-w-[300px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd]" type="email" value={s.billingEmail} onChange={e => set("billingEmail", e.target.value)} /></Field>
       <Field label="Facturation automatique" desc="Génère et envoie les factures automatiquement">
         <Toggle on={s.autoInvoice} onChange={() => set("autoInvoice", !s.autoInvoice)} label={s.autoInvoice ? "Activée" : "Désactivée"} />
       </Field>
-      <div className="pm-section-actions">
-        <button className="pm-btn pm-btn-ghost" onClick={() => notify("Facture de test envoyée", "blue")}><Ico icon={FiMail} size={12} /> Tester</button>
-        <button className="pm-btn pm-btn-primary" onClick={() => notify("Facturation sauvegardée", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
+      <div className="flex justify-end gap-2 p-4 pt-3 border-t border-[#21262d] bg-[#090c10]">
+        <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Facture de test envoyée", "blue")}><Ico icon={FiMail} size={12} /> Tester</button>
+        <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => notify("Facturation sauvegardée", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
       </div>
     </Card>
   );
@@ -920,28 +623,28 @@ function TabLogs({ notify }: TabWithoutStateProps) {
     <>
       <Card title="Journaux système" icon={FiActivity}
         actions={
-          <div style={{ display: "flex", gap: 6 }}>
-            <button className="pm-btn pm-btn-ghost pm-btn-sm" onClick={() => notify("Logs exportés", "green")}><Ico icon={FiDownload} size={12} /> Exporter</button>
-            <button className="pm-btn pm-btn-ghost pm-btn-sm" onClick={() => notify("Logs envoyés au support", "blue")}><Ico icon={FiUpload} size={12} /> Envoyer au support</button>
+          <div className="flex gap-1.5">
+            <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Logs exportés", "green")}><Ico icon={FiDownload} size={12} /> Exporter</button>
+            <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Logs envoyés au support", "blue")}><Ico icon={FiUpload} size={12} /> Envoyer au support</button>
           </div>
         }
       >
         <Field label="Niveau de détail">
-          <div style={{ display: "flex", gap: 6 }}>
+          <div className="flex gap-1.5">
             {["Info", "Warn", "Debug", "Error"].map(l => (
-              <div key={l} className={`pm-network-opt ${l === "Info" ? "active" : ""}`} style={{ flex: "none", padding: "6px 14px" }}>{l}</div>
+              <div key={l} className={`flex-none py-1.5 px-3.5 bg-[#161b22] border border-[#21262d] text-[#8b949e] text-xs text-center cursor-pointer transition-all duration-150 hover:border-[#30363d] hover:text-[#e6edf3] ${l === "Info" ? "bg-[rgba(56,139,253,0.08)] border-[rgba(56,139,253,0.25)] text-[#388bfd]" : ""}`}>{l}</div>
             ))}
           </div>
         </Field>
-        <div className="pm-console">
+        <div className="bg-[#090c10] p-3.5 font-mono text-[11.5px] leading-relaxed max-h-[220px] overflow-y-auto border-t border-[#21262d]">
           {logs.map((l, i) => (
-            <div key={i} className={`pm-log-${l.level}`}><span className="pm-log-ts">[{l.timestamp}]</span>{l.message}</div>
+            <div key={i} className={`${l.level === 'info' ? 'text-[#8b949e]' : l.level === 'warn' ? 'text-[#d29922]' : 'text-[#f85149]'}`}><span className="text-[#484f58] mr-2">[{l.timestamp}]</span>{l.message}</div>
           ))}
         </div>
       </Card>
 
       <Card title="Informations de diagnostic" icon={FiActivity}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 1, background: "var(--border)" }}>
+        <div className="grid grid-cols-2 gap-px bg-[#21262d]">
           {[
             ["Version application", "v2.4.1"],
             ["Schéma base de données", "v1.8"],
@@ -950,9 +653,9 @@ function TabLogs({ notify }: TabWithoutStateProps) {
             ["Uptime", "18j 04h 22min"],
             ["Node.js", "v20.11.0"],
           ].map(([k, v]) => (
-            <div key={k} style={{ background: "var(--panel)", padding: "12px 20px" }}>
-              <div className="pm-stat-label">{k}</div>
-              <div style={{ fontFamily: "var(--mono)", fontSize: 13, color: "var(--t1)", marginTop: 4 }}>{v}</div>
+            <div key={k} className="bg-[#0d1117] p-3 px-5">
+              <div className="text-[10px] font-semibold tracking-[1px] uppercase text-[#484f58]">{k}</div>
+              <div className="font-mono text-[13px] text-[#e6edf3] mt-1">{v}</div>
             </div>
           ))}
         </div>
@@ -962,9 +665,9 @@ function TabLogs({ notify }: TabWithoutStateProps) {
         <Field label="Télémétrie anonymisée" desc="Aide à améliorer le produit sans données personnelles">
           <Toggle on={false} onChange={() => {}} label="Désactivée" />
         </Field>
-        <div style={{ padding: "12px 20px", display: "flex", gap: 8 }}>
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Export RGPD en cours", "blue")}><Ico icon={FiDownload} size={12} /> Exporter mes données (RGPD)</button>
-          <button className="pm-btn pm-btn-danger" onClick={() => notify("Purge planifiée", "red")}><Ico icon={FiTrash2} size={12} /> Purger les données</button>
+        <div className="flex gap-2 p-3.5">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Export RGPD en cours", "blue")}><Ico icon={FiDownload} size={12} /> Exporter mes données (RGPD)</button>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:bg-[rgba(248,81,73,0.08)] hover:border-[rgba(248,81,73,0.25)] hover:text-[#f85149]" onClick={() => notify("Purge planifiée", "red")}><Ico icon={FiTrash2} size={12} /> Purger les données</button>
         </div>
       </Card>
     </>
@@ -974,32 +677,29 @@ function TabLogs({ notify }: TabWithoutStateProps) {
 function TabAdvanced({ notify }: TabWithoutStateProps) {
   return (
     <>
-      <InfoBanner type="amber" title="Mode Expert"
-        text="Ces paramètres sont réservés aux utilisateurs avancés. Une mauvaise configuration peut affecter le fonctionnement de la plateforme." />
+      <InfoBanner type="amber" title="Mode Expert" text="Ces paramètres sont réservés aux utilisateurs avancés. Une mauvaise configuration peut affecter le fonctionnement de la plateforme." />
       <Card title="Cryptographie" icon={FiLock}>
         <Field label="Algorithme de chiffrement" desc="Chiffrement des données locales">
-          <select className="pm-select pm-input-w200">
-            <option>AES-256-GCM</option>
-            <option>ChaCha20-Poly1305</option>
+          <select className="w-full max-w-[200px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd] cursor-pointer appearance-none">
+            <option>AES-256-GCM</option><option>ChaCha20-Poly1305</option>
           </select>
         </Field>
         <Field label="Algorithme de signature" desc="Vérification des licences et clés">
-          <select className="pm-select pm-input-w200">
-            <option>Ed25519</option>
-            <option>RSA-4096</option>
+          <select className="w-full max-w-[200px] bg-[#090c10] border border-[#21262d] px-3 py-1.5 text-[#e6edf3] text-[13px] outline-none focus:border-[#388bfd] cursor-pointer appearance-none">
+            <option>Ed25519</option><option>RSA-4096</option>
           </select>
         </Field>
-        <div className="pm-section-actions">
-          <button className="pm-btn pm-btn-primary" onClick={() => notify("Paramètres crypto sauvegardés", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
+        <div className="flex justify-end gap-2 p-4 pt-3 border-t border-[#21262d] bg-[#090c10]">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => notify("Paramètres crypto sauvegardés", "green")}><Ico icon={FiSave} size={12} /> Sauvegarder</button>
         </div>
       </Card>
       <Card title="Débogage & Reset" icon={FiTerminal}>
-        <div style={{ padding: "14px 20px", display: "flex", flexWrap: "wrap", gap: 8 }}>
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Change-log affiché", "blue")}><Ico icon={FiActivity} size={12} /> Afficher le change-log</button>
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Conflits résolus", "amber")}><Ico icon={FiZap} size={12} /> Forcer résolution conflits</button>
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Import SQL en cours", "blue")}><Ico icon={FiUpload} size={12} /> Importer SQL</button>
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Export SQL en cours", "blue")}><Ico icon={FiDownload} size={12} /> Exporter SQL</button>
-          <button className="pm-btn pm-btn-danger" onClick={() => notify("Historique sync réinitialisé", "red")}><Ico icon={FiTrash2} size={12} /> Reset historique sync</button>
+        <div className="p-3.5 flex flex-wrap gap-2">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Change-log affiché", "blue")}><Ico icon={FiActivity} size={12} /> Afficher le change-log</button>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Conflits résolus", "amber")}><Ico icon={FiZap} size={12} /> Forcer résolution conflits</button>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Import SQL en cours", "blue")}><Ico icon={FiUpload} size={12} /> Importer SQL</button>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Export SQL en cours", "blue")}><Ico icon={FiDownload} size={12} /> Exporter SQL</button>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:bg-[rgba(248,81,73,0.08)] hover:border-[rgba(248,81,73,0.25)] hover:text-[#f85149]" onClick={() => notify("Historique sync réinitialisé", "red")}><Ico icon={FiTrash2} size={12} /> Reset historique sync</button>
         </div>
       </Card>
     </>
@@ -1069,45 +769,49 @@ export default function Parametres({ onNotify }: ParametresProps) {
   };
 
   return (
-    <div className="pm-root">
-      <style>{CSS}</style>
+    <div className="font-['IBM_Plex_Sans'] text-[13px] text-[#e6edf3] antialiased">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+        @keyframes pmEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
 
       {/* Topbar */}
-      <div className="pm-header">
+      <div className="flex items-start justify-between mb-6 pb-5 border-b border-[#21262d] flex-wrap gap-4">
         <div className="pm-header-left">
-          <div className="pm-header-title">
-            <div className="pm-header-icon"><Ico icon={FiSettings} size={15} /></div>
+          <div className="text-lg font-semibold tracking-[-0.4px] flex items-center gap-2.5 mb-1">
+            <div className="w-[30px] h-[30px] bg-[rgba(56,139,253,0.08)] border border-[rgba(56,139,253,0.25)] flex items-center justify-center text-[#388bfd]"><Ico icon={FiSettings} size={15} /></div>
             Paramètres
           </div>
-          <div className="pm-header-sub">Configuration de la plateforme Scolarys</div>
+          <div className="text-xs text-[#484f58] font-mono">Configuration de la plateforme Scolarys</div>
         </div>
-        <div className="pm-header-actions">
-          <button className="pm-btn pm-btn-ghost" onClick={() => { setS(INIT); notify("Paramètres réinitialisés", "amber"); }}>
+        <div className="flex gap-2">
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => { setS(INIT); notify("Paramètres réinitialisés", "amber"); }}>
             <Ico icon={FiRefreshCw} size={12} /> Réinitialiser
           </button>
-          <button className="pm-btn pm-btn-ghost" onClick={() => notify("Configuration exportée en JSON", "green")}>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => notify("Configuration exportée en JSON", "green")}>
             <Ico icon={FiDownload} size={12} /> Exporter
           </button>
-          <button className="pm-btn pm-btn-primary" onClick={() => notify("Tous les paramètres sauvegardés", "green")}>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => notify("Tous les paramètres sauvegardés", "green")}>
             <Ico icon={FiSave} size={12} /> Tout sauvegarder
           </button>
         </div>
       </div>
 
       {/* Layout */}
-      <div className="pm-layout">
+      <div className="flex gap-0 max-[768px]:flex-col">
         {/* Sidebar */}
-        <nav className="pm-nav">
+        <nav className="w-[220px] flex-shrink-0 bg-[#0d1117] border-r border-[#21262d] flex flex-col sticky top-0 max-[768px]:w-full max-[768px]:flex-row max-[768px]:overflow-x-auto max-[768px]:border-r-0 max-[768px]:border-b max-[768px]:border-b-[#21262d] max-[768px]:static">
           {NAV.map(group => (
-            <div className="pm-nav-group" key={group.group}>
-              <div className="pm-nav-group-label">{group.group}</div>
+            <div className="py-3 pb-1 max-[768px]:flex" key={group.group}>
+              <div className="px-4 pb-1.5 text-[10px] font-semibold tracking-[1px] uppercase text-[#484f58] max-[768px]:hidden">{group.group}</div>
               {group.items.map(item => (
                 <div key={item.id}
-                  className={`pm-nav-item ${tab === item.id ? "active" : ""}`}
+                  className={`flex items-center gap-2.5 py-2 px-4 cursor-pointer transition-all duration-150 text-[#8b949e] text-[12.5px] font-normal relative border-b border-transparent select-none hover:bg-[#161b22] hover:text-[#e6edf3] max-[768px]:whitespace-nowrap max-[768px]:py-3 max-[768px]:px-3.5 ${tab === item.id ? "bg-[#161b22] text-[#e6edf3] font-medium" : ""}`}
                   onClick={() => setTab(item.id)}>
                   <Ico icon={item.icon} size={13} />
                   {item.label}
-                  {item.badge && <span className="pm-nav-badge">{item.badge}</span>}
+                  {item.badge && <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 bg-[rgba(248,81,73,0.08)] text-[#f85149] border border-[rgba(248,81,73,0.25)]">{item.badge}</span>}
+                  {tab === item.id && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#388bfd]" />}
                 </div>
               ))}
             </div>
@@ -1115,8 +819,8 @@ export default function Parametres({ onNotify }: ParametresProps) {
         </nav>
 
         {/* Content */}
-        <div className="pm-content">
-          <div key={tab} className="pm-enter">
+        <div className="flex-1 min-w-0 p-6 pt-0 max-[768px]:p-4">
+          <div key={tab} className="animate-[pmEnter_0.25s_cubic-bezier(0.4,0,0.2,1)_both]">
             {renderTab()}
           </div>
         </div>

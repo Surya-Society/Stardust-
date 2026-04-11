@@ -104,225 +104,6 @@ interface CleActivationProps {
   onNotify?: (message: string, type: string) => void;
 }
 
-const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-
-.ka-root {
-  --bg: #090c10;
-  --panel: #0d1117;
-  --surface: #161b22;
-  --elevated: #1c2330;
-  --border: #21262d;
-  --border-hi: #30363d;
-  --blue: #388bfd;
-  --blue-dim: rgba(56,139,253,0.08);
-  --blue-border: rgba(56,139,253,0.25);
-  --green: #3fb950;
-  --green-dim: rgba(63,185,80,0.08);
-  --green-border: rgba(63,185,80,0.25);
-  --amber: #d29922;
-  --amber-dim: rgba(210,153,34,0.08);
-  --amber-border: rgba(210,153,34,0.25);
-  --red: #f85149;
-  --red-dim: rgba(248,81,73,0.08);
-  --red-border: rgba(248,81,73,0.25);
-  --t1: #e6edf3;
-  --t2: #8b949e;
-  --t3: #484f58;
-  --font: 'IBM Plex Sans', sans-serif;
-  --mono: 'IBM Plex Mono', monospace;
-  font-family: var(--font);
-  font-size: 13px;
-  color: var(--t1);
-  -webkit-font-smoothing: antialiased;
-}
-.ka-root * { box-sizing: border-box; margin: 0; padding: 0; }
-
-.ka-topbar { display:flex; align-items:center; justify-content:space-between; padding:16px 0 20px; border-bottom:1px solid var(--border); margin-bottom:24px; }
-.ka-title-row { display:flex; align-items:center; gap:12px; }
-.ka-title-icon { width:32px; height:32px; background:var(--blue-dim); border:1px solid var(--blue-border); display:flex; align-items:center; justify-content:center; color:var(--blue); }
-.ka-title { font-size:18px; font-weight:600; letter-spacing:-0.4px; }
-.ka-subtitle { font-size:12px; color:var(--t3); margin-top:2px; font-family:var(--mono); }
-.ka-topbar-actions { display:flex; gap:8px; align-items:center; }
-
-.ka-stats { display:grid; grid-template-columns:repeat(5,1fr); border:1px solid var(--border); margin-bottom:20px; }
-.ka-stat { padding:16px 20px; background:var(--panel); border-right:1px solid var(--border); position:relative; transition:background .15s; }
-.ka-stat:last-child { border-right:none; }
-.ka-stat:hover { background:var(--surface); }
-.ka-stat-label { font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--t3); margin-bottom:8px; }
-.ka-stat-val { font-size:26px; font-weight:300; letter-spacing:-1px; }
-.ka-stat-bar { position:absolute; bottom:0; left:0; right:0; height:2px; }
-
-.ka-toolbar { display:flex; gap:8px; margin-bottom:20px; align-items:center; flex-wrap:wrap; }
-.ka-search { display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--border); padding:0 12px; height:34px; flex:1; max-width:380px; transition:border-color .15s; }
-.ka-search:focus-within { border-color:var(--blue); }
-.ka-search input { background:none; border:none; outline:none; color:var(--t1); font-family:var(--font); font-size:13px; flex:1; }
-.ka-search input::placeholder { color:var(--t3); }
-.ka-filter-select { height:34px; background:var(--panel); border:1px solid var(--border); color:var(--t2); font-family:var(--font); font-size:12px; padding:0 10px; cursor:pointer; outline:none; appearance:none; transition:border-color .15s; }
-.ka-filter-select:focus { border-color:var(--blue); color:var(--t1); }
-.ka-toolbar-spacer { flex:1; }
-
-.ka-btn { display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 14px; font-family:var(--font); font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; border:none; white-space:nowrap; }
-.ka-btn-primary { background:var(--blue); color:#fff; }
-.ka-btn-primary:hover { background:#58a6ff; }
-.ka-btn-ghost { background:transparent; border:1px solid var(--border); color:var(--t2); }
-.ka-btn-ghost:hover { border-color:var(--border-hi); color:var(--t1); background:var(--surface); }
-.ka-btn-danger { background:var(--red-dim); border:1px solid var(--red-border); color:var(--red); }
-.ka-btn-danger:hover { background:rgba(248,81,73,.15); }
-.ka-btn-sm { height:28px; padding:0 10px; font-size:11px; }
-.ka-btn-icon { width:28px; height:28px; padding:0; justify-content:center; }
-.ka-btn:disabled { opacity:.4; cursor:not-allowed; }
-
-.ka-bulk-bar { display:flex; align-items:center; gap:12px; padding:10px 16px; background:var(--blue-dim); border:1px solid var(--blue-border); margin-bottom:16px; font-size:12px; }
-.ka-bulk-count { color:var(--blue); font-weight:600; }
-.ka-bulk-sep { width:1px; height:16px; background:var(--blue-border); }
-
-/* ── CARD GRID ── */
-.ka-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1px; background:var(--border); }
-
-.ka-card { background:var(--panel); display:flex; flex-direction:column; transition:background .15s; cursor:pointer; position:relative; }
-.ka-card:hover { background:var(--surface); }
-.ka-card.selected { background:var(--blue-dim); }
-.ka-card-accent { height:2px; width:100%; flex-shrink:0; }
-
-.ka-card-head { padding:14px 16px 12px; display:flex; align-items:flex-start; justify-content:space-between; border-bottom:1px solid var(--border); }
-.ka-card-head-left { display:flex; flex-direction:column; gap:4px; min-width:0; flex:1; }
-.ka-card-school { font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.ka-card-city { font-size:11px; color:var(--t3); }
-.ka-card-head-right { display:flex; align-items:center; gap:6px; flex-shrink:0; margin-left:10px; }
-
-.ka-card-key-row { padding:9px 16px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); background:var(--bg); }
-.ka-card-key { font-family:var(--mono); font-size:11px; color:var(--t2); letter-spacing:0.3px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.ka-copy-btn { background:none; border:none; color:var(--t3); cursor:pointer; display:flex; align-items:center; transition:color .15s; flex-shrink:0; padding:0; }
-.ka-copy-btn:hover { color:var(--blue); }
-
-.ka-card-meta { padding:10px 16px; display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; border-bottom:1px solid var(--border); }
-.ka-meta-label { font-size:10px; font-weight:600; letter-spacing:0.8px; text-transform:uppercase; color:var(--t3); margin-bottom:3px; }
-.ka-meta-val { font-size:11.5px; color:var(--t2); font-family:var(--mono); }
-
-.ka-usage-wrap { display:flex; align-items:center; gap:8px; }
-.ka-usage-track { flex:1; height:2px; background:var(--elevated); }
-.ka-usage-fill { height:100%; transition:width .4s; }
-.ka-usage-txt { font-size:10px; color:var(--t3); font-family:var(--mono); min-width:28px; text-align:right; }
-
-.ka-card-foot { padding:9px 16px; display:flex; align-items:center; justify-content:space-between; }
-.ka-card-foot-left { display:flex; align-items:center; gap:8px; }
-.ka-card-actions { display:flex; gap:4px; }
-
-.ka-sec-row { display:flex; align-items:center; gap:4px; }
-.ka-sec-ico { display:flex; align-items:center; opacity:.2; }
-.ka-sec-ico.on { opacity:1; }
-
-.ka-score-wrap { display:flex; align-items:center; gap:5px; }
-.ka-score-bar { width:36px; height:2px; background:var(--elevated); }
-.ka-score-fill { height:100%; }
-.ka-score-num { font-size:11px; font-family:var(--mono); min-width:20px; }
-
-.ka-method { font-size:10px; font-family:var(--mono); display:flex; align-items:center; gap:4px; }
-.ka-method-dot { width:5px; height:5px; flex-shrink:0; }
-
-.ka-hash { font-family:var(--mono); font-size:10px; color:var(--t3); background:var(--bg); padding:2px 6px; border:1px solid var(--border); }
-
-.ka-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; font-size:11px; font-weight:500; }
-.ka-badge-dot { width:5px; height:5px; flex-shrink:0; }
-.ka-badge-green { background:var(--green-dim); color:var(--green); border:1px solid var(--green-border); }
-.ka-badge-amber { background:var(--amber-dim); color:var(--amber); border:1px solid var(--amber-border); }
-.ka-badge-red   { background:var(--red-dim);   color:var(--red);   border:1px solid var(--red-border); }
-.ka-badge-blue  { background:var(--blue-dim);  color:var(--blue);  border:1px solid var(--blue-border); }
-.ka-badge-gray  { background:var(--surface); color:var(--t3); border:1px solid var(--border); }
-
-.ka-empty { padding:56px 0; text-align:center; color:var(--t3); background:var(--panel); border:1px solid var(--border); }
-.ka-empty-title { font-size:14px; margin-top:12px; color:var(--t2); }
-.ka-empty-sub { font-size:12px; margin-top:4px; }
-
-.ka-pagination { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-top:1px solid var(--border); margin-top:1px; }
-.ka-pag-info { font-size:12px; color:var(--t3); font-family:var(--mono); }
-.ka-pag-btns { display:flex; gap:4px; }
-.ka-pag-btn { width:28px; height:28px; background:var(--surface); border:1px solid var(--border); color:var(--t2); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
-.ka-pag-btn:hover { border-color:var(--border-hi); color:var(--t1); }
-.ka-pag-btn.active { background:var(--blue); border-color:var(--blue); color:#fff; }
-.ka-pag-btn:disabled { opacity:.3; cursor:not-allowed; }
-
-.ka-checkbox { width:14px; height:14px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:all .15s; }
-.ka-checkbox.checked { background:var(--blue); border-color:var(--blue); }
-
-.ka-detail { position:fixed; right:0; top:0; bottom:0; width:380px; background:var(--panel); border-left:1px solid var(--border); z-index:200; animation:kaSlideRight .25s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; overflow:hidden; }
-@keyframes kaSlideRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
-.ka-detail-head { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
-.ka-detail-body { flex:1; overflow-y:auto; padding:20px; }
-.ka-detail-section { margin-bottom:20px; }
-.ka-detail-section-title { font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--t3); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
-.ka-detail-row { display:flex; align-items:flex-start; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border); }
-.ka-detail-row:last-child { border-bottom:none; }
-.ka-detail-key { font-size:11px; color:var(--t3); flex-shrink:0; width:120px; }
-.ka-detail-val { font-size:12px; color:var(--t1); text-align:right; font-family:var(--mono); }
-
-.ka-timeline { display:flex; flex-direction:column; }
-.ka-tl-item { display:flex; gap:10px; padding:6px 0; }
-.ka-tl-line { display:flex; flex-direction:column; align-items:center; }
-.ka-tl-dot { width:7px; height:7px; flex-shrink:0; margin-top:3px; }
-.ka-tl-connector { width:1px; flex:1; background:var(--border); margin-top:4px; }
-.ka-tl-item:last-child .ka-tl-connector { display:none; }
-.ka-tl-content { padding-bottom:10px; }
-.ka-tl-event { font-size:12px; color:var(--t2); }
-.ka-tl-time { font-size:10px; color:var(--t3); margin-top:2px; font-family:var(--mono); }
-
-.ka-audit-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); }
-.ka-audit-row:last-child { border-bottom:none; }
-.ka-audit-check { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--t2); }
-
-.ka-overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px; animation:kaFadeIn .2s; }
-@keyframes kaFadeIn { from{opacity:0} to{opacity:1} }
-.ka-modal { background:var(--panel); border:1px solid var(--border-hi); width:100%; max-width:540px; animation:kaSlideUp .25s cubic-bezier(.4,0,.2,1); }
-@keyframes kaSlideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-.ka-modal-head { padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-.ka-modal-title { font-size:14px; font-weight:600; }
-.ka-modal-body { padding:20px 24px; max-height:70vh; overflow-y:auto; }
-.ka-modal-foot { padding:16px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
-.ka-close { width:24px; height:24px; background:none; border:none; color:var(--t3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:color .15s; }
-.ka-close:hover { color:var(--t1); }
-
-.ka-field { margin-bottom:14px; }
-.ka-label { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; color:var(--t3); margin-bottom:6px; }
-.ka-input,.ka-select { width:100%; background:var(--bg); border:1px solid var(--border); padding:8px 11px; color:var(--t1); font-family:var(--font); font-size:13px; outline:none; transition:border-color .15s; }
-.ka-input:focus,.ka-select:focus { border-color:var(--blue); }
-.ka-input::placeholder { color:var(--t3); }
-.ka-select { cursor:pointer; appearance:none; }
-.ka-select option { background:var(--panel); }
-.ka-textarea { width:100%; background:var(--bg); border:1px solid var(--border); padding:8px 11px; color:var(--t1); font-family:var(--font); font-size:13px; outline:none; resize:vertical; min-height:56px; transition:border-color .15s; }
-.ka-textarea:focus { border-color:var(--blue); }
-.ka-field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.ka-key-preview-box { background:var(--bg); border:1px solid var(--border); padding:10px 14px; display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
-.ka-key-preview-val { font-family:var(--mono); font-size:12px; color:var(--blue); letter-spacing:0.5px; }
-.ka-key-preview-refresh { background:none; border:none; color:var(--t3); cursor:pointer; display:flex; align-items:center; transition:color .15s; }
-.ka-key-preview-refresh:hover { color:var(--blue); }
-.ka-sec-opts { display:flex; flex-direction:column; gap:6px; margin-top:4px; }
-.ka-sec-opt { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--bg); border:1px solid var(--border); cursor:pointer; transition:border-color .15s; user-select:none; }
-.ka-sec-opt:hover { border-color:var(--border-hi); }
-.ka-sec-opt.enabled { border-color:var(--blue-border); background:var(--blue-dim); }
-.ka-sec-opt-left { display:flex; align-items:center; gap:10px; }
-.ka-sec-opt-icon { width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:var(--t2); }
-.ka-sec-opt.enabled .ka-sec-opt-icon { color:var(--blue); }
-.ka-sec-opt-name { font-size:12px; font-weight:500; }
-.ka-sec-opt-desc { font-size:11px; color:var(--t3); margin-top:1px; }
-.ka-toggle { width:32px; height:18px; background:var(--elevated); border:1px solid var(--border); position:relative; transition:all .2s; cursor:pointer; flex-shrink:0; }
-.ka-toggle.on { background:var(--blue); border-color:var(--blue); }
-.ka-toggle-knob { position:absolute; top:2px; left:2px; width:12px; height:12px; background:var(--t2); transition:transform .2s,background .2s; }
-.ka-toggle.on .ka-toggle-knob { transform:translateX(14px); background:#fff; }
-
-.ka-toast { position:fixed; bottom:24px; right:24px; background:var(--elevated); border:1px solid var(--border-hi); padding:10px 16px; display:flex; align-items:center; gap:10px; z-index:9999; font-size:12px; min-width:280px; animation:kaSlideUp .25s cubic-bezier(.4,0,.2,1); }
-.ka-toast-dot { width:6px; height:6px; flex-shrink:0; }
-
-@keyframes kaEnter { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-.ka-enter { animation:kaEnter .3s cubic-bezier(.4,0,.2,1) both; }
-.ka-d1 { animation-delay:.05s; }
-.ka-d2 { animation-delay:.10s; }
-.ka-d3 { animation-delay:.15s; }
-
-@media(max-width:900px) { .ka-stats{grid-template-columns:repeat(3,1fr)} .ka-grid{grid-template-columns:1fr} .ka-detail{width:100%} }
-@media(max-width:640px) { .ka-stats{grid-template-columns:repeat(2,1fr)} .ka-toolbar{flex-wrap:wrap} .ka-search{max-width:100%;flex:1 1 100%} }
-`;
-
 const Ico = ({ d, s = 14, sw = 1.5 }: IcoProps) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
     <path d={d} />
@@ -372,39 +153,39 @@ function genKey(): string { return `SCO-2025-${seg()}-${seg()}`; }
 
 function Badge({ status }: BadgeProps) {
   const M: Record<ActivationKey["status"], [string, string]> = {
-    active: ["ka-badge-green","Actif"],
-    expired: ["ka-badge-amber","Expiré"],
-    suspended: ["ka-badge-red","Suspendu"],
-    revoked: ["ka-badge-red","Révoqué"]
+    active: ["bg-[rgba(63,185,80,0.08)] text-[#3fb950] border border-[rgba(63,185,80,0.25)]","Actif"],
+    expired: ["bg-[rgba(210,153,34,0.08)] text-[#d29922] border border-[rgba(210,153,34,0.25)]","Expiré"],
+    suspended: ["bg-[rgba(248,81,73,0.08)] text-[#f85149] border border-[rgba(248,81,73,0.25)]","Suspendu"],
+    revoked: ["bg-[rgba(248,81,73,0.08)] text-[#f85149] border border-[rgba(248,81,73,0.25)]","Révoqué"]
   };
-  const [cls, lbl] = M[status] || ["ka-badge-gray",status];
+  const [cls, lbl] = M[status] || ["bg-[#1c2330] text-[#484f58] border border-[#21262d]",status];
   const dotColors: Record<string, string> = {
-    "ka-badge-green": "#3fb950",
-    "ka-badge-amber": "#d29922",
-    "ka-badge-red": "#f85149",
-    "ka-badge-gray": "#484f58"
+    "bg-[rgba(63,185,80,0.08)] text-[#3fb950]": "#3fb950",
+    "bg-[rgba(210,153,34,0.08)] text-[#d29922]": "#d29922",
+    "bg-[rgba(248,81,73,0.08)] text-[#f85149]": "#f85149",
+    "bg-[#1c2330] text-[#484f58]": "#484f58"
   };
-  const dotColor = dotColors[cls];
-  return <span className={`ka-badge ${cls}`}><span className="ka-badge-dot" style={{background:dotColor}}/>{lbl}</span>;
+  const dotColor = dotColors[cls.split(' ')[0]] || "#484f58";
+  return <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium ${cls}`}><span className="w-1.5 h-1.5" style={{background:dotColor}}/>{lbl}</span>;
 }
 
 function SecurityScore({ score }: SecurityScoreProps) {
   const color = score >= 80 ? "#3fb950" : score >= 50 ? "#d29922" : "#f85149";
   return (
-    <div className="ka-score-wrap">
-      <span className="ka-score-num" style={{color}}>{score}</span>
-      <div className="ka-score-bar"><div className="ka-score-fill" style={{width:`${score}%`,background:color}}/></div>
+    <div className="flex items-center gap-1.5">
+      <span className="text-[11px] font-mono min-w-[20px]" style={{color}}>{score}</span>
+      <div className="w-9 h-0.5 bg-[#1c2330]"><div className="h-full" style={{width:`${score}%`,background:color}}/></div>
     </div>
   );
 }
 
 function Toggle({ on, onChange }: ToggleProps) {
-  return <div className={`ka-toggle ${on?"on":""}`} onClick={onChange}><div className="ka-toggle-knob"/></div>;
+  return <div className={`w-8 h-[18px] bg-[#1c2330] border border-[#21262d] relative transition-all duration-200 cursor-pointer flex-shrink-0 ${on ? "bg-[#388bfd] border-[#388bfd]" : ""}`} onClick={onChange}><div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-[#8b949e] transition-transform duration-200 ${on ? "translate-x-[14px] bg-white" : ""}`}/></div>;
 }
 
 function Checkbox({ checked, onChange }: CheckboxProps) {
   return (
-    <div className={`ka-checkbox ${checked?"checked":""}`} onClick={(e) => { e.stopPropagation(); onChange(); }}>
+    <div className={`w-3.5 h-3.5 bg-[#090c10] border border-[#21262d] flex items-center justify-center cursor-pointer flex-shrink-0 transition-all duration-150 ${checked ? "bg-[#388bfd] border-[#388bfd]" : ""}`} onClick={(e) => { e.stopPropagation(); onChange(); }}>
       {checked && <Ico d={I.check} s={10} sw={2.5}/>}
     </div>
   );
@@ -413,72 +194,72 @@ function Checkbox({ checked, onChange }: CheckboxProps) {
 function KeyCard({ k, selected, onSelect, onDetail, onCopy, onSuspend, onReactivate, onRevoke }: KeyCardProps) {
   const pct = Math.min(k.uses/k.maxUses*100,100);
   const usageColor = pct>85?"#f85149":pct>60?"#d29922":"#388bfd";
-  const planCls = k.plan==="Enterprise"?"ka-badge-blue":k.plan==="Premium"?"ka-badge-green":"ka-badge-gray";
+  const planCls = k.plan==="Enterprise" ? "bg-[rgba(56,139,253,0.08)] text-[#388bfd] border border-[rgba(56,139,253,0.25)]" : k.plan==="Premium" ? "bg-[rgba(63,185,80,0.08)] text-[#3fb950] border border-[rgba(63,185,80,0.25)]" : "bg-[#1c2330] text-[#484f58] border border-[#21262d]";
 
   return (
-    <div className={`ka-card ${selected?"selected":""}`} onClick={() => onDetail(k)}>
-      <div className="ka-card-accent" style={{background:STATUS_ACCENT[k.status]||"#484f58"}}/>
+    <div className={`bg-[#0d1117] flex flex-col transition-colors duration-150 cursor-pointer relative ${selected ? "bg-[rgba(56,139,253,0.08)]" : ""}`} onClick={() => onDetail(k)}>
+      <div className="h-0.5 w-full flex-shrink-0" style={{background:STATUS_ACCENT[k.status]||"#484f58"}}/>
 
-      <div className="ka-card-head">
-        <div className="ka-card-head-left">
-          <div className="ka-card-school">{k.school}</div>
-          <div className="ka-card-city">{k.city}</div>
+      <div className="p-3.5 pb-3 flex items-start justify-between border-b border-[#21262d]">
+        <div className="flex flex-col gap-1 min-w-0 flex-1">
+          <div className="text-[13px] font-semibold overflow-hidden text-ellipsis whitespace-nowrap">{k.school}</div>
+          <div className="text-[11px] text-[#484f58]">{k.city}</div>
         </div>
-        <div className="ka-card-head-right">
+        <div className="flex items-center gap-1.5 flex-shrink-0 ml-2.5">
           <Badge status={k.status}/>
           <Checkbox checked={selected} onChange={onSelect}/>
         </div>
       </div>
 
-      <div className="ka-card-key-row">
+      <div className="px-4 py-2.5 flex items-center gap-2 border-b border-[#21262d] bg-[#090c10]">
         <Ico d={I.key} s={11}/>
-        <span className="ka-card-key">{k.key}</span>
-        <button className="ka-copy-btn" onClick={(e) => { e.stopPropagation(); onCopy(k.key); }} title="Copier"><Ico d={I.copy} s={12}/></button>
+        <span className="font-mono text-[11px] text-[#8b949e] tracking-[0.3px] flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{k.key}</span>
+        <button className="bg-none border-none text-[#484f58] cursor-pointer flex items-center transition-colors duration-150 flex-shrink-0 p-0 hover:text-[#388bfd]" onClick={(e) => { e.stopPropagation(); onCopy(k.key); }} title="Copier"><Ico d={I.copy} s={12}/></button>
       </div>
 
-      <div className="ka-card-meta">
+      <div className="p-4 pb-2.5 grid grid-cols-2 gap-2.5 gap-x-4 border-b border-[#21262d]">
         <div>
-          <div className="ka-meta-label">Plan</div>
-          <span className={`ka-badge ${planCls}`} style={{fontSize:10}}>{k.plan}</span>
+          <div className="text-[10px] font-semibold tracking-[0.8px] uppercase text-[#484f58] mb-0.5">Plan</div>
+          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium ${planCls}`}>{k.plan}</span>
         </div>
         <div>
-          <div className="ka-meta-label">Expiration</div>
-          <div className="ka-meta-val">{k.expires}</div>
+          <div className="text-[10px] font-semibold tracking-[0.8px] uppercase text-[#484f58] mb-0.5">Expiration</div>
+          <div className="text-[11.5px] text-[#8b949e] font-mono">{k.expires}</div>
         </div>
         <div>
-          <div className="ka-meta-label">Méthode</div>
-          <div className="ka-method">
-            <span className="ka-method-dot" style={{background:METHOD_COLORS[k.activationMethod]}}/>
+          <div className="text-[10px] font-semibold tracking-[0.8px] uppercase text-[#484f58] mb-0.5">Méthode</div>
+          <div className="flex items-center gap-1 text-[10px] font-mono">
+            <span className="w-1.5 h-1.5 flex-shrink-0" style={{background:METHOD_COLORS[k.activationMethod]}}/>
             <span style={{color:METHOD_COLORS[k.activationMethod]}}>{METHOD_LABELS[k.activationMethod]}</span>
           </div>
         </div>
         <div>
-          <div className="ka-meta-label">Dernier accès</div>
-          <div className="ka-meta-val">{k.lastUsed}</div>
+          <div className="text-[10px] font-semibold tracking-[0.8px] uppercase text-[#484f58] mb-0.5">Dernier accès</div>
+          <div className="text-[11.5px] text-[#8b949e] font-mono">{k.lastUsed}</div>
         </div>
-        <div style={{gridColumn:"1 / -1"}}>
-          <div className="ka-meta-label">Utilisation — {k.uses}/{k.maxUses}</div>
-          <div className="ka-usage-wrap">
-            <div className="ka-usage-track"><div className="ka-usage-fill" style={{width:`${pct}%`,background:usageColor}}/></div>
-            <span className="ka-usage-txt">{Math.round(pct)}%</span>
+        <div className="col-span-2">
+          <div className="text-[10px] font-semibold tracking-[0.8px] uppercase text-[#484f58] mb-0.5">Utilisation — {k.uses}/{k.maxUses}</div>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-0.5 bg-[#1c2330]"><div className="h-full transition-all duration-400" style={{width:`${pct}%`,background:usageColor}}/></div>
+            <span className="text-[10px] text-[#484f58] font-mono min-w-[28px] text-right">{Math.round(pct)}%</span>
           </div>
         </div>
       </div>
 
-      <div className="ka-card-foot">
-        <div className="ka-card-foot-left">
-          <div className="ka-sec-row">
-            <span className={`ka-sec-ico ${k.hwLock?"on":""}`} title="Hardware Lock" style={{color:"#388bfd"}}><Ico d={I.chip} s={11}/></span>
-            <span className={`ka-sec-ico ${k.twoFa?"on":""}`} title="2FA" style={{color:"#3fb950"}}><Ico d={I.fingerp} s={11}/></span>
-            <span className={`ka-sec-ico ${k.ipRestrict?"on":""}`} title="IP Restrict" style={{color:"#d29922"}}><Ico d={I.lock} s={11}/></span>
+      <div className="px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <span className={`flex items-center ${k.hwLock ? "opacity-100" : "opacity-20"}`} title="Hardware Lock" style={{color:"#388bfd"}}><Ico d={I.chip} s={11}/></span>
+            <span className={`flex items-center ${k.twoFa ? "opacity-100" : "opacity-20"}`} title="2FA" style={{color:"#3fb950"}}><Ico d={I.fingerp} s={11}/></span>
+            <span className={`flex items-center ${k.ipRestrict ? "opacity-100" : "opacity-20"}`} title="IP Restrict" style={{color:"#d29922"}}><Ico d={I.lock} s={11}/></span>
           </div>
           <SecurityScore score={k.secScore}/>
-          <span className="ka-hash">{k.fingerprint}</span>
+          <span className="font-mono text-[10px] text-[#484f58] bg-[#090c10] px-1.5 py-0.5 border border-[#21262d]">{k.fingerprint}</span>
         </div>
-        <div className="ka-card-actions" onClick={e => e.stopPropagation()}>
-          {k.status==="active" && <button className="ka-btn ka-btn-ghost ka-btn-icon ka-btn-sm" title="Suspendre" onClick={() => onSuspend(k.id)}><Ico d={I.ban} s={11}/></button>}
-          {k.status==="suspended" && <button className="ka-btn ka-btn-ghost ka-btn-icon ka-btn-sm" title="Réactiver" onClick={() => onReactivate(k.id)}><Ico d={I.check} s={11}/></button>}
-          <button className="ka-btn ka-btn-danger ka-btn-icon ka-btn-sm" title="Révoquer" onClick={() => onRevoke(k)}><Ico d={I.trash} s={11}/></button>
+        <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+          {k.status==="active" && <button className="flex items-center justify-center w-7 h-7 p-0 bg-transparent border border-[#21262d] text-[#8b949e] text-[11px] cursor-pointer transition-all duration-150 hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" title="Suspendre" onClick={() => onSuspend(k.id)}><Ico d={I.ban} s={11}/></button>}
+          {k.status==="suspended" && <button className="flex items-center justify-center w-7 h-7 p-0 bg-transparent border border-[#21262d] text-[#8b949e] text-[11px] cursor-pointer transition-all duration-150 hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" title="Réactiver" onClick={() => onReactivate(k.id)}><Ico d={I.check} s={11}/></button>}
+          <button className="flex items-center justify-center w-7 h-7 p-0 bg-transparent border border-[#21262d] text-[#8b949e] text-[11px] cursor-pointer transition-all duration-150 hover:bg-[rgba(248,81,73,0.08)] hover:border-[rgba(248,81,73,0.25)] hover:text-[#f85149]" title="Révoquer" onClick={() => onRevoke(k)}><Ico d={I.trash} s={11}/></button>
         </div>
       </div>
     </div>
@@ -635,78 +416,88 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
   ];
 
   return (
-    <div className="ka-root">
-      <style>{CSS}</style>
+    <div className="font-['IBM_Plex_Sans'] text-[13px] text-[#e6edf3] antialiased">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+        @keyframes kaEnter { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes kaSlideRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
+        @keyframes kaSlideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes kaFadeIn { from{opacity:0} to{opacity:1} }
+        .ka-enter { animation:kaEnter .3s cubic-bezier(0.4,0,0.2,1) both; }
+        .ka-d1 { animation-delay:.05s; }
+        .ka-d2 { animation-delay:.10s; }
+        .ka-d3 { animation-delay:.15s; }
+      `}</style>
 
       {/* TOPBAR */}
-      <div className="ka-topbar ka-enter">
-        <div className="ka-title-row">
-          <div className="ka-title-icon"><Ico d={I.key} s={16}/></div>
+      <div className="flex items-center justify-between py-4 pb-5 border-b border-[#21262d] mb-6 ka-enter">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-[rgba(56,139,253,0.08)] border border-[rgba(56,139,253,0.25)] flex items-center justify-center text-[#388bfd]"><Ico d={I.key} s={16}/></div>
           <div>
-            <div className="ka-title">Clés d'Activation</div>
-            <div className="ka-subtitle">{keys.length} clés enregistrées · {stats.active} actives</div>
+            <div className="text-lg font-semibold tracking-[-0.4px]">Clés d'Activation</div>
+            <div className="text-xs text-[#484f58] font-mono mt-0.5">{keys.length} clés enregistrées · {stats.active} actives</div>
           </div>
         </div>
-        <div className="ka-topbar-actions">
-          <button className="ka-btn ka-btn-ghost" onClick={() => setModal("audit")}><Ico d={I.shield} s={13}/> Audit sécurité</button>
-          <button className="ka-btn ka-btn-ghost" onClick={() => showToast("Export CSV…", "blue")}><Ico d={I.export} s={13}/> Exporter</button>
-          <button className="ka-btn ka-btn-primary" onClick={() => { setPreviewKey(genKey()); setModal("generate"); }}><Ico d={I.plus} s={13}/> Générer une clé</button>
+        <div className="flex gap-2">
+          <button className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => setModal("audit")}><Ico d={I.shield} s={13}/> Audit sécurité</button>
+          <button className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => showToast("Export CSV…", "blue")}><Ico d={I.export} s={13}/> Exporter</button>
+          <button className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => { setPreviewKey(genKey()); setModal("generate"); }}><Ico d={I.plus} s={13}/> Générer une clé</button>
         </div>
       </div>
 
       {/* STATS */}
-      <div className="ka-stats ka-enter ka-d1">
+      <div className="grid grid-cols-5 gap-px bg-[#21262d] border border-[#21262d] mb-5 max-[900px]:grid-cols-3 max-[640px]:grid-cols-2">
         {statItems.map((s, i) => (
-          <div className="ka-stat" key={i}>
-            <div className="ka-stat-label">{s.label}</div>
-            <div className="ka-stat-val" style={{ color: s.color }}>{s.val}</div>
-            <div className="ka-stat-bar" style={{ background: s.color }}/>
+          <div className="bg-[#0d1117] p-4 relative transition-colors duration-150 hover:bg-[#161b22]" key={i}>
+            <div className="text-[10px] font-semibold tracking-[1px] uppercase text-[#484f58] mb-2">{s.label}</div>
+            <div className="text-[26px] font-light tracking-[-1px]" style={{ color: s.color }}>{s.val}</div>
+            <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: s.color }}/>
           </div>
         ))}
       </div>
 
       {/* TOOLBAR */}
-      <div className="ka-toolbar ka-enter ka-d2">
-        <div className="ka-search">
+      <div className="flex gap-2 mb-5 items-center flex-wrap ka-enter ka-d2">
+        <div className="flex items-center gap-2 bg-[#0d1117] border border-[#21262d] px-3 h-[34px] flex-1 max-w-[380px] transition-colors duration-150 focus-within:border-[#388bfd]">
           <Ico d={I.search} s={13}/>
-          <input placeholder="Rechercher clé, établissement, fingerprint…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}/>
+          <input placeholder="Rechercher clé, établissement, fingerprint…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="bg-transparent border-none outline-none text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] flex-1 placeholder:text-[#484f58]"/>
         </div>
-        <select className="ka-filter-select" value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }}>
+        <select className="h-[34px] bg-[#0d1117] border border-[#21262d] text-[#8b949e] font-['IBM_Plex_Sans'] text-xs px-2.5 cursor-pointer outline-none appearance-none transition-colors duration-150 focus:border-[#388bfd] focus:text-[#e6edf3]" value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }}>
           <option value="all">Tous statuts</option><option value="active">Actives</option><option value="expired">Expirées</option><option value="suspended">Suspendues</option>
         </select>
-        <select className="ka-filter-select" value={filterPlan} onChange={e => { setFilterPlan(e.target.value); setPage(1); }}>
+        <select className="h-[34px] bg-[#0d1117] border border-[#21262d] text-[#8b949e] font-['IBM_Plex_Sans'] text-xs px-2.5 cursor-pointer outline-none appearance-none transition-colors duration-150 focus:border-[#388bfd] focus:text-[#e6edf3]" value={filterPlan} onChange={e => { setFilterPlan(e.target.value); setPage(1); }}>
           <option value="all">Tous plans</option><option value="Basic">Basic</option><option value="Premium">Premium</option><option value="Enterprise">Enterprise</option>
         </select>
-        <select className="ka-filter-select" value={filterMethod} onChange={e => { setFilterMethod(e.target.value); setPage(1); }}>
+        <select className="h-[34px] bg-[#0d1117] border border-[#21262d] text-[#8b949e] font-['IBM_Plex_Sans'] text-xs px-2.5 cursor-pointer outline-none appearance-none transition-colors duration-150 focus:border-[#388bfd] focus:text-[#e6edf3]" value={filterMethod} onChange={e => { setFilterMethod(e.target.value); setPage(1); }}>
           <option value="all">Toutes méthodes</option><option value="online">En ligne</option><option value="usb">Clé USB</option><option value="file">Fichier</option>
         </select>
-        <div className="ka-toolbar-spacer"/>
-        <span style={{ fontSize: 11, color: "var(--t3)", fontFamily: "var(--mono)" }}>{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>
+        <div className="flex-1"/>
+        <span className="text-[11px] text-[#484f58] font-mono">{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
       {/* BULK BAR */}
       {selected.size > 0 && (
-        <div className="ka-bulk-bar">
-          <span className="ka-bulk-count">{selected.size} sélectionné{selected.size > 1 ? "s" : ""}</span>
-          <div className="ka-bulk-sep"/>
-          <button className="ka-btn ka-btn-ghost ka-btn-sm" onClick={() => { selected.forEach(id => handleSuspend(id)); setSelected(new Set()); }}><Ico d={I.ban} s={12}/> Suspendre</button>
-          <button className="ka-btn ka-btn-danger ka-btn-sm" onClick={() => { selected.forEach(id => setKeys(k => k.map(x => x.id === id ? { ...x, status: "revoked" } : x))); showToast(`${selected.size} clé(s) révoquées`, "red"); setSelected(new Set()); }}><Ico d={I.trash} s={12}/> Révoquer</button>
-          <button className="ka-btn ka-btn-ghost ka-btn-sm" onClick={() => showToast("Export sélection…", "blue")}><Ico d={I.export} s={12}/> Exporter</button>
-          <div className="ka-toolbar-spacer"/>
-          <button className="ka-btn ka-btn-ghost ka-btn-sm" onClick={() => setSelected(new Set())}><Ico d={I.close} s={12}/> Désélectionner</button>
+        <div className="flex items-center gap-3 py-2.5 px-4 bg-[rgba(56,139,253,0.08)] border border-[rgba(56,139,253,0.25)] mb-4 text-xs">
+          <span className="text-[#388bfd] font-semibold">{selected.size} sélectionné{selected.size > 1 ? "s" : ""}</span>
+          <div className="w-px h-4 bg-[rgba(56,139,253,0.25)]"/>
+          <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => { selected.forEach(id => handleSuspend(id)); setSelected(new Set()); }}><Ico d={I.ban} s={12}/> Suspendre</button>
+          <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:bg-[rgba(248,81,73,0.08)] hover:border-[rgba(248,81,73,0.25)] hover:text-[#f85149]" onClick={() => { selected.forEach(id => setKeys(k => k.map(x => x.id === id ? { ...x, status: "revoked" } : x))); showToast(`${selected.size} clé(s) révoquées`, "red"); setSelected(new Set()); }}><Ico d={I.trash} s={12}/> Révoquer</button>
+          <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => showToast("Export sélection…", "blue")}><Ico d={I.export} s={12}/> Exporter</button>
+          <div className="flex-1"/>
+          <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => setSelected(new Set())}><Ico d={I.close} s={12}/> Désélectionner</button>
         </div>
       )}
 
       {/* CARD GRID */}
       <div className="ka-enter ka-d3">
         {paginated.length === 0 ? (
-          <div className="ka-empty">
+          <div className="py-14 text-center text-[#484f58] bg-[#0d1117] border border-[#21262d]">
             <Ico d={I.search} s={32}/>
-            <div className="ka-empty-title">Aucune clé trouvée</div>
-            <div className="ka-empty-sub">Modifiez vos filtres ou générez une nouvelle clé</div>
+            <div className="text-sm mt-3 text-[#8b949e]">Aucune clé trouvée</div>
+            <div className="text-xs mt-1">Modifiez vos filtres ou générez une nouvelle clé</div>
           </div>
         ) : (
-          <div className="ka-grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-px bg-[#21262d]">
             {paginated.map(k => (
               <KeyCard
                 key={k.id}
@@ -723,14 +514,14 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
           </div>
         )}
         {totalPages > 1 && (
-          <div className="ka-pagination">
-            <span className="ka-pag-info">{(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} sur {filtered.length}</span>
-            <div className="ka-pag-btns">
-              <button className="ka-pag-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>‹</button>
+          <div className="flex items-center justify-between py-3.5 border-t border-[#21262d] mt-px">
+            <span className="text-xs text-[#484f58] font-mono">{(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} sur {filtered.length}</span>
+            <div className="flex gap-1">
+              <button className="w-7 h-7 bg-[#161b22] border border-[#21262d] text-[#8b949e] text-xs cursor-pointer flex items-center justify-center transition-all duration-150 hover:border-[#30363d] hover:text-[#e6edf3] disabled:opacity-30 disabled:cursor-not-allowed" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>‹</button>
               {Array.from({ length: totalPages }, (_, i) => (
-                <button key={i} className={`ka-pag-btn ${page === i + 1 ? "active" : ""}`} onClick={() => setPage(i + 1)}>{i + 1}</button>
+                <button key={i} className={`w-7 h-7 bg-[#161b22] border border-[#21262d] text-[#8b949e] text-xs cursor-pointer flex items-center justify-center transition-all duration-150 hover:border-[#30363d] hover:text-[#e6edf3] ${page === i + 1 ? "!bg-[#388bfd] !border-[#388bfd] !text-white" : ""}`} onClick={() => setPage(i + 1)}>{i + 1}</button>
               ))}
-              <button className="ka-pag-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>›</button>
+              <button className="w-7 h-7 bg-[#161b22] border border-[#21262d] text-[#8b949e] text-xs cursor-pointer flex items-center justify-center transition-all duration-150 hover:border-[#30363d] hover:text-[#e6edf3] disabled:opacity-30 disabled:cursor-not-allowed" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>›</button>
             </div>
           </div>
         )}
@@ -739,25 +530,25 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
       {/* DETAIL PANEL */}
       {detailKey && (
         <>
-          <div style={{ position: "fixed", inset: 0, zIndex: 199 }} onClick={() => setDetailKey(null)}/>
-          <div className="ka-detail">
-            <div className="ka-detail-head">
+          <div className="fixed inset-0 z-[199]" onClick={() => setDetailKey(null)}/>
+          <div className="fixed right-0 top-0 bottom-0 w-[380px] bg-[#0d1117] border-l border-[#21262d] z-[200] animate-[kaSlideRight_0.25s_cubic-bezier(0.4,0,0.2,1)] flex flex-col overflow-hidden max-[900px]:w-full">
+            <div className="p-4 pb-3 border-b border-[#21262d] flex items-center justify-between flex-shrink-0">
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{detailKey.school}</div>
-                <div style={{ fontSize: 11, color: "var(--t3)", fontFamily: "var(--mono)", marginTop: 2 }}>{detailKey.key}</div>
+                <div className="text-[13px] font-semibold">{detailKey.school}</div>
+                <div className="text-[11px] text-[#484f58] font-mono mt-0.5">{detailKey.key}</div>
               </div>
-              <button className="ka-close" onClick={() => setDetailKey(null)}><Ico d={I.close} s={14}/></button>
+              <button className="w-6 h-6 bg-transparent border-none text-[#484f58] cursor-pointer flex items-center justify-center transition-colors duration-150 hover:text-[#e6edf3]" onClick={() => setDetailKey(null)}><Ico d={I.close} s={14}/></button>
             </div>
-            <div className="ka-detail-body">
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="flex-1 overflow-y-auto p-5">
+              <div className="flex items-center justify-between mb-5 p-3 bg-[#161b22] border border-[#21262d]">
                 <Badge status={detailKey.status}/>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 10, color: "var(--t3)", marginBottom: 4, letterSpacing: "0.8px", textTransform: "uppercase" }}>Score sécurité</div>
+                <div className="text-right">
+                  <div className="text-[10px] text-[#484f58] mb-1 tracking-[0.8px] uppercase">Score sécurité</div>
                   <SecurityScore score={detailKey.secScore}/>
                 </div>
               </div>
-              <div className="ka-detail-section">
-                <div className="ka-detail-section-title">Informations</div>
+              <div className="mb-5">
+                <div className="text-[10px] font-semibold tracking-[1px] uppercase text-[#484f58] mb-2.5 pb-1.5 border-b border-[#21262d]">Informations</div>
                 {[
                   ["Plan", detailKey.plan],
                   ["Créée le", detailKey.created],
@@ -770,38 +561,44 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
                   ["Hash", detailKey.hash],
                   ["Révocations", detailKey.revocations]
                 ].map(([k, v]) => (
-                  <div className="ka-detail-row" key={k}><span className="ka-detail-key">{k}</span><span className="ka-detail-val">{v}</span></div>
+                  <div className="flex items-start justify-between py-1.5 border-b border-[#21262d] last:border-b-0" key={k}><span className="text-[11px] text-[#484f58] w-[120px] flex-shrink-0">{k}</span><span className="text-xs text-[#e6edf3] text-right font-mono">{v}</span></div>
                 ))}
               </div>
-              <div className="ka-detail-section">
-                <div className="ka-detail-section-title">Protections actives</div>
+              <div className="mb-5">
+                <div className="text-[10px] font-semibold tracking-[1px] uppercase text-[#484f58] mb-2.5 pb-1.5 border-b border-[#21262d]">Protections actives</div>
                 {[
                   { icon: I.chip, label: "Hardware Lock", on: detailKey.hwLock },
                   { icon: I.fingerp, label: "2FA TOTP", on: detailKey.twoFa },
                   { icon: I.network, label: "Restriction IP", on: detailKey.ipRestrict }
                 ].map(p => (
-                  <div className="ka-audit-row" key={p.label}>
-                    <div className="ka-audit-check"><Ico d={p.icon} s={13}/><span style={{ color: p.on ? "var(--t1)" : "var(--t3)" }}>{p.label}</span></div>
-                    <span className={`ka-badge ${p.on ? "ka-badge-green" : "ka-badge-gray"}`}>{p.on ? "Actif" : "Inactif"}</span>
+                  <div className="flex items-center justify-between py-2 border-b border-[#21262d] last:border-b-0" key={p.label}>
+                    <div className="flex items-center gap-2"><Ico d={p.icon} s={13}/><span style={{ color: p.on ? "#e6edf3" : "#484f58" }}>{p.label}</span></div>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium ${p.on ? "bg-[rgba(63,185,80,0.08)] text-[#3fb950] border border-[rgba(63,185,80,0.25)]" : "bg-[#1c2330] text-[#484f58] border border-[#21262d]"}`}>{p.on ? "Actif" : "Inactif"}</span>
                   </div>
                 ))}
               </div>
-              <div className="ka-detail-section">
-                <div className="ka-detail-section-title">Historique d'activité</div>
-                <div className="ka-timeline">
+              <div className="mb-5">
+                <div className="text-[10px] font-semibold tracking-[1px] uppercase text-[#484f58] mb-2.5 pb-1.5 border-b border-[#21262d]">Historique d'activité</div>
+                <div className="flex flex-col">
                   {detailKey.events.map((e, i) => (
-                    <div className="ka-tl-item" key={i}>
-                      <div className="ka-tl-line"><div className="ka-tl-dot" style={{ background: e.dot }}/><div className="ka-tl-connector"/></div>
-                      <div className="ka-tl-content"><div className="ka-tl-event">{e.event}</div><div className="ka-tl-time">{e.time}</div></div>
+                    <div className="flex gap-2.5 py-1.5" key={i}>
+                      <div className="flex flex-col items-center">
+                        <div className="w-1.5 h-1.5 mt-0.5" style={{ background: e.dot }}/>
+                        <div className="w-px flex-1 bg-[#21262d] mt-1"/>
+                      </div>
+                      <div className="pb-2.5">
+                        <div className="text-xs text-[#8b949e]">{e.event}</div>
+                        <div className="text-[10px] text-[#484f58] mt-0.5 font-mono">{e.time}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {detailKey.status === "active" && <button className="ka-btn ka-btn-ghost" style={{ width: "100%", justifyContent: "center" }} onClick={() => { handleSuspend(detailKey.id); setDetailKey(null); }}><Ico d={I.ban} s={13}/> Suspendre</button>}
-                {detailKey.status === "suspended" && <button className="ka-btn ka-btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={() => { handleReactivate(detailKey.id); setDetailKey(null); }}><Ico d={I.check} s={13}/> Réactiver</button>}
-                <button className="ka-btn ka-btn-ghost" style={{ width: "100%", justifyContent: "center" }} onClick={() => handleCopy(detailKey.key)}><Ico d={I.copy} s={13}/> Copier la clé</button>
-                <button className="ka-btn ka-btn-danger" style={{ width: "100%", justifyContent: "center" }} onClick={() => setModal("revoke")}><Ico d={I.trash} s={13}/> Révoquer définitivement</button>
+              <div className="flex flex-col gap-1.5">
+                {detailKey.status === "active" && <button className="inline-flex items-center justify-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" style={{ width: "100%" }} onClick={() => { handleSuspend(detailKey.id); setDetailKey(null); }}><Ico d={I.ban} s={13}/> Suspendre</button>}
+                {detailKey.status === "suspended" && <button className="inline-flex items-center justify-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" style={{ width: "100%" }} onClick={() => { handleReactivate(detailKey.id); setDetailKey(null); }}><Ico d={I.check} s={13}/> Réactiver</button>}
+                <button className="inline-flex items-center justify-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" style={{ width: "100%" }} onClick={() => handleCopy(detailKey.key)}><Ico d={I.copy} s={13}/> Copier la clé</button>
+                <button className="inline-flex items-center justify-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:bg-[rgba(248,81,73,0.08)] hover:border-[rgba(248,81,73,0.25)] hover:text-[#f85149]" style={{ width: "100%" }} onClick={() => setModal("revoke")}><Ico d={I.trash} s={13}/> Révoquer définitivement</button>
               </div>
             </div>
           </div>
@@ -810,77 +607,77 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
 
       {/* MODAL GÉNÉRER */}
       {modal === "generate" && (
-        <div className="ka-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
-          <div className="ka-modal">
-            <div className="ka-modal-head">
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 28, height: 28, background: "var(--blue-dim)", border: "1px solid var(--blue-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)" }}><Ico d={I.key} s={14}/></div>
-                <span className="ka-modal-title">Générer une clé d'activation</span>
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-[1000] p-5 animate-[kaFadeIn_0.2s]" onClick={e => e.target === e.currentTarget && setModal(null)}>
+          <div className="bg-[#0d1117] border border-[#30363d] w-full max-w-[540px] animate-[kaSlideUp_0.25s_cubic-bezier(0.4,0,0.2,1)]">
+            <div className="p-5 pb-4 border-b border-[#21262d] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 bg-[rgba(56,139,253,0.08)] border border-[rgba(56,139,253,0.25)] flex items-center justify-center text-[#388bfd]"><Ico d={I.key} s={14}/></div>
+                <span className="text-sm font-semibold">Générer une clé d'activation</span>
               </div>
-              <button className="ka-close" onClick={() => setModal(null)}><Ico d={I.close} s={14}/></button>
+              <button className="w-6 h-6 bg-transparent border-none text-[#484f58] cursor-pointer flex items-center justify-center transition-colors duration-150 hover:text-[#e6edf3]" onClick={() => setModal(null)}><Ico d={I.close} s={14}/></button>
             </div>
-            <div className="ka-modal-body">
-              <div className="ka-field">
-                <div className="ka-label"><Ico d={I.globe} s={11}/> Établissement</div>
-                <input className="ka-input" placeholder="Nom de l'établissement" value={form.school} onChange={e => setForm({ ...form, school: e.target.value })}/>
+            <div className="p-5 pb-4 max-h-[70vh] overflow-y-auto">
+              <div className="mb-3.5">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5"><Ico d={I.globe} s={11}/> Établissement</div>
+                <input className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] placeholder:text-[#484f58]" placeholder="Nom de l'établissement" value={form.school} onChange={e => setForm({ ...form, school: e.target.value })}/>
               </div>
-              <div className="ka-field-row">
-                <div className="ka-field">
-                  <div className="ka-label">Plan</div>
-                  <select className="ka-select" value={form.plan} onChange={e => setForm({ ...form, plan: e.target.value as FormData["plan"] })}>
+              <div className="grid grid-cols-2 gap-3 mb-3.5">
+                <div>
+                  <div className="text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">Plan</div>
+                  <select className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] cursor-pointer appearance-none" value={form.plan} onChange={e => setForm({ ...form, plan: e.target.value as FormData["plan"] })}>
                     <option value="Basic">Basic — 99€/mois</option><option value="Premium">Premium — 299€/mois</option><option value="Enterprise">Enterprise — 599€/mois</option>
                   </select>
                 </div>
-                <div className="ka-field">
-                  <div className="ka-label">Max utilisateurs</div>
-                  <input className="ka-input" type="number" value={form.maxUses} onChange={e => setForm({ ...form, maxUses: e.target.value })}/>
+                <div>
+                  <div className="text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">Max utilisateurs</div>
+                  <input className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd]" type="number" value={form.maxUses} onChange={e => setForm({ ...form, maxUses: e.target.value })}/>
                 </div>
               </div>
-              <div className="ka-field-row">
-                <div className="ka-field">
-                  <div className="ka-label"><Ico d={I.clock} s={11}/> Expiration</div>
-                  <input className="ka-input" type="date" value={form.expires} onChange={e => setForm({ ...form, expires: e.target.value })}/>
+              <div className="grid grid-cols-2 gap-3 mb-3.5">
+                <div>
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5"><Ico d={I.clock} s={11}/> Expiration</div>
+                  <input className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd]" type="date" value={form.expires} onChange={e => setForm({ ...form, expires: e.target.value })}/>
                 </div>
-                <div className="ka-field">
-                  <div className="ka-label">Méthode d'activation</div>
-                  <select className="ka-select" value={form.activationMethod} onChange={e => setForm({ ...form, activationMethod: e.target.value as FormData["activationMethod"] })}>
+                <div>
+                  <div className="text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">Méthode d'activation</div>
+                  <select className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] cursor-pointer appearance-none" value={form.activationMethod} onChange={e => setForm({ ...form, activationMethod: e.target.value as FormData["activationMethod"] })}>
                     <option value="online">En ligne</option><option value="usb">Clé USB</option><option value="file">Fichier .licpkg</option>
                   </select>
                 </div>
               </div>
-              <div className="ka-field">
-                <div className="ka-label"><Ico d={I.shield} s={11}/> Sécurité avancée</div>
-                <div className="ka-sec-opts">
+              <div className="mb-3.5">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5"><Ico d={I.shield} s={11}/> Sécurité avancée</div>
+                <div className="flex flex-col gap-1.5 mt-1">
                   {securityOptions.map(opt => (
                     <div
                       key={opt.key}
-                      className={`ka-sec-opt ${form[opt.key] ? "enabled" : ""}`}
+                      className={`flex items-center justify-between p-2.5 bg-[#090c10] border border-[#21262d] cursor-pointer select-none transition-colors duration-150 hover:border-[#30363d] ${form[opt.key] ? "border-[rgba(56,139,253,0.25)] bg-[rgba(56,139,253,0.08)]" : ""}`}
                       onClick={() => setForm(f => ({ ...f, [opt.key]: !f[opt.key] }))}
                     >
-                      <div className="ka-sec-opt-left">
-                        <div className="ka-sec-opt-icon"><Ico d={opt.icon} s={14}/></div>
-                        <div><div className="ka-sec-opt-name">{opt.name}</div><div className="ka-sec-opt-desc">{opt.desc}</div></div>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 flex items-center justify-center text-[#8b949e]"><Ico d={opt.icon} s={14}/></div>
+                        <div><div className="text-xs font-medium">{opt.name}</div><div className="text-[11px] text-[#484f58] mt-0.5">{opt.desc}</div></div>
                       </div>
                       <Toggle on={form[opt.key]} onChange={() => {}}/>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="ka-field">
-                <div className="ka-label"><Ico d={I.hash} s={11}/> Aperçu de la clé</div>
-                <div className="ka-key-preview-box">
-                  <span className="ka-key-preview-val">{previewKey}</span>
-                  <button className="ka-key-preview-refresh" onClick={() => setPreviewKey(genKey())}><Ico d={I.refresh} s={14}/></button>
+              <div className="mb-3.5">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5"><Ico d={I.hash} s={11}/> Aperçu de la clé</div>
+                <div className="bg-[#090c10] border border-[#21262d] p-2.5 flex items-center justify-between mt-1.5">
+                  <span className="font-mono text-xs text-[#388bfd] tracking-[0.5px]">{previewKey}</span>
+                  <button className="bg-none border-none text-[#484f58] cursor-pointer flex items-center transition-colors duration-150 hover:text-[#388bfd]" onClick={() => setPreviewKey(genKey())}><Ico d={I.refresh} s={14}/></button>
                 </div>
               </div>
-              <div className="ka-field">
-                <div className="ka-label">Note interne (optionnel)</div>
-                <textarea className="ka-textarea" rows={2} placeholder="Remarque, contexte, référence commande…" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })}/>
+              <div className="mb-3.5">
+                <div className="text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">Note interne (optionnel)</div>
+                <textarea className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] resize-vertical min-h-[56px]" rows={2} placeholder="Remarque, contexte, référence commande…" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })}/>
               </div>
             </div>
-            <div className="ka-modal-foot">
-              <button className="ka-btn ka-btn-ghost" onClick={() => setModal(null)}>Annuler</button>
-              <button className="ka-btn ka-btn-primary" onClick={handleGenerate} disabled={!form.school}><Ico d={I.check} s={13}/> Générer et envoyer</button>
+            <div className="p-4 pt-3 border-t border-[#21262d] flex justify-end gap-2">
+              <button className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => setModal(null)}>Annuler</button>
+              <button className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={handleGenerate} disabled={!form.school}><Ico d={I.check} s={13}/> Générer et envoyer</button>
             </div>
           </div>
         </div>
@@ -888,34 +685,30 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
 
       {/* MODAL RÉVOQUER */}
       {modal === "revoke" && (
-        <div className="ka-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
-          <div className="ka-modal" style={{ maxWidth: 420 }}>
-            <div className="ka-modal-head">
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 28, height: 28, background: "var(--red-dim)", border: "1px solid var(--red-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)" }}><Ico d={I.warn} s={14}/></div>
-                <span className="ka-modal-title">Confirmer la révocation</span>
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-[1000] p-5 animate-[kaFadeIn_0.2s]" onClick={e => e.target === e.currentTarget && setModal(null)}>
+          <div className="bg-[#0d1117] border border-[#30363d] w-full max-w-[420px] animate-[kaSlideUp_0.25s_cubic-bezier(0.4,0,0.2,1)]">
+            <div className="p-5 pb-4 border-b border-[#21262d] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 bg-[rgba(248,81,73,0.08)] border border-[rgba(248,81,73,0.25)] flex items-center justify-center text-[#f85149]"><Ico d={I.warn} s={14}/></div>
+                <span className="text-sm font-semibold">Confirmer la révocation</span>
               </div>
-              <button className="ka-close" onClick={() => setModal(null)}><Ico d={I.close} s={14}/></button>
+              <button className="w-6 h-6 bg-transparent border-none text-[#484f58] cursor-pointer flex items-center justify-center transition-colors duration-150 hover:text-[#e6edf3]" onClick={() => setModal(null)}><Ico d={I.close} s={14}/></button>
             </div>
-            <div className="ka-modal-body">
-              <div style={{ padding: "12px 14px", background: "var(--red-dim)", border: "1px solid var(--red-border)", marginBottom: 16 }}>
-                <div style={{ fontSize: 12, color: "var(--red)", fontWeight: 500, marginBottom: 4 }}>Action irréversible</div>
-                <div style={{ fontSize: 12, color: "var(--t2)" }}>La clé <span style={{ fontFamily: "var(--mono)" }}>{detailKey?.key}</span> sera révoquée. L'établissement {detailKey?.school} sera déconnecté immédiatement.</div>
+            <div className="p-5 pb-4 max-h-[70vh] overflow-y-auto">
+              <div className="p-3 bg-[rgba(248,81,73,0.08)] border border-[rgba(248,81,73,0.25)] mb-4">
+                <div className="text-xs text-[#f85149] font-medium mb-1">Action irréversible</div>
+                <div className="text-xs text-[#8b949e]">La clé <span className="font-mono">{detailKey?.key}</span> sera révoquée. L'établissement {detailKey?.school} sera déconnecté immédiatement.</div>
               </div>
-              <div className="ka-field">
-                <div className="ka-label">Raison de la révocation</div>
-                <select className="ka-select">
-                  <option>Non-paiement</option>
-                  <option>Abus détecté</option>
-                  <option>Clé compromise</option>
-                  <option>Résiliation client</option>
-                  <option>Autre</option>
+              <div>
+                <div className="text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">Raison de la révocation</div>
+                <select className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] cursor-pointer appearance-none">
+                  <option>Non-paiement</option><option>Abus détecté</option><option>Clé compromise</option><option>Résiliation client</option><option>Autre</option>
                 </select>
               </div>
             </div>
-            <div className="ka-modal-foot">
-              <button className="ka-btn ka-btn-ghost" onClick={() => setModal(null)}>Annuler</button>
-              <button className="ka-btn ka-btn-danger" onClick={confirmRevoke}><Ico d={I.trash} s={13}/> Révoquer définitivement</button>
+            <div className="p-4 pt-3 border-t border-[#21262d] flex justify-end gap-2">
+              <button className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => setModal(null)}>Annuler</button>
+              <button className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:bg-[rgba(248,81,73,0.08)] hover:border-[rgba(248,81,73,0.25)] hover:text-[#f85149]" onClick={confirmRevoke}><Ico d={I.trash} s={13}/> Révoquer définitivement</button>
             </div>
           </div>
         </div>
@@ -923,32 +716,32 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
 
       {/* MODAL AUDIT */}
       {modal === "audit" && (
-        <div className="ka-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
-          <div className="ka-modal">
-            <div className="ka-modal-head">
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 28, height: 28, background: "var(--green-dim)", border: "1px solid var(--green-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--green)" }}><Ico d={I.shield} s={14}/></div>
-                <span className="ka-modal-title">Rapport d'audit sécurité</span>
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-[1000] p-5 animate-[kaFadeIn_0.2s]" onClick={e => e.target === e.currentTarget && setModal(null)}>
+          <div className="bg-[#0d1117] border border-[#30363d] w-full max-w-[540px] animate-[kaSlideUp_0.25s_cubic-bezier(0.4,0,0.2,1)]">
+            <div className="p-5 pb-4 border-b border-[#21262d] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 bg-[rgba(63,185,80,0.08)] border border-[rgba(63,185,80,0.25)] flex items-center justify-center text-[#3fb950]"><Ico d={I.shield} s={14}/></div>
+                <span className="text-sm font-semibold">Rapport d'audit sécurité</span>
               </div>
-              <button className="ka-close" onClick={() => setModal(null)}><Ico d={I.close} s={14}/></button>
+              <button className="w-6 h-6 bg-transparent border-none text-[#484f58] cursor-pointer flex items-center justify-center transition-colors duration-150 hover:text-[#e6edf3]" onClick={() => setModal(null)}><Ico d={I.close} s={14}/></button>
             </div>
-            <div className="ka-modal-body">
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "var(--border)", border: "1px solid var(--border)", marginBottom: 20 }}>
+            <div className="p-5 pb-4 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-3 gap-px bg-[#21262d] border border-[#21262d] mb-5">
                 {auditItems.map(s => (
-                  <div key={s.label} style={{ background: "var(--panel)", padding: "14px 16px" }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "var(--t3)", marginBottom: 6 }}>{s.label}</div>
-                    <div style={{ fontSize: 22, fontWeight: 300, color: s.color }}>{s.val}</div>
+                  <div key={s.label} className="bg-[#0d1117] p-3.5">
+                    <div className="text-[10px] font-semibold tracking-[0.8px] uppercase text-[#484f58] mb-1.5">{s.label}</div>
+                    <div className="text-[22px] font-light" style={{ color: s.color }}>{s.val}</div>
                   </div>
                 ))}
               </div>
-              <div style={{ border: "1px solid var(--border)" }}>
+              <div className="border border-[#21262d]">
                 {keys.map((k, i) => (
-                  <div key={k.id} style={{ display: "flex", alignItems: "center", padding: "10px 14px", borderBottom: i < keys.length - 1 ? "1px solid var(--border)" : "none", background: "var(--panel)", gap: 12 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{k.school}</div>
-                      <div style={{ fontSize: 10, color: "var(--t3)", fontFamily: "var(--mono)" }}>{k.key}</div>
+                  <div key={k.id} className={`flex items-center p-2.5 gap-3 bg-[#0d1117] ${i < keys.length - 1 ? "border-b border-[#21262d]" : ""}`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium overflow-hidden text-ellipsis whitespace-nowrap">{k.school}</div>
+                      <div className="text-[10px] text-[#484f58] font-mono">{k.key}</div>
                     </div>
-                    <div style={{ display: "flex", gap: 4 }}>
+                    <div className="flex gap-1">
                       <span style={{ opacity: k.hwLock ? 1 : 0.2 }}><Ico d={I.chip} s={12}/></span>
                       <span style={{ opacity: k.twoFa ? 1 : 0.2 }}><Ico d={I.fingerp} s={12}/></span>
                       <span style={{ opacity: k.ipRestrict ? 1 : 0.2 }}><Ico d={I.lock} s={12}/></span>
@@ -958,15 +751,15 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
                 ))}
               </div>
               {keys.some(k => k.secScore < 50) && (
-                <div style={{ marginTop: 16, padding: "12px 14px", background: "var(--amber-dim)", border: "1px solid var(--amber-border)" }}>
-                  <div style={{ fontSize: 12, color: "var(--amber)", fontWeight: 500, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}><Ico d={I.warn} s={13}/> {keys.filter(k => k.secScore < 50).length} clé(s) à risque</div>
-                  <div style={{ fontSize: 12, color: "var(--t2)" }}>Activez le Hardware Lock et le 2FA pour les clés dont le score est inférieur à 50.</div>
+                <div className="mt-4 p-3 bg-[rgba(210,153,34,0.08)] border border-[rgba(210,153,34,0.25)]">
+                  <div className="flex items-center gap-1.5 text-xs text-[#d29922] font-medium mb-1"><Ico d={I.warn} s={13}/> {keys.filter(k => k.secScore < 50).length} clé(s) à risque</div>
+                  <div className="text-xs text-[#8b949e]">Activez le Hardware Lock et le 2FA pour les clés dont le score est inférieur à 50.</div>
                 </div>
               )}
             </div>
-            <div className="ka-modal-foot">
-              <button className="ka-btn ka-btn-ghost" onClick={() => setModal(null)}>Fermer</button>
-              <button className="ka-btn ka-btn-primary" onClick={() => { showToast("Rapport exporté", "green"); setModal(null); }}><Ico d={I.download} s={13}/> Exporter le rapport</button>
+            <div className="p-4 pt-3 border-t border-[#21262d] flex justify-end gap-2">
+              <button className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => setModal(null)}>Fermer</button>
+              <button className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => { showToast("Rapport exporté", "green"); setModal(null); }}><Ico d={I.download} s={13}/> Exporter le rapport</button>
             </div>
           </div>
         </div>
@@ -974,8 +767,8 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
 
       {/* TOAST */}
       {toast && (
-        <div className="ka-toast">
-          <div className="ka-toast-dot" style={{
+        <div className="fixed bottom-6 right-6 bg-[#1c2330] border border-[#30363d] py-2.5 px-4 flex items-center gap-2.5 z-[9999] text-xs min-w-[280px] animate-[kaSlideUp_0.25s_cubic-bezier(0.4,0,0.2,1)]">
+          <div className="w-1.5 h-1.5 flex-shrink-0" style={{
             background: toast.type === "green" ? "#3fb950" :
                         toast.type === "red" ? "#f85149" :
                         toast.type === "amber" ? "#d29922" : "#388bfd"

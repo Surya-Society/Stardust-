@@ -272,10 +272,10 @@ const apiKeys: ApiKey[] = [
 function LanguageBadge({ lang }: { lang: Algorithm['languages'][0] }) {
   const Icon = lang.icon;
   return (
-    <span className="lang-badge">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#161b22] border border-[#21262d] text-[11px]">
       <Icon size={12} />
       <span>{lang.name} {lang.version}</span>
-      <span className="downloads">{lang.downloads}+</span>
+      <span className="text-[10px] text-[#484f58] ml-1">{lang.downloads}+</span>
     </span>
   );
 }
@@ -289,7 +289,7 @@ function TemplateTypeBadge({ type }: { type: Template['type'] }) {
   };
   const { icon: Icon, label, color } = config[type];
   return (
-    <span className="type-badge" style={{ borderColor: color, color }}>
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] bg-transparent border" style={{ borderColor: color, color }}>
       <Icon size={12} />
       {label}
     </span>
@@ -298,13 +298,13 @@ function TemplateTypeBadge({ type }: { type: Template['type'] }) {
 
 function StatusBadge({ status }: { status: Algorithm['status'] }) {
   const config = {
-    stable: { label: 'Stable', color: '#39d353' },
-    beta: { label: 'Bêta', color: '#e3b341' },
-    deprecated: { label: 'Obsolète', color: '#f85149' }
+    stable: { label: 'Stable', color: '#39d353', bg: 'bg-[rgba(57,211,83,0.08)]', border: 'border-[rgba(57,211,83,0.25)]' },
+    beta: { label: 'Bêta', color: '#e3b341', bg: 'bg-[rgba(227,179,65,0.08)]', border: 'border-[rgba(227,179,65,0.25)]' },
+    deprecated: { label: 'Obsolète', color: '#f85149', bg: 'bg-[rgba(248,81,73,0.08)]', border: 'border-[rgba(248,81,73,0.25)]' }
   };
-  const { label, color } = config[status];
+  const { label, color, bg, border } = config[status];
   return (
-    <span className="status-badge" style={{ borderColor: color, color }}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] ${bg} border ${border}`} style={{ color }}>
       {label}
     </span>
   );
@@ -315,58 +315,58 @@ function AlgorithmCard({ algo, onAction }: { algo: Algorithm; onAction: (action:
   const totalDownloads = algo.languages.reduce((acc, l) => acc + l.downloads, 0);
   
   return (
-    <div className="algorithm-card">
-      <div className="card-header">
-        <div className="title-section">
-          <h3>{algo.name}</h3>
+    <div className="bg-[#0d1117] p-6">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <h3 className="text-base font-semibold">{algo.name}</h3>
           <StatusBadge status={algo.status} />
         </div>
-        <button className="menu-btn" onClick={() => onAction('menu')}>
+        <button className="w-8 h-8 flex items-center justify-center bg-transparent border border-[#21262d] text-[#484f58] cursor-pointer hover:bg-[#161b22] hover:text-[#e6edf3]" onClick={() => onAction('menu')}>
           <FiMoreVertical size={16} />
         </button>
       </div>
 
-      <p className="description">{algo.description}</p>
+      <p className="text-[13px] text-[#8b949e] leading-relaxed mb-4">{algo.description}</p>
 
-      <div className="type-tag">
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#1c2330] border border-[#21262d] text-[11px] uppercase mb-4">
         {algo.type === 'quantum' && <TbBinary size={14} />}
         {algo.type === 'encryption' && <BiLock size={14} />}
         {algo.type === 'compression' && <FiArchive size={14} />}
         <span>{algo.type}</span>
       </div>
 
-      <div className="languages-section">
-        <h4>Disponible en :</h4>
-        <div className="languages-grid">
+      <div className="mb-5">
+        <h4 className="text-xs font-medium text-[#484f58] mb-3">Disponible en :</h4>
+        <div className="flex flex-wrap gap-2">
           {algo.languages.map((lang, i) => (
             <LanguageBadge key={`${algo.id}-lang-${i}`} lang={lang} />
           ))}
         </div>
       </div>
 
-      <div className="stats">
-        <div className="stat">
+      <div className="flex gap-5 py-4 border-t border-b border-[#21262d] mb-4">
+        <div className="flex items-center gap-1.5 text-xs text-[#484f58]">
           <FiDownload size={14} />
           <span>{totalDownloads.toLocaleString()} téléchargements</span>
         </div>
-        <div className="stat">
+        <div className="flex items-center gap-1.5 text-xs text-[#484f58]">
           <FiStar size={14} />
           <span>{algo.rating}/5</span>
         </div>
-        <div className="stat">
+        <div className="flex items-center gap-1.5 text-xs text-[#484f58]">
           <FiUsers size={14} />
           <span>{algo.usage.toLocaleString()} utilisations</span>
         </div>
       </div>
 
-      <div className="card-footer">
-        <span className="version">v{algo.version}</span>
-        <span className="updated">MAJ {algo.updated}</span>
-        <div className="actions">
-          <button className="action-btn" onClick={() => onAction('docs')}>
+      <div className="flex items-center justify-between">
+        <span className="font-mono text-xs text-[#388bfd]">v{algo.version}</span>
+        <span className="text-[11px] text-[#484f58]">MAJ {algo.updated}</span>
+        <div className="flex gap-1.5">
+          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-[#21262d] text-[#8b949e] text-[11px] cursor-pointer transition-all duration-200 hover:bg-[#1c2330] hover:border-[#30363d] hover:text-[#e6edf3]" onClick={() => onAction('docs')}>
             <FiCode size={14} /> Docs
           </button>
-          <button className="action-btn primary" onClick={() => onAction('download')}>
+          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#388bfd] border border-[#388bfd] text-white text-[11px] cursor-pointer transition-all duration-200 hover:bg-[#58a6ff]" onClick={() => onAction('download')}>
             <FiDownload size={14} /> Télécharger
           </button>
         </div>
@@ -378,41 +378,41 @@ function AlgorithmCard({ algo, onAction }: { algo: Algorithm; onAction: (action:
 // Carte Template
 function TemplateCard({ template, onAction }: { template: Template; onAction: (action: string) => void }) {
   return (
-    <div className="template-card">
-      <div className="preview">
+    <div className="bg-[#0d1117] flex gap-5 p-5 max-[768px]:flex-col">
+      <div className="w-[120px] h-[120px] bg-[#161b22] border border-[#21262d] flex flex-col items-center justify-center gap-3 text-[#484f58] max-[768px]:w-full max-[768px]:h-[100px]">
         <HiOutlinePhotograph size={32} />
         <TemplateTypeBadge type={template.type} />
       </div>
 
-      <div className="card-content">
-        <h3>{template.name}</h3>
-        <p>{template.description}</p>
+      <div className="flex-1">
+        <h3 className="text-[15px] font-semibold mb-2">{template.name}</h3>
+        <p className="text-xs text-[#8b949e] mb-3">{template.description}</p>
 
-        <div className="tags">
+        <div className="flex flex-wrap gap-1.5 mb-3">
           {template.tags.map((tag, i) => (
-            <span key={`${template.id}-tag-${i}`} className="tag">#{tag}</span>
+            <span key={`${template.id}-tag-${i}`} className="px-2 py-0.5 bg-[#161b22] border border-[#21262d] text-[10px] text-[#484f58]">#{tag}</span>
           ))}
         </div>
 
-        <div className="template-meta">
-          <span><FiLayers size={12} /> {template.category}</span>
-          <span><FiDownload size={12} /> {template.downloads}</span>
-          <span><FiUsers size={12} /> {template.uses} utilisations</span>
+        <div className="flex gap-4 mb-4 text-[11px] text-[#484f58]">
+          <span className="flex items-center gap-1"><FiLayers size={12} /> {template.category}</span>
+          <span className="flex items-center gap-1"><FiDownload size={12} /> {template.downloads}</span>
+          <span className="flex items-center gap-1"><FiUsers size={12} /> {template.uses} utilisations</span>
         </div>
 
-        <div className="card-footer">
-          <span className="format">{template.format}</span>
+        <div className="flex items-center gap-3">
+          <span className="px-2 py-0.5 bg-[#1c2330] border border-[#21262d] text-[10px] uppercase text-[#484f58]">{template.format}</span>
           {template.customizable && (
-            <span className="customizable">Personnalisable</span>
+            <span className="px-2 py-0.5 bg-[rgba(57,211,83,0.08)] border border-[rgba(57,211,83,0.25)] text-[10px] text-[#39d353]">Personnalisable</span>
           )}
-          <div className="actions">
-            <button className="action-btn" onClick={() => onAction('preview')}>
+          <div className="flex gap-1.5 ml-auto">
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-[#21262d] text-[#8b949e] text-[11px] cursor-pointer transition-all duration-200 hover:bg-[#1c2330] hover:border-[#30363d] hover:text-[#e6edf3]" onClick={() => onAction('preview')}>
               <FiEye size={14} /> Aperçu
             </button>
-            <button className="action-btn primary" onClick={() => onAction('edit')}>
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-transparent border border-[#21262d] text-[#8b949e] text-[11px] cursor-pointer transition-all duration-200 hover:bg-[#1c2330] hover:border-[#30363d] hover:text-[#e6edf3]" onClick={() => onAction('edit')}>
               <FiEdit2 size={14} /> Modifier
             </button>
-            <button className="action-btn" onClick={() => onAction('download')}>
+            <button className="inline-flex items-center justify-center w-8 h-8 bg-transparent border border-[#21262d] text-[#8b949e] text-[11px] cursor-pointer transition-all duration-200 hover:bg-[#1c2330] hover:border-[#30363d] hover:text-[#e6edf3]" onClick={() => onAction('download')}>
               <FiDownload size={14} />
             </button>
           </div>
@@ -428,42 +428,47 @@ function ApiKeyCard({ apiKey, onAction, onCopy }: { apiKey: ApiKey; onAction: (a
   const displayKey = showFullKey ? apiKey.key : `${apiKey.key.substring(0, 20)}...`;
 
   return (
-    <div className="apikey-card">
-      <div className="card-header">
+    <div className="bg-[#0d1117] p-5">
+      <div className="flex items-start justify-between mb-4">
         <div>
-          <h3>{apiKey.name}</h3>
-          {apiKey.algorithm && <span className="algo-tag">{apiKey.algorithm}</span>}
+          <h3 className="text-[15px] font-semibold mb-1">{apiKey.name}</h3>
+          {apiKey.algorithm && <span className="text-[11px] text-[#388bfd]">{apiKey.algorithm}</span>}
         </div>
-        <button className="menu-btn" onClick={() => onAction('menu')}>
+        <button className="w-8 h-8 flex items-center justify-center bg-transparent border border-[#21262d] text-[#484f58] cursor-pointer hover:bg-[#161b22] hover:text-[#e6edf3]" onClick={() => onAction('menu')}>
           <FiMoreVertical size={16} />
         </button>
       </div>
 
-      <div className="key-display">
+      <div className="flex items-center justify-between p-3 bg-[#161b22] border border-[#21262d] font-mono text-xs mb-3">
         <code>{displayKey}</code>
-        <div className="key-actions">
-          <button onClick={() => setShowFullKey(!showFullKey)}>
+        <div className="flex gap-1">
+          <button className="w-7 h-7 flex items-center justify-center bg-transparent border border-[#21262d] text-[#484f58] cursor-pointer hover:bg-[#1c2330] hover:text-[#e6edf3]" onClick={() => setShowFullKey(!showFullKey)}>
             {showFullKey ? <FiEyeOff size={14} /> : <FiEye size={14} />}
           </button>
-          <button onClick={() => onCopy(apiKey.key)}>
+          <button className="w-7 h-7 flex items-center justify-center bg-transparent border border-[#21262d] text-[#484f58] cursor-pointer hover:bg-[#1c2330] hover:text-[#e6edf3]" onClick={() => onCopy(apiKey.key)}>
             <FiCopy size={14} />
           </button>
         </div>
       </div>
 
-      <div className="key-meta">
-        <span><FiCalendar size={12} /> Créée {apiKey.created}</span>
-        <span><FiActivity size={12} /> {apiKey.requests} requêtes</span>
-        <span><FiClock size={12} /> {apiKey.lastUsed}</span>
+      <div className="flex flex-wrap gap-4 py-3 border-t border-b border-[#21262d] mb-4 text-[11px] text-[#484f58]">
+        <span className="flex items-center gap-1"><FiCalendar size={12} /> Créée {apiKey.created}</span>
+        <span className="flex items-center gap-1"><FiActivity size={12} /> {apiKey.requests} requêtes</span>
+        <span className="flex items-center gap-1"><FiClock size={12} /> {apiKey.lastUsed}</span>
       </div>
 
-      <div className="card-footer">
-        <span className={`status ${apiKey.status}`}>{apiKey.status}</span>
-        <div className="actions">
-          <button className="action-btn" onClick={() => onAction('edit')}>
+      <div className="flex items-center justify-between">
+        <span className={`px-2 py-0.5 text-[11px] font-medium capitalize ${
+          apiKey.status === 'active' ? 'bg-[rgba(57,211,83,0.08)] text-[#39d353] border border-[rgba(57,211,83,0.25)]' :
+          apiKey.status === 'inactive' ? 'bg-[#1c2330] text-[#484f58] border border-[#21262d]' :
+          apiKey.status === 'expired' ? 'bg-[rgba(227,179,65,0.08)] text-[#e3b341] border border-[rgba(227,179,65,0.25)]' :
+          'bg-[rgba(248,81,73,0.08)] text-[#f85149] border border-[rgba(248,81,73,0.25)]'
+        }`}>{apiKey.status}</span>
+        <div className="flex gap-1.5">
+          <button className="inline-flex items-center justify-center w-8 h-8 bg-transparent border border-[#21262d] text-[#8b949e] text-[11px] cursor-pointer transition-all duration-200 hover:bg-[#1c2330] hover:border-[#30363d] hover:text-[#e6edf3]" onClick={() => onAction('edit')}>
             <FiEdit2 size={14} />
           </button>
-          <button className="action-btn" onClick={() => onAction('refresh')}>
+          <button className="inline-flex items-center justify-center w-8 h-8 bg-transparent border border-[#21262d] text-[#8b949e] text-[11px] cursor-pointer transition-all duration-200 hover:bg-[#1c2330] hover:border-[#30363d] hover:text-[#e6edf3]" onClick={() => onAction('refresh')}>
             <FiRefreshCw size={14} />
           </button>
         </div>
@@ -517,41 +522,48 @@ export default function ApiPages({ onNotify }: ApiPagesProps) {
   };
 
   return (
-    <div className="api-page">
+    <div className="animate-[fadeIn_0.4s_ease]">
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+
       {/* En-tête */}
-      <div className="page-header">
-        <h1 className="page-title">
+      <div className="flex items-center justify-between mb-6 max-[768px]:flex-col max-[768px]:items-start">
+        <h1 className="flex items-center gap-3 text-2xl font-semibold">
           <BiCodeBlock size={28} />
           Développeurs & Templates
         </h1>
-        <div className="header-actions">
-          <button className="btn btn-ghost" onClick={() => onNotify('Données actualisées', 'green')}>
+        <div className="flex gap-2 max-[768px]:w-full max-[768px]:mt-3">
+          <button className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium cursor-pointer transition-all duration-200 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3]" onClick={() => onNotify('Données actualisées', 'green')}>
             <FiRefreshCw size={14} /> Actualiser
           </button>
-          <button className="btn btn-primary" onClick={handleCreateClick}>
+          <button className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium cursor-pointer transition-all duration-200 bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={handleCreateClick}>
             <FiPlus size={14} /> Nouvel algorithme
           </button>
         </div>
       </div>
 
       {/* Onglets */}
-      <div className="tabs">
+      <div className="flex gap-1 mb-6 border-b border-[#21262d] overflow-x-auto">
         <button
-          className={`tab ${activeTab === 'algorithms' ? 'active' : ''}`}
+          className={`flex items-center gap-2 px-5 py-3 bg-transparent border-none border-b-2 border-transparent text-[#8b949e] cursor-pointer text-[13px] font-medium transition-all duration-200 hover:text-[#e6edf3] hover:bg-[#161b22] ${activeTab === 'algorithms' ? '!text-[#388bfd] !border-b-[#388bfd] !bg-[#1c2330]' : ''}`}
           onClick={() => setActiveTab('algorithms')}
         >
           <HiOutlineChip size={16} />
           Algorithmes ({algorithms.length})
         </button>
         <button
-          className={`tab ${activeTab === 'templates' ? 'active' : ''}`}
+          className={`flex items-center gap-2 px-5 py-3 bg-transparent border-none border-b-2 border-transparent text-[#8b949e] cursor-pointer text-[13px] font-medium transition-all duration-200 hover:text-[#e6edf3] hover:bg-[#161b22] ${activeTab === 'templates' ? '!text-[#388bfd] !border-b-[#388bfd] !bg-[#1c2330]' : ''}`}
           onClick={() => setActiveTab('templates')}
         >
           <HiOutlineTemplate size={16} />
           Templates ({templates.length})
         </button>
         <button
-          className={`tab ${activeTab === 'keys' ? 'active' : ''}`}
+          className={`flex items-center gap-2 px-5 py-3 bg-transparent border-none border-b-2 border-transparent text-[#8b949e] cursor-pointer text-[13px] font-medium transition-all duration-200 hover:text-[#e6edf3] hover:bg-[#161b22] ${activeTab === 'keys' ? '!text-[#388bfd] !border-b-[#388bfd] !bg-[#1c2330]' : ''}`}
           onClick={() => setActiveTab('keys')}
         >
           <FiKey size={16} />
@@ -560,19 +572,20 @@ export default function ApiPages({ onNotify }: ApiPagesProps) {
       </div>
 
       {/* Barre de recherche */}
-      <div className="search-section">
-        <div className="search-box">
+      <div className="flex gap-4 mb-6 max-[768px]:flex-col">
+        <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-[#161b22] border border-[#21262d]">
           <FiSearch size={16} />
           <input
             type="text"
             placeholder="Rechercher..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 bg-transparent border-none text-[#e6edf3] text-[13px] focus:outline-none"
           />
         </div>
-        <div className="filter">
+        <div className="flex items-center gap-2 px-4 py-2 bg-[#161b22] border border-[#21262d]">
           <FiFilter size={16} />
-          <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-transparent border-none text-[#e6edf3] text-[13px] focus:outline-none">
             <option value="all">Tous</option>
             <option value="encryption">Cryptage</option>
             <option value="compression">Compression</option>
@@ -587,7 +600,7 @@ export default function ApiPages({ onNotify }: ApiPagesProps) {
       <div className="tab-content">
         {/* Algorithmes */}
         {activeTab === 'algorithms' && (
-          <div className="algorithms-grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(450px,1fr))] gap-px bg-[#21262d] border border-[#21262d] max-[768px]:grid-cols-1">
             {filteredAlgorithms.map(algo => (
               <AlgorithmCard key={`algo-${algo.id}`} algo={algo} onAction={handleAction} />
             ))}
@@ -596,7 +609,7 @@ export default function ApiPages({ onNotify }: ApiPagesProps) {
 
         {/* Templates */}
         {activeTab === 'templates' && (
-          <div className="templates-grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(450px,1fr))] gap-px bg-[#21262d] border border-[#21262d] max-[768px]:grid-cols-1">
             {filteredTemplates.map(template => (
               <TemplateCard key={`template-${template.id}`} template={template} onAction={handleAction} />
             ))}
@@ -605,571 +618,13 @@ export default function ApiPages({ onNotify }: ApiPagesProps) {
 
         {/* Clés API */}
         {activeTab === 'keys' && (
-          <div className="keys-grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(450px,1fr))] gap-px bg-[#21262d] border border-[#21262d] max-[768px]:grid-cols-1">
             {filteredKeys.map(key => (
               <ApiKeyCard key={`apikey-${key.id}`} apiKey={key} onAction={handleAction} onCopy={handleCopyKey} />
             ))}
           </div>
         )}
       </div>
-
-      <style>{`
-        .api-page {
-          animation: fadeIn 0.4s ease;
-        }
-
-        .page-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 24px;
-        }
-
-        .page-title {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          font-size: 24px;
-          font-weight: 600;
-        }
-
-        .header-actions {
-          display: flex;
-          gap: 8px;
-        }
-
-        .tabs {
-          display: flex;
-          gap: 4px;
-          margin-bottom: 24px;
-          border-bottom: 1px solid var(--border);
-        }
-
-        .tab {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 20px;
-          background: transparent;
-          border: none;
-          border-bottom: 2px solid transparent;
-          color: var(--text-secondary);
-          cursor: pointer;
-          font-size: 13px;
-          font-weight: 500;
-        }
-
-        .tab:hover {
-          color: var(--text-primary);
-          background: var(--bg-surface);
-        }
-
-        .tab.active {
-          color: var(--accent-blue);
-          border-bottom-color: var(--accent-blue);
-          background: var(--bg-elevated);
-        }
-
-        .search-section {
-          display: flex;
-          gap: 16px;
-          margin-bottom: 24px;
-        }
-
-        .search-box {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 8px 16px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-        }
-
-        .search-box input {
-          flex: 1;
-          background: transparent;
-          border: none;
-          color: var(--text-primary);
-          font-size: 13px;
-        }
-
-        .search-box input:focus {
-          outline: none;
-        }
-
-        .filter {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-        }
-
-        .filter select {
-          background: transparent;
-          border: none;
-          color: var(--text-primary);
-          font-size: 13px;
-        }
-
-        .filter select:focus {
-          outline: none;
-        }
-
-        /* Grilles */
-        .algorithms-grid,
-        .templates-grid,
-        .keys-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-          gap: 1px;
-          background: var(--border);
-          border: 1px solid var(--border);
-        }
-
-        /* Cartes algorithmes */
-        .algorithm-card {
-          background: var(--bg-panel);
-          padding: 24px;
-        }
-
-        .algorithm-card .card-header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          margin-bottom: 12px;
-        }
-
-        .algorithm-card .title-section {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .algorithm-card h3 {
-          font-size: 16px;
-          font-weight: 600;
-        }
-
-        .algorithm-card .description {
-          font-size: 13px;
-          color: var(--text-secondary);
-          line-height: 1.6;
-          margin-bottom: 16px;
-        }
-
-        .type-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 4px 12px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border);
-          font-size: 11px;
-          text-transform: uppercase;
-          margin-bottom: 16px;
-        }
-
-        .languages-section {
-          margin-bottom: 20px;
-        }
-
-        .languages-section h4 {
-          font-size: 12px;
-          font-weight: 500;
-          color: var(--text-muted);
-          margin-bottom: 12px;
-        }
-
-        .languages-grid {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .lang-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          font-size: 11px;
-        }
-
-        .lang-badge .downloads {
-          color: var(--text-muted);
-          font-size: 10px;
-          margin-left: 4px;
-        }
-
-        .algorithm-card .stats {
-          display: flex;
-          gap: 20px;
-          padding: 16px 0;
-          border-top: 1px solid var(--border);
-          border-bottom: 1px solid var(--border);
-          margin-bottom: 16px;
-        }
-
-        .algorithm-card .stat {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-          color: var(--text-muted);
-        }
-
-        .algorithm-card .card-footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .algorithm-card .version {
-          font-family: var(--mono);
-          font-size: 12px;
-          color: var(--accent-blue);
-        }
-
-        .algorithm-card .updated {
-          font-size: 11px;
-          color: var(--text-muted);
-        }
-
-        /* Cartes templates */
-        .template-card {
-          background: var(--bg-panel);
-          display: flex;
-          gap: 20px;
-          padding: 20px;
-        }
-
-        .template-card .preview {
-          width: 120px;
-          height: 120px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          color: var(--text-muted);
-        }
-
-        .template-card .card-content {
-          flex: 1;
-        }
-
-        .template-card h3 {
-          font-size: 15px;
-          font-weight: 600;
-          margin-bottom: 8px;
-        }
-
-        .template-card p {
-          font-size: 12px;
-          color: var(--text-secondary);
-          margin-bottom: 12px;
-        }
-
-        .tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          margin-bottom: 12px;
-        }
-
-        .tag {
-          padding: 2px 8px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          font-size: 10px;
-          color: var(--text-muted);
-        }
-
-        .template-meta {
-          display: flex;
-          gap: 16px;
-          margin-bottom: 16px;
-          font-size: 11px;
-          color: var(--text-muted);
-        }
-
-        .template-meta span {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .template-card .card-footer {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .format {
-          padding: 2px 8px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border);
-          font-size: 10px;
-          text-transform: uppercase;
-          color: var(--text-muted);
-        }
-
-        .customizable {
-          padding: 2px 8px;
-          background: rgba(57, 211, 83, 0.15);
-          border: 1px solid rgba(57, 211, 83, 0.3);
-          font-size: 10px;
-          color: var(--accent-teal);
-        }
-
-        /* Cartes clés API */
-        .apikey-card {
-          background: var(--bg-panel);
-          padding: 20px;
-        }
-
-        .apikey-card .card-header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          margin-bottom: 16px;
-        }
-
-        .apikey-card h3 {
-          font-size: 15px;
-          font-weight: 600;
-          margin-bottom: 4px;
-        }
-
-        .algo-tag {
-          font-size: 11px;
-          color: var(--accent-blue);
-        }
-
-        .key-display {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 12px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          font-family: var(--mono);
-          font-size: 12px;
-          margin-bottom: 12px;
-        }
-
-        .key-actions {
-          display: flex;
-          gap: 4px;
-        }
-
-        .key-actions button {
-          width: 28px;
-          height: 28px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: transparent;
-          border: 1px solid var(--border);
-          color: var(--text-muted);
-          cursor: pointer;
-        }
-
-        .key-actions button:hover {
-          background: var(--bg-elevated);
-          color: var(--text-primary);
-        }
-
-        .key-meta {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 16px;
-          padding: 12px 0;
-          border-top: 1px solid var(--border);
-          border-bottom: 1px solid var(--border);
-          margin-bottom: 16px;
-          font-size: 11px;
-          color: var(--text-muted);
-        }
-
-        .key-meta span {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .apikey-card .status {
-          padding: 2px 8px;
-          font-size: 11px;
-          font-weight: 500;
-          text-transform: capitalize;
-        }
-
-        .status.active {
-          background: rgba(57, 211, 83, 0.15);
-          color: var(--accent-teal);
-          border: 1px solid rgba(57, 211, 83, 0.3);
-        }
-
-        .status.inactive {
-          background: var(--bg-elevated);
-          color: var(--text-muted);
-          border: 1px solid var(--border);
-        }
-
-        .status.expired {
-          background: rgba(227, 179, 65, 0.15);
-          color: var(--accent-amber);
-          border: 1px solid rgba(227, 179, 65, 0.3);
-        }
-
-        .status.revoked {
-          background: rgba(248, 81, 73, 0.15);
-          color: var(--accent-red);
-          border: 1px solid rgba(248, 81, 73, 0.3);
-        }
-
-        .apikey-card .card-footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        /* Actions communes */
-        .actions {
-          display: flex;
-          gap: 6px;
-        }
-
-        .action-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          background: transparent;
-          border: 1px solid var(--border);
-          color: var(--text-secondary);
-          font-size: 11px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .action-btn:hover {
-          background: var(--bg-elevated);
-          border-color: var(--border-bright);
-          color: var(--text-primary);
-        }
-
-        .action-btn.primary {
-          background: var(--accent-blue);
-          border-color: var(--accent-blue);
-          color: white;
-        }
-
-        .action-btn.primary:hover {
-          background: #58a6ff;
-        }
-
-        .menu-btn {
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: transparent;
-          border: 1px solid var(--border);
-          color: var(--text-muted);
-          cursor: pointer;
-        }
-
-        .menu-btn:hover {
-          background: var(--bg-surface);
-          color: var(--text-primary);
-        }
-
-        .type-badge, .status-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: 2px 8px;
-          border: 1px solid;
-          font-size: 10px;
-          background: transparent;
-        }
-
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          border: 1px solid transparent;
-        }
-
-        .btn-primary {
-          background: var(--accent-blue);
-          color: white;
-        }
-
-        .btn-primary:hover {
-          background: #58a6ff;
-        }
-
-        .btn-ghost {
-          background: transparent;
-          border: 1px solid var(--border);
-          color: var(--text-secondary);
-        }
-
-        .btn-ghost:hover {
-          border-color: var(--border-bright);
-          color: var(--text-primary);
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @media (max-width: 768px) {
-          .page-header {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-
-          .tabs {
-            overflow-x: auto;
-          }
-
-          .search-section {
-            flex-direction: column;
-          }
-
-          .algorithms-grid,
-          .templates-grid,
-          .keys-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .template-card {
-            flex-direction: column;
-          }
-
-          .template-card .preview {
-            width: 100%;
-            height: 100px;
-          }
-        }
-      `}</style>
     </div>
   );
 }

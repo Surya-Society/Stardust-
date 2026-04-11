@@ -2,19 +2,20 @@
 import { useState } from 'react';
 import {
   FiStar, FiMessageCircle, FiThumbsUp,
-  FiMoreVertical,FiSearch,
+  FiMoreVertical, FiSearch,
   FiFlag, FiCheckCircle, FiAlertCircle,
   FiMail,
   FiDownload, FiRefreshCw, FiEdit2, FiTrash2,
-  FiUsers, FiUserPlus, FiUserCheck,FiActivity,
- FiUpload,
-  FiSave, FiImage,FiPhone,
+  FiUsers, FiUserPlus, FiUserCheck, FiActivity,
+  FiUpload,
+  FiSave, FiImage, FiPhone,
   FiTwitter, FiFacebook, FiLinkedin
 } from 'react-icons/fi';
 
 import { BsChatQuote } from 'react-icons/bs';
-import {RiTeamLine } from 'react-icons/ri';
+import { RiTeamLine } from 'react-icons/ri';
 import { FaRegCommentDots } from 'react-icons/fa';
+
 interface Comment {
   id: number;
   author: string;
@@ -194,27 +195,14 @@ const teamMembers: TeamMember[] = [
 // Composant d'étoiles
 function Stars({ rating, size = 16 }: { rating: number; size?: number }) {
   return (
-    <div className="stars">
+    <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
         <FiStar
           key={star}
           size={size}
-          className={`star ${star <= rating ? 'filled' : ''}`}
+          className={`${star <= rating ? 'text-[#e3b341] fill-[#e3b341]' : 'text-[#484f58]'}`}
         />
       ))}
-      <style>{`
-        .stars {
-          display: flex;
-          gap: 2px;
-        }
-        .star {
-          color: var(--text-muted);
-        }
-        .star.filled {
-          color: var(--accent-amber);
-          fill: var(--accent-amber);
-        }
-      `}</style>
     </div>
   );
 }
@@ -222,53 +210,51 @@ function Stars({ rating, size = 16 }: { rating: number; size?: number }) {
 // Composant de carte d'avis
 function CommentCard({ comment, onAction }: { comment: Comment; onAction: (action: string, comment: Comment) => void }) {
   return (
-    <div className={`comment-card ${comment.reported ? 'reported' : ''}`}>
-      <div className="card-header">
-        <div className="user-info">
-          <div className="avatar">
+    <div className={`bg-[#0d1117] p-5 border border-transparent transition-all duration-200 hover:border-[#30363d] ${comment.reported ? 'border-l-[3px] border-l-[#f85149]' : ''}`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex gap-3">
+          <div className="w-10 h-10 bg-[#1c2330] border border-[#21262d] flex items-center justify-center font-semibold text-[#388bfd]">
             {comment.author.charAt(0)}
           </div>
           <div>
-            <h4 className="name">{comment.author}</h4>
-            <p className="school">{comment.school}</p>
+            <h4 className="text-sm font-semibold mb-0.5">{comment.author}</h4>
+            <p className="text-xs text-[#484f58]">{comment.school}</p>
           </div>
         </div>
-        <div className="card-actions">
-          {comment.verified && <FiCheckCircle className="verified" size={16} />}
-          <button onClick={() => onAction('menu', comment)}>
+        <div className="flex gap-2">
+          {comment.verified && <FiCheckCircle size={16} className="text-[#39d353]" />}
+          <button className="bg-transparent border-none text-[#484f58] cursor-pointer" onClick={() => onAction('menu', comment)}>
             <FiMoreVertical size={16} />
           </button>
         </div>
       </div>
 
-      <div className="rating">
+      <div className="flex items-center justify-between mb-3">
         <Stars rating={comment.rating} />
-        <span className="date">{comment.date}</span>
+        <span className="text-[11px] text-[#484f58]">{comment.date}</span>
       </div>
 
-      <p className="text">{comment.text}</p>
+      <p className="text-[13px] text-[#8b949e] leading-relaxed mb-4">{comment.text}</p>
 
       {comment.response && (
-        <div className="response">
+        <div className="flex items-center gap-2 p-3 bg-[#161b22] border border-[#21262d] mb-4 text-xs text-[#8b949e]">
           <FiMessageCircle size={14} />
           <span>{comment.response}</span>
         </div>
       )}
 
-      <div className="footer">
-        <div className="stats">
-          <span><FiThumbsUp size={12} /> 12</span>
+      <div className="flex items-center justify-between">
+        <div className="flex gap-3 text-[11px] text-[#484f58]">
+          <span className="flex items-center gap-1"><FiThumbsUp size={12} /> 12</span>
           {comment.reported && (
-            <span className="reported">
-              <FiFlag size={12} /> {comment.reportCount} signalements
-            </span>
+            <span className="flex items-center gap-1 text-[#f85149]"><FiFlag size={12} /> {comment.reportCount} signalements</span>
           )}
         </div>
-        <div className="actions">
-          <button className="approve" onClick={() => onAction('approve', comment)}>
+        <div className="flex gap-2">
+          <button className="flex items-center gap-1 px-2 py-1 border border-[#21262d] bg-transparent text-[#8b949e] text-[11px] cursor-pointer transition-all duration-200 hover:bg-[#39d353] hover:border-[#39d353] hover:text-black" onClick={() => onAction('approve', comment)}>
             <FiCheckCircle size={14} /> Approuver
           </button>
-          <button className="delete" onClick={() => onAction('delete', comment)}>
+          <button className="flex items-center gap-1 px-2 py-1 border border-[#21262d] bg-transparent text-[#8b949e] text-[11px] cursor-pointer transition-all duration-200 hover:bg-[#f85149] hover:border-[#f85149] hover:text-white" onClick={() => onAction('delete', comment)}>
             <FiTrash2 size={14} /> Supprimer
           </button>
         </div>
@@ -280,41 +266,43 @@ function CommentCard({ comment, onAction }: { comment: Comment; onAction: (actio
 // Composant de carte membre d'équipe
 function TeamMemberCard({ member, onEdit, onDelete }: { member: TeamMember; onEdit: () => void; onDelete: () => void }) {
   return (
-    <div className="team-card">
-      <div className="card-header">
-        <img src={member.avatar} alt={member.name} className="avatar" />
-        <div className="info">
-          <h4>{member.name}</h4>
-          <p className="role">{member.role}</p>
+    <div className="bg-[#0d1117] p-5">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex gap-3">
+          <img src={member.avatar} alt={member.name} className="w-15 h-15 object-cover" />
+          <div>
+            <h4 className="text-base font-semibold mb-1">{member.name}</h4>
+            <p className="text-xs text-[#388bfd]">{member.role}</p>
+          </div>
         </div>
-        <button className="menu">
+        <button className="bg-transparent border-none text-[#484f58] cursor-pointer">
           <FiMoreVertical size={16} />
         </button>
       </div>
 
-      <p className="bio">{member.bio}</p>
+      <p className="text-[13px] text-[#8b949e] leading-relaxed mb-4">{member.bio}</p>
 
-      <div className="contact">
-        <div><FiMail size={14} /> {member.email}</div>
-        <div><FiPhone size={14} /> {member.phone}</div>
+      <div className="flex flex-col gap-2 mb-4 text-xs text-[#484f58]">
+        <div className="flex items-center gap-2"><FiMail size={14} /> {member.email}</div>
+        <div className="flex items-center gap-2"><FiPhone size={14} /> {member.phone}</div>
       </div>
 
-      <div className="social">
+      <div className="flex gap-3 mb-4 text-[#484f58]">
         {member.social.twitter && <FiTwitter size={16} />}
         {member.social.facebook && <FiFacebook size={16} />}
         {member.social.linkedin && <FiLinkedin size={16} />}
       </div>
 
-      <div className="footer">
-        <label className="visibility">
-          <input type="checkbox" checked={member.visible} readOnly />
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-2 text-xs text-[#484f58] cursor-pointer">
+          <input type="checkbox" checked={member.visible} readOnly className="w-4 h-4" />
           Visible sur le site
         </label>
-        <div className="actions">
-          <button className="edit" onClick={onEdit}>
+        <div className="flex gap-2">
+          <button className="px-2 py-1 border border-[#21262d] bg-transparent text-[#8b949e] text-[11px] cursor-pointer transition-all duration-200 hover:bg-[#388bfd] hover:border-[#388bfd] hover:text-white" onClick={onEdit}>
             <FiEdit2 size={14} />
           </button>
-          <button className="delete" onClick={onDelete}>
+          <button className="px-2 py-1 border border-[#21262d] bg-transparent text-[#8b949e] text-[11px] cursor-pointer transition-all duration-200 hover:bg-[#f85149] hover:border-[#f85149] hover:text-white" onClick={onDelete}>
             <FiTrash2 size={14} />
           </button>
         </div>
@@ -337,13 +325,15 @@ function ActivityItem({ activity }: { activity: Activity }) {
   };
 
   return (
-    <div className="activity-item">
-      <div className="icon">{getIcon()}</div>
-      <div className="content">
-        <p>
-          <strong>{activity.user}</strong> {activity.action} <strong>{activity.target}</strong>
+    <div className="flex items-start gap-4 p-4 border-b border-[#21262d] last:border-b-0">
+      <div className="w-8 h-8 bg-[#161b22] border border-[#21262d] flex items-center justify-center text-[#484f58]">
+        {getIcon()}
+      </div>
+      <div className="flex-1">
+        <p className="text-[13px] text-[#8b949e] mb-1">
+          <strong className="text-[#e6edf3] font-medium">{activity.user}</strong> {activity.action} <strong className="text-[#e6edf3] font-medium">{activity.target}</strong>
         </p>
-        <span className="time">{activity.time}</span>
+        <span className="text-[11px] text-[#484f58]">{activity.time}</span>
       </div>
     </div>
   );
@@ -411,109 +401,97 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
   };
 
   return (
-    <div className="avis-page">
+    <div className="animate-[fadeIn_0.4s_ease]">
       {/* En-tête */}
-      <div className="page-header">
-        <h1 className="page-title">
+      <div className="flex items-center justify-between mb-6 max-[768px]:flex-col max-[768px]:items-start">
+        <h1 className="flex items-center gap-3 text-2xl font-semibold">
           <BsChatQuote size={24} />
           Avis & Modération
         </h1>
-        <div className="header-actions">
-          <button className="btn btn-ghost" onClick={() => onNotify('Données actualisées', 'green')}>
+        <div className="flex gap-2 max-[768px]:w-full max-[768px]:mt-3">
+          <button className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium cursor-pointer transition-all duration-200 border border-transparent bg-transparent border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3]" onClick={() => onNotify('Données actualisées', 'green')}>
             <FiRefreshCw size={14} /> Actualiser
           </button>
-          <button className="btn btn-ghost" onClick={() => onNotify('Export en cours', 'blue')}>
+          <button className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium cursor-pointer transition-all duration-200 border border-transparent bg-transparent border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3]" onClick={() => onNotify('Export en cours', 'blue')}>
             <FiDownload size={14} /> Exporter
           </button>
         </div>
       </div>
 
       {/* Statistiques globales */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#388bfd20', color: '#388bfd' }}>
-            <FaRegCommentDots size={20} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">Total avis</span>
-            <span className="stat-value">{stats.totalComments}</span>
+      <div className="grid grid-cols-6 gap-px bg-[#21262d] border border-[#21262d] mb-6 max-[1100px]:grid-cols-3 max-[768px]:grid-cols-2 max-[480px]:grid-cols-1">
+        <div className="bg-[#0d1117] p-4 flex items-center gap-4">
+          <div className="w-12 h-12 flex items-center justify-center bg-[rgba(56,139,253,0.125)] text-[#388bfd]"><FaRegCommentDots size={20} /></div>
+          <div className="flex-1">
+            <span className="block text-[11px] uppercase text-[#484f58] mb-1">Total avis</span>
+            <span className="text-xl font-medium text-[#e6edf3]">{stats.totalComments}</span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#e3b34120', color: '#e3b341' }}>
-            <FiStar size={20} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">Note moyenne</span>
-            <span className="stat-value">{stats.avgRating}/5</span>
+        <div className="bg-[#0d1117] p-4 flex items-center gap-4">
+          <div className="w-12 h-12 flex items-center justify-center bg-[rgba(227,179,65,0.125)] text-[#e3b341]"><FiStar size={20} /></div>
+          <div className="flex-1">
+            <span className="block text-[11px] uppercase text-[#484f58] mb-1">Note moyenne</span>
+            <span className="text-xl font-medium text-[#e6edf3]">{stats.avgRating}/5</span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#39d35320', color: '#39d353' }}>
-            <FiCheckCircle size={20} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">Avis vérifiés</span>
-            <span className="stat-value">{stats.verifiedComments}</span>
+        <div className="bg-[#0d1117] p-4 flex items-center gap-4">
+          <div className="w-12 h-12 flex items-center justify-center bg-[rgba(57,211,83,0.125)] text-[#39d353]"><FiCheckCircle size={20} /></div>
+          <div className="flex-1">
+            <span className="block text-[11px] uppercase text-[#484f58] mb-1">Avis vérifiés</span>
+            <span className="text-xl font-medium text-[#e6edf3]">{stats.verifiedComments}</span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#f8514920', color: '#f85149' }}>
-            <FiFlag size={20} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">Signalements</span>
-            <span className="stat-value">{stats.reportedComments}</span>
+        <div className="bg-[#0d1117] p-4 flex items-center gap-4">
+          <div className="w-12 h-12 flex items-center justify-center bg-[rgba(248,81,73,0.125)] text-[#f85149]"><FiFlag size={20} /></div>
+          <div className="flex-1">
+            <span className="block text-[11px] uppercase text-[#484f58] mb-1">Signalements</span>
+            <span className="text-xl font-medium text-[#e6edf3]">{stats.reportedComments}</span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#a5a0e820', color: '#a5a0e8' }}>
-            <FiUsers size={20} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">Utilisateurs</span>
-            <span className="stat-value">{stats.totalUsers}</span>
+        <div className="bg-[#0d1117] p-4 flex items-center gap-4">
+          <div className="w-12 h-12 flex items-center justify-center bg-[rgba(165,160,232,0.125)] text-[#a5a0e8]"><FiUsers size={20} /></div>
+          <div className="flex-1">
+            <span className="block text-[11px] uppercase text-[#484f58] mb-1">Utilisateurs</span>
+            <span className="text-xl font-medium text-[#e6edf3]">{stats.totalUsers}</span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#39d35320', color: '#39d353' }}>
-            <FiUserCheck size={20} />
-          </div>
-          <div className="stat-content">
-            <span className="stat-label">En ligne</span>
-            <span className="stat-value">{stats.onlineUsers}</span>
+        <div className="bg-[#0d1117] p-4 flex items-center gap-4">
+          <div className="w-12 h-12 flex items-center justify-center bg-[rgba(57,211,83,0.125)] text-[#39d353]"><FiUserCheck size={20} /></div>
+          <div className="flex-1">
+            <span className="block text-[11px] uppercase text-[#484f58] mb-1">En ligne</span>
+            <span className="text-xl font-medium text-[#e6edf3]">{stats.onlineUsers}</span>
           </div>
         </div>
       </div>
 
       {/* Onglets */}
-      <div className="tabs">
+      <div className="flex gap-1 mb-6 border-b border-[#21262d] overflow-x-auto">
         <button
-          className={`tab ${activeTab === 'comments' ? 'active' : ''}`}
+          className={`flex items-center gap-2 px-5 py-3 bg-transparent border-none border-b-2 border-transparent text-[#8b949e] cursor-pointer text-[13px] font-medium transition-all duration-200 hover:text-[#e6edf3] hover:bg-[#161b22] ${activeTab === 'comments' ? '!text-[#388bfd] !border-b-[#388bfd] !bg-[#1c2330]' : ''}`}
           onClick={() => setActiveTab('comments')}
         >
           <FaRegCommentDots size={16} />
           Avis
           {reportedComments.length > 0 && (
-            <span className="badge">{reportedComments.length}</span>
+            <span className="bg-[#f85149] text-white text-[10px] px-1.5 py-0.5 ml-1">{reportedComments.length}</span>
           )}
         </button>
         <button
-          className={`tab ${activeTab === 'users' ? 'active' : ''}`}
+          className={`flex items-center gap-2 px-5 py-3 bg-transparent border-none border-b-2 border-transparent text-[#8b949e] cursor-pointer text-[13px] font-medium transition-all duration-200 hover:text-[#e6edf3] hover:bg-[#161b22] ${activeTab === 'users' ? '!text-[#388bfd] !border-b-[#388bfd] !bg-[#1c2330]' : ''}`}
           onClick={() => setActiveTab('users')}
         >
           <FiUsers size={16} />
           Utilisateurs
         </button>
         <button
-          className={`tab ${activeTab === 'activity' ? 'active' : ''}`}
+          className={`flex items-center gap-2 px-5 py-3 bg-transparent border-none border-b-2 border-transparent text-[#8b949e] cursor-pointer text-[13px] font-medium transition-all duration-200 hover:text-[#e6edf3] hover:bg-[#161b22] ${activeTab === 'activity' ? '!text-[#388bfd] !border-b-[#388bfd] !bg-[#1c2330]' : ''}`}
           onClick={() => setActiveTab('activity')}
         >
           <FiActivity size={16} />
           Activité
         </button>
         <button
-          className={`tab ${activeTab === 'team' ? 'active' : ''}`}
+          className={`flex items-center gap-2 px-5 py-3 bg-transparent border-none border-b-2 border-transparent text-[#8b949e] cursor-pointer text-[13px] font-medium transition-all duration-200 hover:text-[#e6edf3] hover:bg-[#161b22] ${activeTab === 'team' ? '!text-[#388bfd] !border-b-[#388bfd] !bg-[#1c2330]' : ''}`}
           onClick={() => setActiveTab('team')}
         >
           <RiTeamLine size={16} />
@@ -522,18 +500,19 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
       </div>
 
       {/* Barre de recherche */}
-      <div className="search-section">
-        <div className="search-box">
+      <div className="flex gap-4 mb-6 max-[768px]:flex-col">
+        <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-[#161b22] border border-[#21262d]">
           <FiSearch size={16} />
           <input
             type="text"
             placeholder="Rechercher..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 bg-transparent border-none text-[#e6edf3] text-[13px] focus:outline-none"
           />
         </div>
         {activeTab === 'team' && (
-          <button className="btn btn-primary" onClick={() => handleTeamAction('add')}>
+          <button className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium cursor-pointer transition-all duration-200 border border-transparent bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={() => handleTeamAction('add')}>
             <FiUserPlus size={14} /> Ajouter un membre
           </button>
         )}
@@ -543,11 +522,11 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
       <div className="tab-content">
         {/* Onglet Avis */}
         {activeTab === 'comments' && (
-          <div className="comments-section">
-            <div className="section-header">
-              <h3>Gestion des avis</h3>
-              <div className="filters">
-                <select className="filter-select">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold">Gestion des avis</h3>
+              <div className="flex gap-2">
+                <select className="px-3 py-1.5 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-xs">
                   <option>Tous les avis</option>
                   <option>Signalés uniquement</option>
                   <option>Non vérifiés</option>
@@ -558,31 +537,23 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
 
             {/* Avis signalés en alerte */}
             {reportedComments.length > 0 && (
-              <div className="alerts">
-                <h4>
-                  <FiAlertCircle size={16} style={{ color: 'var(--accent-red)' }} />
+              <div className="mb-6">
+                <h4 className="flex items-center gap-2 mb-4 text-[#f85149]">
+                  <FiAlertCircle size={16} />
                   Avis signalés ({reportedComments.length})
                 </h4>
-                <div className="comments-grid">
+                <div className="grid grid-cols-2 gap-px bg-[#21262d] border border-[#21262d] mb-6 max-[768px]:grid-cols-1">
                   {reportedComments.map(comment => (
-                    <CommentCard
-                      key={comment.id}
-                      comment={comment}
-                      onAction={handleCommentAction}
-                    />
+                    <CommentCard key={comment.id} comment={comment} onAction={handleCommentAction} />
                   ))}
                 </div>
               </div>
             )}
 
             {/* Tous les avis */}
-            <div className="comments-grid">
+            <div className="grid grid-cols-2 gap-px bg-[#21262d] border border-[#21262d] max-[768px]:grid-cols-1">
               {comments.filter(c => !c.reported).map(comment => (
-                <CommentCard
-                  key={comment.id}
-                  comment={comment}
-                  onAction={handleCommentAction}
-                />
+                <CommentCard key={comment.id} comment={comment} onAction={handleCommentAction} />
               ))}
             </div>
           </div>
@@ -590,37 +561,41 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
 
         {/* Onglet Utilisateurs */}
         {activeTab === 'users' && (
-          <div className="users-section">
-            <div className="users-grid">
+          <div>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-px bg-[#21262d] border border-[#21262d]">
               {users.map(user => (
-                <div key={user.id} className="user-card">
-                  <div className="user-header">
-                    <div className="user-avatar">
+                <div key={user.id} className="bg-[#0d1117] p-5">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 bg-[#1c2330] border border-[#21262d] flex items-center justify-center text-xl font-semibold text-[#388bfd]">
                       {user.name.charAt(0)}
                     </div>
-                    <div className="user-status">
-                      <span className={`status-dot ${user.status}`} />
+                    <div className="flex items-center gap-1.5 text-[11px] text-[#484f58]">
+                      <span className={`w-2 h-2 ${user.status === 'online' ? 'bg-[#39d353]' : user.status === 'offline' ? 'bg-[#484f58]' : 'bg-[#e3b341]'}`} />
                       <span>{user.status}</span>
                     </div>
                   </div>
-                  <h4 className="user-name">{user.name}</h4>
-                  <p className="user-email">{user.email}</p>
-                  <div className="user-role">
-                    <span className={`role-badge ${user.role}`}>{user.role}</span>
+                  <h4 className="text-base font-semibold mb-1">{user.name}</h4>
+                  <p className="text-xs text-[#484f58] mb-3">{user.email}</p>
+                  <div className="mb-4">
+                    <span className={`px-2 py-0.5 text-[11px] font-medium border border-[#21262d] ${
+                      user.role === 'admin' ? 'bg-[rgba(248,81,73,0.15)] text-[#f85149] border-[rgba(248,81,73,0.3)]' :
+                      user.role === 'moderator' ? 'bg-[rgba(227,179,65,0.15)] text-[#e3b341] border-[rgba(227,179,65,0.3)]' :
+                      'bg-[#1c2330] text-[#484f58]'
+                    }`}>{user.role}</span>
                   </div>
-                  <div className="user-stats">
-                    <div>
-                      <span className="label">Commentaires</span>
-                      <span className="value">{user.comments}</span>
+                  <div className="flex gap-5 py-3 border-t border-b border-[#21262d] mb-3">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase text-[#484f58]">Commentaires</span>
+                      <span className="text-base font-medium text-[#e6edf3]">{user.comments}</span>
                     </div>
-                    <div>
-                      <span className="label">Likes reçus</span>
-                      <span className="value">{user.likes}</span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase text-[#484f58]">Likes reçus</span>
+                      <span className="text-base font-medium text-[#e6edf3]">{user.likes}</span>
                     </div>
                   </div>
-                  <div className="user-footer">
-                    <span className="joined">Inscrit le {user.joined}</span>
-                    <button className="user-menu">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-[#484f58]">Inscrit le {user.joined}</span>
+                    <button className="bg-transparent border-none text-[#484f58] cursor-pointer">
                       <FiMoreVertical size={16} />
                     </button>
                   </div>
@@ -632,9 +607,9 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
 
         {/* Onglet Activité */}
         {activeTab === 'activity' && (
-          <div className="activity-section">
-            <h3>Activités récentes</h3>
-            <div className="activity-list">
+          <div>
+            <h3 className="text-base font-semibold mb-4">Activités récentes</h3>
+            <div className="bg-[#0d1117] border border-[#21262d]">
               {activities.map(activity => (
                 <ActivityItem key={activity.id} activity={activity} />
               ))}
@@ -644,13 +619,13 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
 
         {/* Onglet Équipe */}
         {activeTab === 'team' && (
-          <div className="team-section">
-            <h3>Gestion de l'équipe</h3>
-            <p className="section-subtitle">
+          <div>
+            <h3 className="text-base font-semibold mb-1">Gestion de l'équipe</h3>
+            <p className="text-[13px] text-[#484f58] mb-5">
               Gérez les membres de l'équipe affichés sur la page "Notre équipe"
             </p>
 
-            <div className="team-grid">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-px bg-[#21262d] border border-[#21262d]">
               {teamMembers.map(member => (
                 <TeamMemberCard
                   key={member.id}
@@ -663,81 +638,86 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
 
             {/* Modal d'édition */}
             {editingMember && (
-              <div className="modal">
-                <div className="modal-content">
-                  <h3>{editingMember.id ? 'Modifier' : 'Ajouter'} un membre</h3>
+              <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000]">
+                <div className="bg-[#0d1117] border border-[#21262d] w-full max-w-[500px] max-h-[90vh] overflow-y-auto p-6">
+                  <h3 className="text-lg font-semibold mb-6">{editingMember.id ? 'Modifier' : 'Ajouter'} un membre</h3>
                   
-                  <div className="form-group">
-                    <label>Photo</label>
-                    <div className="photo-upload">
-                      <div className="photo-preview">
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-[#8b949e] mb-2">Photo</label>
+                    <div className="flex items-center gap-4">
+                      <div className="w-20 h-20 bg-[#161b22] border border-[#21262d] flex items-center justify-center text-[#484f58] overflow-hidden">
                         {editingMember.avatar ? (
-                          <img src={editingMember.avatar} alt="Preview" />
+                          <img src={editingMember.avatar} alt="Preview" className="w-full h-full object-cover" />
                         ) : (
                           <FiImage size={40} />
                         )}
                       </div>
-                      <button className="btn btn-ghost">
+                      <button className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium cursor-pointer transition-all duration-200 border border-transparent bg-transparent border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3]">
                         <FiUpload size={14} /> Choisir une image
                       </button>
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label>Nom complet</label>
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-[#8b949e] mb-2">Nom complet</label>
                     <input
                       type="text"
                       value={editingMember.name}
                       onChange={(e) => setEditingMember({...editingMember, name: e.target.value})}
                       placeholder="Ex: Jean Dupont"
+                      className="w-full px-3 py-2 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-[13px] focus:border-[#388bfd] focus:outline-none"
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label>Poste</label>
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-[#8b949e] mb-2">Poste</label>
                     <input
                       type="text"
                       value={editingMember.role}
                       onChange={(e) => setEditingMember({...editingMember, role: e.target.value})}
                       placeholder="Ex: Directeur Technique"
+                      className="w-full px-3 py-2 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-[13px] focus:border-[#388bfd] focus:outline-none"
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label>Email</label>
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-[#8b949e] mb-2">Email</label>
                     <input
                       type="email"
                       value={editingMember.email}
                       onChange={(e) => setEditingMember({...editingMember, email: e.target.value})}
                       placeholder="exemple@nova.fr"
+                      className="w-full px-3 py-2 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-[13px] focus:border-[#388bfd] focus:outline-none"
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label>Téléphone</label>
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-[#8b949e] mb-2">Téléphone</label>
                     <input
                       type="tel"
                       value={editingMember.phone}
                       onChange={(e) => setEditingMember({...editingMember, phone: e.target.value})}
                       placeholder="+33 6 12 34 56 78"
+                      className="w-full px-3 py-2 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-[13px] focus:border-[#388bfd] focus:outline-none"
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label>Biographie</label>
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-[#8b949e] mb-2">Biographie</label>
                     <textarea
                       value={editingMember.bio}
                       onChange={(e) => setEditingMember({...editingMember, bio: e.target.value})}
                       placeholder="Présentez le membre de l'équipe..."
                       rows={3}
+                      className="w-full px-3 py-2 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-[13px] focus:border-[#388bfd] focus:outline-none resize-vertical"
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label>Réseaux sociaux</label>
-                    <div className="social-inputs">
-                      <div className="social-input">
-                        <FiTwitter size={14} />
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-[#8b949e] mb-2">Réseaux sociaux</label>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <FiTwitter size={14} className="text-[#484f58]" />
                         <input
                           type="url"
                           placeholder="Twitter"
@@ -746,10 +726,11 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
                             ...editingMember,
                             social: {...editingMember.social, twitter: e.target.value}
                           })}
+                          className="flex-1 px-3 py-2 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-[13px] focus:border-[#388bfd] focus:outline-none"
                         />
                       </div>
-                      <div className="social-input">
-                        <FiFacebook size={14} />
+                      <div className="flex items-center gap-2">
+                        <FiFacebook size={14} className="text-[#484f58]" />
                         <input
                           type="url"
                           placeholder="Facebook"
@@ -758,10 +739,11 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
                             ...editingMember,
                             social: {...editingMember.social, facebook: e.target.value}
                           })}
+                          className="flex-1 px-3 py-2 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-[13px] focus:border-[#388bfd] focus:outline-none"
                         />
                       </div>
-                      <div className="social-input">
-                        <FiLinkedin size={14} />
+                      <div className="flex items-center gap-2">
+                        <FiLinkedin size={14} className="text-[#484f58]" />
                         <input
                           type="url"
                           placeholder="LinkedIn"
@@ -770,27 +752,29 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
                             ...editingMember,
                             social: {...editingMember.social, linkedin: e.target.value}
                           })}
+                          className="flex-1 px-3 py-2 bg-[#161b22] border border-[#21262d] text-[#e6edf3] text-[13px] focus:border-[#388bfd] focus:outline-none"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label className="checkbox">
+                  <div className="mb-5">
+                    <label className="flex items-center gap-2 text-xs text-[#8b949e] cursor-pointer">
                       <input
                         type="checkbox"
                         checked={editingMember.visible}
                         onChange={(e) => setEditingMember({...editingMember, visible: e.target.checked})}
+                        className="w-4 h-4"
                       />
                       Afficher sur le site
                     </label>
                   </div>
 
-                  <div className="modal-actions">
-                    <button className="btn btn-ghost" onClick={() => setEditingMember(null)}>
+                  <div className="flex gap-3 justify-end mt-6">
+                    <button className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium cursor-pointer transition-all duration-200 border border-transparent bg-transparent border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3]" onClick={() => setEditingMember(null)}>
                       Annuler
                     </button>
-                    <button className="btn btn-primary" onClick={handleSaveMember}>
+                    <button className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium cursor-pointer transition-all duration-200 border border-transparent bg-[#388bfd] text-white hover:bg-[#58a6ff]" onClick={handleSaveMember}>
                       <FiSave size={14} /> Enregistrer
                     </button>
                   </div>
@@ -802,788 +786,9 @@ export default function Avis({ onNotify = () => {} }: AvisProps) {
       </div>
 
       <style>{`
-        .avis-page {
-          animation: fadeIn 0.4s ease;
-        }
-
-        .page-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 24px;
-        }
-
-        .page-title {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          font-size: 24px;
-          font-weight: 600;
-        }
-
-        .header-actions {
-          display: flex;
-          gap: 8px;
-        }
-
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(6, 1fr);
-          gap: 1px;
-          background: var(--border);
-          border: 1px solid var(--border);
-          margin-bottom: 24px;
-        }
-
-        .stat-card {
-          background: var(--bg-panel);
-          padding: 16px;
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .stat-icon {
-          width: 48px;
-          height: 48px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .stat-content {
-          flex: 1;
-        }
-
-        .stat-label {
-          display: block;
-          font-size: 11px;
-          text-transform: uppercase;
-          color: var(--text-muted);
-          margin-bottom: 4px;
-        }
-
-        .stat-value {
-          font-size: 20px;
-          font-weight: 500;
-          color: var(--text-primary);
-        }
-
-        .tabs {
-          display: flex;
-          gap: 4px;
-          margin-bottom: 24px;
-          border-bottom: 1px solid var(--border);
-        }
-
-        .tab {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 20px;
-          background: transparent;
-          border: none;
-          border-bottom: 2px solid transparent;
-          color: var(--text-secondary);
-          cursor: pointer;
-          font-size: 13px;
-          font-weight: 500;
-          transition: all 0.2s ease;
-          position: relative;
-        }
-
-        .tab:hover {
-          color: var(--text-primary);
-          background: var(--bg-surface);
-        }
-
-        .tab.active {
-          color: var(--accent-blue);
-          border-bottom-color: var(--accent-blue);
-          background: var(--bg-elevated);
-        }
-
-        .tab .badge {
-          background: var(--accent-red);
-          color: white;
-          font-size: 10px;
-          padding: 2px 6px;
-          margin-left: 4px;
-        }
-
-        .search-section {
-          display: flex;
-          gap: 16px;
-          margin-bottom: 24px;
-        }
-
-        .search-box {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 8px 16px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-        }
-
-        .search-box input {
-          flex: 1;
-          background: transparent;
-          border: none;
-          color: var(--text-primary);
-          font-size: 13px;
-        }
-
-        .search-box input:focus {
-          outline: none;
-        }
-
-        .comments-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1px;
-          background: var(--border);
-          border: 1px solid var(--border);
-          margin-bottom: 24px;
-        }
-
-        .comment-card {
-          background: var(--bg-panel);
-          padding: 20px;
-          border: 1px solid transparent;
-          transition: all 0.2s ease;
-        }
-
-        .comment-card.reported {
-          border-left: 3px solid var(--accent-red);
-        }
-
-        .comment-card:hover {
-          border-color: var(--border-bright);
-        }
-
-        .card-header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          margin-bottom: 12px;
-        }
-
-        .user-info {
-          display: flex;
-          gap: 12px;
-        }
-
-        .avatar {
-          width: 40px;
-          height: 40px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-          color: var(--accent-blue);
-        }
-
-        .name {
-          font-size: 14px;
-          font-weight: 600;
-          margin-bottom: 2px;
-        }
-
-        .school {
-          font-size: 12px;
-          color: var(--text-muted);
-        }
-
-        .card-actions {
-          display: flex;
-          gap: 8px;
-        }
-
-        .card-actions button {
-          background: transparent;
-          border: none;
-          color: var(--text-muted);
-          cursor: pointer;
-        }
-
-        .verified {
-          color: var(--accent-teal);
-        }
-
-        .rating {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 12px;
-        }
-
-        .date {
-          font-size: 11px;
-          color: var(--text-muted);
-        }
-
-        .text {
-          font-size: 13px;
-          color: var(--text-secondary);
-          line-height: 1.6;
-          margin-bottom: 16px;
-        }
-
-        .response {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          margin-bottom: 16px;
-          font-size: 12px;
-          color: var(--text-secondary);
-        }
-
-        .footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .stats {
-          display: flex;
-          gap: 12px;
-          font-size: 11px;
-          color: var(--text-muted);
-        }
-
-        .stats span {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .reported {
-          color: var(--accent-red);
-        }
-
-        .actions {
-          display: flex;
-          gap: 8px;
-        }
-
-        .actions button {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          padding: 4px 8px;
-          border: 1px solid var(--border);
-          background: transparent;
-          color: var(--text-secondary);
-          font-size: 11px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .actions .approve:hover {
-          background: var(--accent-teal);
-          border-color: var(--accent-teal);
-          color: black;
-        }
-
-        .actions .delete:hover {
-          background: var(--accent-red);
-          border-color: var(--accent-red);
-          color: white;
-        }
-
-        .users-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 1px;
-          background: var(--border);
-          border: 1px solid var(--border);
-        }
-
-        .user-card {
-          background: var(--bg-panel);
-          padding: 20px;
-        }
-
-        .user-header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          margin-bottom: 16px;
-        }
-
-        .user-avatar {
-          width: 48px;
-          height: 48px;
-          background: var(--bg-elevated);
-          border: 1px solid var(--border);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          font-weight: 600;
-          color: var(--accent-blue);
-        }
-
-        .user-status {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 11px;
-          color: var(--text-muted);
-        }
-
-        .status-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-        }
-
-        .status-dot.online {
-          background: var(--accent-teal);
-        }
-
-        .status-dot.offline {
-          background: var(--text-muted);
-        }
-
-        .status-dot.away {
-          background: var(--accent-amber);
-        }
-
-        .user-name {
-          font-size: 16px;
-          font-weight: 600;
-          margin-bottom: 4px;
-        }
-
-        .user-email {
-          font-size: 12px;
-          color: var(--text-muted);
-          margin-bottom: 12px;
-        }
-
-        .user-role {
-          margin-bottom: 16px;
-        }
-
-        .role-badge {
-          padding: 2px 8px;
-          font-size: 11px;
-          font-weight: 500;
-          border: 1px solid var(--border);
-        }
-
-        .role-badge.admin {
-          background: rgba(248, 81, 73, 0.15);
-          color: var(--accent-red);
-          border-color: rgba(248, 81, 73, 0.3);
-        }
-
-        .role-badge.moderator {
-          background: rgba(227, 179, 65, 0.15);
-          color: var(--accent-amber);
-          border-color: rgba(227, 179, 65, 0.3);
-        }
-
-        .role-badge.user {
-          background: var(--bg-elevated);
-          color: var(--text-muted);
-        }
-
-        .user-stats {
-          display: flex;
-          gap: 20px;
-          padding: 12px 0;
-          border-top: 1px solid var(--border);
-          border-bottom: 1px solid var(--border);
-          margin-bottom: 12px;
-        }
-
-        .user-stats div {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .user-stats .label {
-          font-size: 10px;
-          text-transform: uppercase;
-          color: var(--text-muted);
-        }
-
-        .user-stats .value {
-          font-size: 16px;
-          font-weight: 500;
-          color: var(--text-primary);
-        }
-
-        .user-footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .joined {
-          font-size: 11px;
-          color: var(--text-muted);
-        }
-
-        .user-menu {
-          background: transparent;
-          border: none;
-          color: var(--text-muted);
-          cursor: pointer;
-        }
-
-        .activity-list {
-          background: var(--bg-panel);
-          border: 1px solid var(--border);
-        }
-
-        .activity-item {
-          display: flex;
-          align-items: flex-start;
-          gap: 16px;
-          padding: 16px 20px;
-          border-bottom: 1px solid var(--border);
-        }
-
-        .activity-item:last-child {
-          border-bottom: none;
-        }
-
-        .icon {
-          width: 32px;
-          height: 32px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--text-muted);
-        }
-
-        .content {
-          flex: 1;
-        }
-
-        .content p {
-          font-size: 13px;
-          color: var(--text-secondary);
-          margin-bottom: 4px;
-        }
-
-        .content strong {
-          color: var(--text-primary);
-          font-weight: 500;
-        }
-
-        .time {
-          font-size: 11px;
-          color: var(--text-muted);
-        }
-
-        .team-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-          gap: 1px;
-          background: var(--border);
-          border: 1px solid var(--border);
-        }
-
-        .team-card {
-          background: var(--bg-panel);
-          padding: 20px;
-        }
-
-        .team-card .card-header {
-          margin-bottom: 16px;
-        }
-
-        .team-card .avatar {
-          width: 60px;
-          height: 60px;
-          border-radius: 30px;
-          object-fit: cover;
-        }
-
-        .team-card .info h4 {
-          font-size: 16px;
-          font-weight: 600;
-          margin-bottom: 4px;
-        }
-
-        .team-card .role {
-          font-size: 12px;
-          color: var(--accent-blue);
-        }
-
-        .team-card .bio {
-          font-size: 13px;
-          color: var(--text-secondary);
-          line-height: 1.6;
-          margin-bottom: 16px;
-        }
-
-        .team-card .contact {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          margin-bottom: 16px;
-          font-size: 12px;
-          color: var(--text-muted);
-        }
-
-        .team-card .contact div {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .team-card .social {
-          display: flex;
-          gap: 12px;
-          margin-bottom: 16px;
-          color: var(--text-muted);
-        }
-
-        .team-card .footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .visibility {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 12px;
-          color: var(--text-muted);
-        }
-
-        .modal {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.8);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-
-        .modal-content {
-          background: var(--bg-panel);
-          border: 1px solid var(--border);
-          width: 100%;
-          max-width: 500px;
-          max-height: 90vh;
-          overflow-y: auto;
-          padding: 24px;
-        }
-
-        .modal-content h3 {
-          font-size: 18px;
-          font-weight: 600;
-          margin-bottom: 24px;
-        }
-
-        .form-group {
-          margin-bottom: 20px;
-        }
-
-        .form-group label {
-          display: block;
-          font-size: 12px;
-          font-weight: 500;
-          color: var(--text-secondary);
-          margin-bottom: 8px;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-          width: 100%;
-          padding: 8px 12px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          color: var(--text-primary);
-          font-size: 13px;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-          border-color: var(--accent-blue);
-          outline: none;
-        }
-
-        .photo-upload {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .photo-preview {
-          width: 80px;
-          height: 80px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--text-muted);
-          overflow: hidden;
-        }
-
-        .photo-preview img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .social-inputs {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .social-input {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .social-input input {
-          flex: 1;
-        }
-
-        .checkbox {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-        }
-
-        .modal-actions {
-          display: flex;
-          gap: 12px;
-          justify-content: flex-end;
-          margin-top: 24px;
-        }
-
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          border: 1px solid transparent;
-        }
-
-        .btn-primary {
-          background: var(--accent-blue);
-          color: white;
-        }
-
-        .btn-primary:hover {
-          background: #58a6ff;
-          transform: translateY(-2px);
-        }
-
-        .btn-ghost {
-          background: transparent;
-          border: 1px solid var(--border);
-          color: var(--text-secondary);
-        }
-
-        .btn-ghost:hover {
-          border-color: var(--border-bright);
-          color: var(--text-primary);
-        }
-
-        .alerts {
-          margin-bottom: 24px;
-        }
-
-        .alerts h4 {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 16px;
-          color: var(--accent-red);
-        }
-
-        .section-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 16px;
-        }
-
-        .section-header h3 {
-          font-size: 16px;
-          font-weight: 600;
-        }
-
-        .filters {
-          display: flex;
-          gap: 8px;
-        }
-
-        .filter-select {
-          padding: 6px 12px;
-          background: var(--bg-surface);
-          border: 1px solid var(--border);
-          color: var(--text-primary);
-          font-size: 12px;
-        }
-
-        .section-subtitle {
-          font-size: 13px;
-          color: var(--text-muted);
-          margin-bottom: 20px;
-        }
-
-        @media (max-width: 1100px) {
-          .stats-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-
-        @media (max-width: 768px) {
-          .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .comments-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .tabs {
-            overflow-x: auto;
-          }
-
-          .search-section {
-            flex-direction: column;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .stats-grid {
-            grid-template-columns: 1fr;
-          }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
       `}</style>
     </div>

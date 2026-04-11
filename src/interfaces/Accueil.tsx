@@ -10,7 +10,7 @@ import SubscriptionsPage from '../components/Abonnement';
 import ClientsPage       from '../components/Clients';
 import CommentsPage      from '../components/Avis';
 import ApiPage           from '../components/ClesApi';
-import Applications      from '../components/Applications';
+import Applications      from '../components/ApplicationsModule/Applications';
 import SettingsPage      from '../components/Parametres';
 import Toast             from '../components/Toast';
 import AdminPage         from '../components/Admin';
@@ -44,7 +44,6 @@ export default function Accueil({ onLogout }: AccueilProps) {
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
   const [profileOpen, setProfileOpen] = useState<boolean>(false);
   
-  // Correction: Type explicite pour le ref
   const userBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -120,7 +119,7 @@ export default function Accueil({ onLogout }: AccueilProps) {
       case 'comments':
         return <CommentsPage />;
       case 'finance':
-        return <FinanceSection language="fr" />;
+        return <FinanceSection />;
       case 'api':
         return <ApiPage onNotify={showNotification} />;
       case 'apps':
@@ -135,747 +134,194 @@ export default function Accueil({ onLogout }: AccueilProps) {
   };
 
   return (
-    <>
-      <style>{globalStyles}</style>
-      <div className="layout">
-        {/* Overlay mobile */}
-        {isMobile && (
-          <div 
-            className={`nav-overlay ${navOpen ? 'show' : ''}`} 
-            onClick={() => setNavOpen(false)} 
-            aria-hidden="true"
-          />
-        )}
+    <div className="min-h-screen flex bg-[#090c10] text-[#e6edf3] text-sm leading-relaxed antialiased font-['DM_Sans']">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap');
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #30363d; }
+        ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
 
-        {/* Navigation latérale */}
-        <nav className={`nav ${navOpen ? 'open' : ''} ${navCollapsed && !isMobile ? 'collapsed' : ''}`}>
-          <div className="nav-header">
-            <div className="nav-logo">
-              <img src="/LogoNova.png" alt="Nova Logo" className="nav-logo-img" />
-              {(!navCollapsed || isMobile) && (
-                <span className="nav-logo-text">Nova</span>
-              )}
-            </div>
-            
-            {!isMobile && (
-              <button 
-                className={`nav-collapse-btn ${navCollapsed ? 'collapsed' : ''}`}
-                onClick={toggleNavCollapse}
-                title={navCollapsed ? 'Développer' : 'Réduire'}
-                type="button"
-              >
-                {navCollapsed ? <FiChevronRight size={18} /> : <FiChevronLeft size={18} />}
-              </button>
+      {/* Overlay mobile */}
+      {isMobile && (
+        <div 
+          className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[99] animate-[fadeIn_0.2s_ease] ${navOpen ? 'block' : 'hidden'}`}
+          onClick={() => setNavOpen(false)} 
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Navigation latérale */}
+      <nav className={`fixed top-0 left-0 bottom-0 z-[100] flex flex-col overflow-y-auto overflow-x-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-[#0d1117] border-r border-[#21262d] ${navOpen ? 'translate-x-0' : isMobile ? '-translate-x-full' : 'translate-x-0'} ${navCollapsed && !isMobile ? 'w-[80px]' : 'w-[280px]'}`}>
+        <div className="relative border-b border-[#21262d]">
+          <div className={`flex items-center gap-3 min-h-[72px] ${navCollapsed && !isMobile ? 'justify-center px-0 py-5' : 'p-5'}`}>
+            <img src="/LogoNova.png" alt="Nova Logo" className="w-9 h-9 object-contain transition-transform duration-200 hover:scale-105" />
+            {(!navCollapsed || isMobile) && (
+              <span className="font-semibold text-lg tracking-tight text-white whitespace-nowrap">Nova</span>
             )}
           </div>
-
-          <div className="nav-section">
-            <div className="nav-label">
-              {(!navCollapsed || isMobile) ? 'Navigation' : '···'}
-            </div>
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                className={`nav-item ${currentPage === item.id ? 'active' : ''}`}
-                onClick={() => navigateTo(item.id)}
-                type="button"
-                title={navCollapsed && !isMobile ? item.label : undefined}
-              >
-                <item.icon size={18} className="nav-icon" />
-                {(!navCollapsed || isMobile) && (
-                  <>
-                    <span className="nav-label-text">{item.label}</span>
-                    {item.badge && (
-                      <span 
-                        className={`nav-badge ${item.badgeColor ? item.badgeColor : ''}`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
-                  </>
-                )}
-                {navCollapsed && !isMobile && item.badge && (
-                  <span className="nav-badge-collapsed">{item.badge}</span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          <div className="nav-section nav-section-bottom">
-            <div className="nav-label">
-              {(!navCollapsed || isMobile) ? 'Système' : '···'}
-            </div>
-            <button
-              className={`nav-item ${currentPage === 'settings' ? 'active' : ''}`}
-              onClick={() => navigateTo('settings')}
+          
+          {!isMobile && (
+            <button 
+              className={`absolute right-[-12px] top-1/2 -translate-y-1/2 w-6 h-6 bg-[#1c2330] border border-[#21262d] flex items-center justify-center text-[#8b949e] cursor-pointer transition-all duration-200 z-10 hover:bg-[#388bfd] hover:border-[#388bfd] hover:text-white ${navCollapsed ? 'rotate-180' : ''}`}
+              onClick={toggleNavCollapse}
+              title={navCollapsed ? 'Développer' : 'Réduire'}
               type="button"
-              title={navCollapsed && !isMobile ? 'Paramètres' : undefined}
             >
-              <FiSettings size={18} className="nav-icon" />
-              {(!navCollapsed || isMobile) && (
-                <span className="nav-label-text">Paramètres</span>
-              )}
+              {navCollapsed ? <FiChevronRight size={18} /> : <FiChevronLeft size={18} />}
             </button>
-          </div>
+          )}
+        </div>
 
-          <div className="nav-footer">
-            <button className="nav-user" type="button" onClick={handleLogout}>
-              <div className="nav-avatar">
-                <FiUser size={16} />
-              </div>
+        <div className={`${navCollapsed && !isMobile ? 'px-1 py-4' : 'px-3 py-4'}`}>
+          <div className={`text-[10px] font-semibold tracking-[1.2px] uppercase text-[#484f58] mb-2 whitespace-nowrap ${navCollapsed && !isMobile ? 'text-center px-0' : 'px-2'}`}>
+            {(!navCollapsed || isMobile) ? 'Navigation' : '···'}
+          </div>
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              className={`group relative flex items-center gap-3 px-3 py-2.5 text-[#8b949e] cursor-pointer text-[13.5px] transition-all duration-200 border-none bg-transparent w-full text-left mb-0.5 whitespace-nowrap hover:text-[#e6edf3] hover:bg-[#161b22] ${currentPage === item.id ? '!text-[#e6edf3] !bg-[#1c2330]' : ''} ${navCollapsed && !isMobile ? 'justify-center px-0' : ''}`}
+              onClick={() => navigateTo(item.id)}
+              type="button"
+              title={navCollapsed && !isMobile ? item.label : undefined}
+            >
+              {currentPage === item.id && (
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#388bfd]" />
+              )}
+              <item.icon size={18} className="flex-shrink-0" />
               {(!navCollapsed || isMobile) && (
                 <>
-                  <div className="nav-user-info">
-                    <div className="nav-user-name">Admin</div>
-                    <div className="nav-user-role">Super Admin</div>
-                  </div>
-                  <FiLogOut size={16} className="nav-logout-icon" />
+                  <span className="flex-1 text-left">{item.label}</span>
+                  {item.badge && (
+                    <span className={`text-white text-[10px] font-semibold py-0.5 px-1.5 min-w-[20px] text-center ${
+                      item.badgeColor === 'green' ? 'bg-[#39d353]' : item.badgeColor === 'amber' ? 'bg-[#e3b341]' : 'bg-[#f85149]'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
                 </>
               )}
+              {navCollapsed && !isMobile && item.badge && (
+                <span className="absolute top-0.5 right-0.5 bg-[#f85149] text-white text-[8px] font-semibold py-0.5 px-1 min-w-4 text-center">
+                  {item.badge}
+                </span>
+              )}
             </button>
-          </div>
-        </nav>
+          ))}
+        </div>
 
-        {/* Contenu principal */}
-        <main className={`main ${navCollapsed && !isMobile ? 'expanded' : ''}`}>
-          {/* Barre supérieure */}
-          <header className="topbar">
-            <button 
-              className="menu-btn" 
-              onClick={() => isMobile ? setNavOpen(!navOpen) : toggleNavCollapse()}
-              type="button"
-              aria-label="Menu"
-            >
-              <FiMenu size={20} />
-            </button>
-            
-            <h1 className="topbar-title">
-              {pageTitles[currentPage] || 'Nova'}
-            </h1>
-            
-            <div className="topbar-search">
-              <FiSearch size={16} className="search-icon" />
-              <input 
-                type="text" 
-                placeholder="Recherche globale..." 
-                aria-label="Recherche globale"
-              />
+        <div className={`mt-auto ${navCollapsed && !isMobile ? 'px-1 py-4' : 'px-3 py-4'}`}>
+          <div className={`text-[10px] font-semibold tracking-[1.2px] uppercase text-[#484f58] mb-2 whitespace-nowrap ${navCollapsed && !isMobile ? 'text-center px-0' : 'px-2'}`}>
+            {(!navCollapsed || isMobile) ? 'Système' : '···'}
+          </div>
+          <button
+            className={`group relative flex items-center gap-3 px-3 py-2.5 text-[#8b949e] cursor-pointer text-[13.5px] transition-all duration-200 border-none bg-transparent w-full text-left mb-0.5 whitespace-nowrap hover:text-[#e6edf3] hover:bg-[#161b22] ${currentPage === 'settings' ? '!text-[#e6edf3] !bg-[#1c2330]' : ''} ${navCollapsed && !isMobile ? 'justify-center px-0' : ''}`}
+            onClick={() => navigateTo('settings')}
+            type="button"
+            title={navCollapsed && !isMobile ? 'Paramètres' : undefined}
+          >
+            {currentPage === 'settings' && (
+              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#388bfd]" />
+            )}
+            <FiSettings size={18} className="flex-shrink-0" />
+            {(!navCollapsed || isMobile) && (
+              <span className="flex-1 text-left">Paramètres</span>
+            )}
+          </button>
+        </div>
+
+        <div className={`border-t border-[#21262d] ${navCollapsed && !isMobile ? 'p-4' : 'p-4'}`}>
+          <button className={`flex items-center gap-3 px-3 py-2 cursor-pointer border-none bg-transparent w-full transition-all duration-200 hover:bg-[#161b22] ${navCollapsed && !isMobile ? 'justify-center px-0' : ''}`} type="button" onClick={handleLogout}>
+            <div className="w-9 h-9 bg-[#388bfd] flex items-center justify-center text-white">
+              <FiUser size={16} />
             </div>
-            
-            <button 
-              className="topbar-btn notification-btn"
-              onClick={() => showNotification('Aucune nouvelle notification', 'blue')}
-              type="button"
-              aria-label="Notifications"
-            >
-              <FiBell size={18} />
-              <span className="topbar-dot" />
-            </button>
-            
-            <button
-              ref={userBtnRef}
-              className={`topbar-btn user-btn ${profileOpen ? 'user-btn-active' : ''}`}
-              type="button"
-              aria-label="Profil"
-              aria-expanded={profileOpen}
-              onClick={() => setProfileOpen(v => !v)}
-            >
-              <span className="user-initials">A</span>
-            </button>
-          </header>
+            {(!navCollapsed || isMobile) && (
+              <>
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="text-[13px] font-semibold text-[#e6edf3]">Admin</div>
+                  <div className="text-[11px] text-[#484f58]">Super Admin</div>
+                </div>
+                <FiLogOut size={16} className="text-[#484f58] transition-transform duration-200 group-hover:text-[#f85149] group-hover:translate-x-1" />
+              </>
+            )}
+          </button>
+        </div>
+      </nav>
 
-          {/* Zone de contenu */}
-          <div className="content">
-            {renderPage()}
+      {/* Contenu principal */}
+      <main className={`flex-1 min-h-screen flex flex-col bg-[#090c10] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${navCollapsed && !isMobile ? 'ml-[80px]' : isMobile ? 'ml-0' : 'ml-[280px]'}`}>
+        {/* Barre supérieure */}
+        <header className="h-16 border-b border-[#21262d] flex items-center px-7 gap-5 bg-[rgba(13,17,23,0.95)] backdrop-blur-sm sticky top-0 z-50">
+          <button 
+            className={`${isMobile ? 'flex' : 'flex'} w-[38px] h-[38px] bg-[#161b22] border border-[#21262d] items-center justify-center cursor-pointer text-[#8b949e] transition-all duration-200 hover:text-[#e6edf3] hover:border-[#30363d] ${isMobile ? '' : 'hover:rotate-90'}`}
+            onClick={() => isMobile ? setNavOpen(!navOpen) : toggleNavCollapse()}
+            type="button"
+            aria-label="Menu"
+          >
+            <FiMenu size={20} />
+          </button>
+          
+          <h1 className="text-base font-medium tracking-tight text-[#e6edf3] flex-1">
+            {pageTitles[currentPage] || 'Nova'}
+          </h1>
+          
+          <div className="hidden md:flex items-center gap-2.5 bg-[#161b22] border border-[#21262d] px-4 py-2 w-[280px] transition-all duration-200 focus-within:border-[#388bfd] focus-within:shadow-[0_0_0_3px_rgba(56,139,253,0.1)] focus-within:w-[320px]">
+            <FiSearch size={16} className="text-[#484f58]" />
+            <input 
+              type="text" 
+              placeholder="Recherche globale..." 
+              aria-label="Recherche globale"
+              className="bg-transparent border-none outline-none text-[#e6edf3] font-['DM_Sans'] text-[13px] w-full placeholder:text-[#484f58]"
+            />
           </div>
-        </main>
+          
+          <button 
+            className="relative w-[38px] h-[38px] bg-[#161b22] border border-[#21262d] flex items-center justify-center cursor-pointer text-[#8b949e] transition-all duration-200 hover:text-[#e6edf3] hover:border-[#30363d] hover:-translate-y-px"
+            onClick={() => showNotification('Aucune nouvelle notification', 'blue')}
+            type="button"
+            aria-label="Notifications"
+          >
+            <FiBell size={18} />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-[#f85149] border-2 border-[#0d1117]" />
+          </button>
+          
+          <button
+            ref={userBtnRef}
+            className={`w-[38px] h-[38px] bg-[#388bfd] border border-[#21262d] flex items-center justify-center cursor-pointer text-white transition-all duration-200 hover:brightness-110 ${profileOpen ? 'ring-2 ring-[#388bfd] ring-offset-2 ring-offset-[#090c10]' : ''}`}
+            type="button"
+            aria-label="Profil"
+            aria-expanded={profileOpen}
+            onClick={() => setProfileOpen(v => !v)}
+          >
+            <span className="text-sm font-semibold">A</span>
+          </button>
+        </header>
 
-        {/* Toast de notification */}
-        {toast && <Toast message={toast.msg} type={toast.type} />}
+        {/* Zone de contenu */}
+        <div className="p-8 flex-1 md:p-8 sm:p-5">
+          {renderPage()}
+        </div>
+      </main>
 
-        {/* Modal de profil - avec vérification de null */}
-        {userBtnRef.current && (
-          <ProfileModal
-            isOpen={profileOpen}
-            onClose={() => setProfileOpen(false)}
-            onLogout={handleLogout}
-            anchorRef={userBtnRef as React.RefObject<HTMLButtonElement>}
-          />
-        )}
-      </div>
-    </>
+      {/* Toast de notification */}
+      {toast && <Toast message={toast.msg} type={toast.type} />}
+
+      {/* Modal de profil */}
+      {userBtnRef.current && (
+        <ProfileModal
+          isOpen={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          onLogout={handleLogout}
+          anchorRef={userBtnRef as React.RefObject<HTMLButtonElement>}
+        />
+      )}
+    </div>
   );
 }
-
-const globalStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap');
-
-  *, *::before, *::after { 
-    box-sizing: border-box; 
-    margin: 0; 
-    padding: 0; 
-  }
-  
-  :root {
-    --bg-base: #090c10;
-    --bg-panel: #0d1117;
-    --bg-surface: #161b22;
-    --bg-elevated: #1c2330;
-    --border: #21262d;
-    --border-bright: #30363d;
-    --accent-blue: #388bfd;
-    --accent-teal: #39d353;
-    --accent-amber: #e3b341;
-    --accent-red: #f85149;
-    --accent-purple: #a5a0e8;
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
-    --text-muted: #484f58;
-    --font: 'DM Sans', sans-serif;
-    --mono: 'DM Mono', monospace;
-    --nav-w: 260px;
-    --nav-w-collapsed: 80px;
-    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  html, body { 
-    background: var(--bg-base); 
-    color: var(--text-primary); 
-    font-family: var(--font);
-    font-size: 14px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh;
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { 
-    width: 6px; 
-    height: 6px; 
-  }
-  ::-webkit-scrollbar-track { 
-    background: transparent; 
-  }
-  ::-webkit-scrollbar-thumb { 
-    background: var(--border-bright);
-    border-radius: 3px;
-  }
-  ::-webkit-scrollbar-thumb:hover { 
-    background: var(--text-muted);
-  }
-
-  /* Layout */
-  .layout { 
-    display: flex; 
-    min-height: 100vh; 
-  }
-
-  /* Navigation */
-  .nav {
-    width: var(--nav-w);
-    background: var(--bg-panel);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    z-index: 100;
-    transition: width 0.3s var(--transition-smooth), transform 0.3s var(--transition-smooth);
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  
-  .nav.collapsed { 
-    width: var(--nav-w-collapsed);
-  }
-
-  .nav-header {
-    position: relative;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .nav-logo {
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 72px;
-  }
-  
-  .nav.collapsed .nav-logo {
-    padding: 20px 0;
-    justify-content: center;
-  }
-  
-  .nav-logo-img {
-    width: 36px;
-    height: 36px;
-    object-fit: contain;
-    transition: transform 0.2s ease;
-  }
-  
-  .nav-logo-img:hover {
-    transform: scale(1.05);
-  }
-  
-  .nav-logo-text { 
-    font-weight: 600; 
-    font-size: 18px; 
-    letter-spacing: -0.3px;
-    white-space: nowrap;
-    color: white;
-  }
-
-  .nav-collapse-btn {
-    position: absolute;
-    right: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 24px;
-    height: 24px;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    z-index: 10;
-  }
-
-  .nav-collapse-btn.collapsed {
-    transform: translateY(-50%) rotate(180deg);
-  }
-
-  .nav-collapse-btn:hover {
-    background: var(--accent-blue);
-    border-color: var(--accent-blue);
-    color: white;
-  }
-
-  .nav-section { 
-    padding: 16px 12px 8px; 
-  }
-  
-  .nav.collapsed .nav-section {
-    padding: 16px 4px;
-  }
-  
-  .nav-section-bottom {
-    margin-top: auto;
-  }
-  
-  .nav-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    padding: 0 8px;
-    margin-bottom: 8px;
-    white-space: nowrap;
-  }
-  
-  .nav.collapsed .nav-label {
-    text-align: center;
-    padding: 0;
-  }
-
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 13.5px;
-    transition: all 0.2s ease;
-    position: relative;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
-    border-radius: 6px;
-    margin-bottom: 2px;
-    white-space: nowrap;
-  }
-  
-  .nav.collapsed .nav-item {
-    padding: 10px 0;
-    justify-content: center;
-  }
-  
-  .nav-item:hover { 
-    color: var(--text-primary); 
-    background: var(--bg-surface);
-  }
-  
-  .nav-item.active { 
-    color: var(--text-primary); 
-    background: var(--bg-elevated);
-  }
-  
-  .nav-item.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--accent-blue);
-    border-radius: 0 3px 3px 0;
-  }
-
-  .nav-badge {
-    margin-left: auto;
-    background: var(--accent-red);
-    color: white;
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 6px;
-    min-width: 20px;
-    text-align: center;
-    border-radius: 12px;
-  }
-  
-  .nav-badge.green { 
-    background: var(--accent-teal); 
-  }
-  
-  .nav-badge.amber { 
-    background: var(--accent-amber); 
-  }
-
-  .nav-badge-collapsed {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    background: var(--accent-red);
-    color: white;
-    font-size: 8px;
-    font-weight: 600;
-    padding: 2px 4px;
-    min-width: 16px;
-    text-align: center;
-    border-radius: 8px;
-  }
-
-  .nav-footer {
-    border-top: 1px solid var(--border);
-    padding: 16px;
-  }
-  
-  .nav.collapsed .nav-footer {
-    padding: 16px 0;
-  }
-  
-  .nav-user {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 12px;
-    cursor: pointer;
-    border: none;
-    background: none;
-    width: 100%;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-  }
-  
-  .nav.collapsed .nav-user {
-    padding: 8px 0;
-    justify-content: center;
-  }
-  
-  .nav-user:hover { 
-    background: var(--bg-surface);
-  }
-  
-  .nav-avatar {
-    width: 36px;
-    height: 36px;
-    background: var(--accent-blue);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    border-radius: 8px;
-  }
-  
-  .nav-user-info { 
-    flex: 1; 
-    min-width: 0; 
-  }
-  
-  .nav-user-name { 
-    font-size: 13px; 
-    font-weight: 600; 
-    color: var(--text-primary);
-  }
-  
-  .nav-user-role { 
-    font-size: 11px; 
-    color: var(--text-muted); 
-  }
-  
-  .nav-logout-icon {
-    color: var(--text-muted);
-    transition: transform 0.2s ease;
-  }
-  
-  .nav-user:hover .nav-logout-icon {
-    color: var(--accent-red);
-    transform: translateX(4px);
-  }
-
-  /* Contenu principal */
-  .main { 
-    margin-left: var(--nav-w); 
-    flex: 1;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-base);
-    transition: margin-left 0.3s var(--transition-smooth);
-  }
-  
-  .main.expanded { 
-    margin-left: var(--nav-w-collapsed); 
-  }
-
-  /* Barre supérieure */
-  .topbar {
-    height: 64px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 28px;
-    gap: 20px;
-    background: rgba(13, 17, 23, 0.95);
-    backdrop-filter: blur(8px);
-    position: sticky;
-    top: 0;
-    z-index: 50;
-  }
-  
-  .topbar-title { 
-    font-size: 16px; 
-    font-weight: 500; 
-    flex: 1;
-    letter-spacing: -0.3px;
-    color: var(--text-primary);
-  }
-  
-  .topbar-search {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    padding: 8px 16px;
-    width: 280px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-  }
-  
-  .topbar-search:focus-within {
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.1);
-    width: 320px;
-  }
-  
-  .topbar-search input {
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--text-primary);
-    font-family: var(--font);
-    font-size: 13px;
-    width: 100%;
-  }
-  
-  .topbar-search input::placeholder { 
-    color: var(--text-muted); 
-  }
-  
-  .search-icon {
-    color: var(--text-muted);
-  }
-  
-  .topbar-btn {
-    width: 38px;
-    height: 38px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--text-secondary);
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    position: relative;
-  }
-  
-  .topbar-btn:hover { 
-    color: var(--text-primary); 
-    border-color: var(--border-bright);
-    transform: translateY(-1px);
-  }
-  
-  .topbar-dot {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 8px;
-    height: 8px;
-    background: var(--accent-red);
-    border-radius: 50%;
-    border: 2px solid var(--bg-panel);
-  }
-  
-  .user-btn {
-    background: var(--accent-blue);
-    color: white;
-  }
-  
-  .user-btn:hover {
-    background: var(--accent-blue);
-    filter: brightness(1.1);
-  }
-  
-  .user-initials {
-    font-size: 14px;
-    font-weight: 600;
-  }
-  
-  .menu-btn {
-    display: none;
-    width: 38px;
-    height: 38px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--text-secondary);
-    border-radius: 8px;
-    transition: all 0.2s ease;
-  }
-  
-  .menu-btn:hover {
-    color: var(--text-primary);
-    border-color: var(--border-bright);
-    transform: rotate(90deg);
-  }
-
-  /* Zone de contenu */
-  .content { 
-    padding: 32px; 
-    flex: 1;
-  }
-
-  /* Overlay mobile */
-  .nav-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 99;
-    animation: fadeIn 0.2s ease;
-  }
-  
-  .nav-overlay.show { 
-    display: block; 
-  }
-
-  /* Animations */
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  /* Responsive */
-  @media (max-width: 1100px) {
-    .topbar-search {
-      width: 200px;
-    }
-    
-    .topbar-search:focus-within {
-      width: 240px;
-    }
-  }
-  
-  @media (max-width: 768px) {
-    :root { 
-      --nav-w: 280px; 
-    }
-    
-    .nav { 
-      transform: translateX(-100%); 
-    }
-    
-    .nav.collapsed { 
-      width: var(--nav-w);
-    }
-    
-    .nav.open { 
-      transform: translateX(0);
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
-    }
-    
-    .main, .main.expanded { 
-      margin-left: 0; 
-    }
-    
-    .menu-btn { 
-      display: flex; 
-    }
-    
-    .nav-collapse-btn {
-      display: none;
-    }
-    
-    .content { 
-      padding: 20px; 
-    }
-    
-    .topbar { 
-      padding: 0 16px; 
-      gap: 12px;
-    }
-    
-    .topbar-search { 
-      display: none; 
-    }
-    
-    .nav-logo {
-      padding: 16px;
-    }
-    
-    .nav-logo-img {
-      width: 32px;
-      height: 32px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .content { 
-      padding: 16px; 
-    }
-    
-    .topbar-title {
-      font-size: 14px;
-    }
-    
-    .topbar-btn:not(.menu-btn):not(.user-btn) {
-      display: none;
-    }
-  }
-`;
