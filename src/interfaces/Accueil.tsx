@@ -1,21 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
-  FiGrid, FiKey, FiCreditCard, FiUsers, FiMessageCircle,
-  FiCode, FiBox, FiSettings, FiLogOut, FiBell, FiSearch,
-  FiMenu, FiUser, FiChevronLeft, FiChevronRight, FiShield, FiDollarSign
+  FiKey, FiCreditCard, FiSettings, FiLogOut, FiBell, FiSearch,
+  FiMenu, FiUser, FiChevronLeft, FiChevronRight, FiUsers, FiTag
 } from 'react-icons/fi';
-import Dashboard         from '../components/Dashboard';
 import KeysPage          from '../components/CleActvation';
 import SubscriptionsPage from '../components/Abonnement';
-import ClientsPage       from '../components/Clients';
-import CommentsPage      from '../components/Avis';
-import ApiPage           from '../components/ClesApi';
-import Applications      from '../components/ApplicationsModule/Applications';
-import SettingsPage      from '../components/Parametres';
+import OffresPage        from '../components/Offres';
 import Toast             from '../components/Toast';
-import AdminPage         from '../components/Admin';
-import ProfileModal      from '../components/ProfilModal';
-import FinanceSection    from '../components/FinanceSection';
 
 interface NavItem {
   id: string;
@@ -69,28 +60,18 @@ export default function Accueil({ onLogout }: AccueilProps) {
   };
 
   const navItems: NavItem[] = [
-    { id: 'dashboard', icon: FiGrid, label: 'Vue d\'ensemble' },
+    { id: 'dashboard', icon: FiUsers, label: 'Dashboard', badge: '12', badgeColor: 'green' },
     { id: 'keys', icon: FiKey, label: 'Clés d\'activation', badge: '5' },
     { id: 'subscriptions', icon: FiCreditCard, label: 'Abonnements', badge: '1', badgeColor: 'amber' },
-    { id: 'clients', icon: FiUsers, label: 'Clients' },
-    { id: 'comments', icon: FiMessageCircle, label: 'Site web', badge: '4', badgeColor: 'green' },
-    { id: 'finance', icon: FiDollarSign, label: 'Finance', badge: 'Nouveau', badgeColor: 'green' },
-    { id: 'api', icon: FiCode, label: 'Clés API' },
-    { id: 'apps', icon: FiBox, label: 'Applications' },
-    { id: 'admin', icon: FiShield, label: 'Administration' },
+    { id: 'offres', icon: FiTag, label: 'Offres', badge: '8', badgeColor: 'green' },  // ✅ NOUVEAU
   ];
 
   const pageTitles: Record<string, string> = {
-    dashboard: 'Vue d\'ensemble',
+    dashboard: 'Dashboard',
     keys: 'Clés d\'activation',
     subscriptions: 'Abonnements',
-    clients: 'Clients',
-    comments: 'Avis Clients',
-    finance: 'Finance',
-    api: 'Clés API',
-    apps: 'Applications',
+    offres: 'Gestion des Offres',  // ✅ NOUVEAU
     settings: 'Paramètres',
-    admin: 'Administration',
   };
 
   const navigateTo = (pageId: string) => {
@@ -109,27 +90,17 @@ export default function Accueil({ onLogout }: AccueilProps) {
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard onNotify={showNotification} />;
+        return <div className="text-[#e6edf3]">Dashboard</div>;
       case 'keys':
-        return <KeysPage />;
+        return <KeysPage onNotify={showNotification} />;
       case 'subscriptions':
         return <SubscriptionsPage onNotify={showNotification} />;
-      case 'clients':
-        return <ClientsPage onNotify={showNotification} />;
-      case 'comments':
-        return <CommentsPage />;
-      case 'finance':
-        return <FinanceSection />;
-      case 'api':
-        return <ApiPage onNotify={showNotification} />;
-      case 'apps':
-        return <Applications onNotify={showNotification} />;
+      case 'offres':  // ✅ NOUVEAU
+        return <OffresPage onNotify={showNotification} />;
       case 'settings':
-        return <SettingsPage onNotify={showNotification} />;
-      case 'admin':
-        return <AdminPage />;
+        return <div className="text-[#e6edf3]">Paramètres</div>;
       default:
-        return <Dashboard onNotify={showNotification} />;
+        return <KeysPage onNotify={showNotification} />;
     }
   };
 
@@ -162,9 +133,9 @@ export default function Accueil({ onLogout }: AccueilProps) {
       <nav className={`fixed top-0 left-0 bottom-0 z-[100] flex flex-col overflow-y-auto overflow-x-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-[#0d1117] border-r border-[#21262d] ${navOpen ? 'translate-x-0' : isMobile ? '-translate-x-full' : 'translate-x-0'} ${navCollapsed && !isMobile ? 'w-[80px]' : 'w-[280px]'}`}>
         <div className="relative border-b border-[#21262d]">
           <div className={`flex items-center gap-3 min-h-[72px] ${navCollapsed && !isMobile ? 'justify-center px-0 py-5' : 'p-5'}`}>
-            <img src="/LogoNova.png" alt="Nova Logo" className="w-9 h-9 object-contain transition-transform duration-200 hover:scale-105" />
+            <img src="/LogoNova.png" alt="Stardust Logo" className="w-9 h-9 object-contain transition-transform duration-200 hover:scale-105" />
             {(!navCollapsed || isMobile) && (
-              <span className="font-semibold text-lg tracking-tight text-white whitespace-nowrap">Nova</span>
+              <span className="font-semibold text-lg tracking-tight text-white whitespace-nowrap">Stardust</span>
             )}
           </div>
           
@@ -182,7 +153,7 @@ export default function Accueil({ onLogout }: AccueilProps) {
 
         <div className={`${navCollapsed && !isMobile ? 'px-1 py-4' : 'px-3 py-4'}`}>
           <div className={`text-[10px] font-semibold tracking-[1.2px] uppercase text-[#484f58] mb-2 whitespace-nowrap ${navCollapsed && !isMobile ? 'text-center px-0' : 'px-2'}`}>
-            {(!navCollapsed || isMobile) ? 'Navigation' : '···'}
+            {(!navCollapsed || isMobile) ? 'Menu' : '···'}
           </div>
           {navItems.map((item) => (
             <button
@@ -269,7 +240,7 @@ export default function Accueil({ onLogout }: AccueilProps) {
           </button>
           
           <h1 className="text-base font-medium tracking-tight text-[#e6edf3] flex-1">
-            {pageTitles[currentPage] || 'Nova'}
+            {pageTitles[currentPage] || 'Stardust'}
           </h1>
           
           <div className="hidden md:flex items-center gap-2.5 bg-[#161b22] border border-[#21262d] px-4 py-2 w-[280px] transition-all duration-200 focus-within:border-[#388bfd] focus-within:shadow-[0_0_0_3px_rgba(56,139,253,0.1)] focus-within:w-[320px]">
@@ -312,16 +283,6 @@ export default function Accueil({ onLogout }: AccueilProps) {
 
       {/* Toast de notification */}
       {toast && <Toast message={toast.msg} type={toast.type} />}
-
-      {/* Modal de profil */}
-      {userBtnRef.current && (
-        <ProfileModal
-          isOpen={profileOpen}
-          onClose={() => setProfileOpen(false)}
-          onLogout={handleLogout}
-          anchorRef={userBtnRef as React.RefObject<HTMLButtonElement>}
-        />
-      )}
     </div>
   );
 }

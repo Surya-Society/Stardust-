@@ -39,7 +39,7 @@ export default function SplashScreen({ onFinish, duration = 6000 }: SplashScreen
         <div className="logo-container">
           <img 
             src="/LogoNova.png" 
-            alt="Nova" 
+            alt="Stardust" 
             className="logo"
           />
           <div className="logo-glow"></div>
@@ -47,7 +47,7 @@ export default function SplashScreen({ onFinish, duration = 6000 }: SplashScreen
 
         {/* Nom avec animation */}
         <h1 className="app-name">
-          <span className="nova">NOVA</span>
+          <span className="stardust">STARDUST</span>
           <span className="tagline">Administration</span>
         </h1>
 
@@ -86,7 +86,7 @@ export default function SplashScreen({ onFinish, duration = 6000 }: SplashScreen
 
         {/* Version */}
         <div className="version">
-          v2.1.0
+          v1.0.0
         </div>
 
         {/* Particules animées */}
@@ -171,7 +171,7 @@ export default function SplashScreen({ onFinish, duration = 6000 }: SplashScreen
           animation: slideUp 0.8s ease-out;
         }
 
-        .nova {
+        .stardust {
           display: block;
           font-size: 48px;
           font-weight: 700;
@@ -380,7 +380,7 @@ export default function SplashScreen({ onFinish, duration = 6000 }: SplashScreen
             height: 100px;
           }
 
-          .nova {
+          .stardust {
             font-size: 36px;
           }
 

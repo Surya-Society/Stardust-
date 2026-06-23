@@ -1,40 +1,70 @@
 [package]
-name = "nova"
+name = "Stardust"
 version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [lib]
-# The `_lib` suffix may seem redundant but it is necessary
-# to make the lib name unique and wouldn't conflict with the bin name.
-# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "nova_lib"
+name = "Stardust"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-log = "0.4"
-serde_with = "3.0"
+# ================================================================
+# TAURI & UI
+# ================================================================
 tauri = { version = "2.8.4", features = [] }
 tauri-plugin-log = "2"
-uuid = { version = "1.0", features = ["v4", "serde"] }
-chrono = { version = "0.4", features = ["serde"] }
 tauri-plugin-opener = "2.0.0"
+
+# ================================================================
+# SÉRIALISATION
+# ================================================================
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_with = "3.0"
+
+# ================================================================
+# LOGS
+# ================================================================
+log = "0.4"
+env_logger = "0.10"
+
+# ================================================================
+# BASE DE DONNÉES
+# ================================================================
+sqlx = { version = "0.7", features = [
+    "sqlite",                      # ✅ Cache local
+    "postgres",                    # ✅ Base en ligne
+    "runtime-tokio-rustls",
+    "macros",
+    "chrono",
+    "uuid",
+    "json"
+] }
+
+# ================================================================
+# GESTION DES DATES
+# ================================================================
+chrono = { version = "0.4", features = ["serde"] }
+
+# ================================================================
+# UUID
+# ================================================================
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# ================================================================
+# ASYNC
+# ================================================================
 tokio = { version = "1", features = ["full"] }
-sqlx = { version = "0.7", features = ["sqlite", "postgres", "runtime-tokio-rustls", "macros"] }
-dotenv = "0.15"
-validator = { version = "0.16", features = ["derive"] } 
-image = "0.25"
-base64 = "0.21"
-webp = "0.2"
-rgb = "0.8"
+
+# ================================================================
+# CRYPTOGRAPHIE
+# ================================================================
+ring = "0.17"
 aes-gcm = "0.10"
 chacha20 = "0.9"
 sha2 = "0.10"
@@ -43,4 +73,38 @@ hmac = "0.12"
 pbkdf2 = "0.12"
 rand = "0.8"
 rsa = "0.9"
-ring = "0.17"
+base64 = "0.21"
+
+# ================================================================
+# IMAGES
+# ================================================================
+image = "0.25"
+webp = "0.2"
+rgb = "0.8"
+
+# ================================================================
+# HTTP CLIENT (pour les appels API MTN/Airtel)
+# ================================================================
+reqwest = { version = "0.12", features = ["json"] }
+
+# ================================================================
+# GESTION DES ERREURS
+# ================================================================
+thiserror = "1.0"
+anyhow = "1.0"
+
+# ================================================================
+# VALIDATION
+# ================================================================
+validator = { version = "0.16", features = ["derive"] }
+
+# ================================================================
+# ENVIRONNEMENT & FICHIERS
+# ================================================================
+dotenv = "0.15"
+dirs = "5.0"
+axum = "0.7"
+
+actix-web = "4.4"
+actix-rt = "2.9"
+actix-cors = "0.6"
