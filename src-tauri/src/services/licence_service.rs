@@ -29,7 +29,8 @@ impl LicenceService {
         let row = sqlx::query(
             r#"
             SELECT 
-                key_text, school_name, plan, expires_at, max_uses, id_etablissement
+                key_text, school_name, plan, expires_at, max_uses, id_etablissement,
+                synced, sync_date
             FROM activation_keys 
             WHERE id = ?
             "#
@@ -53,7 +54,6 @@ impl LicenceService {
 
         info!("🔑 Challenge generated for licence {}: {}", licence_id, challenge);
 
-        // ✅ CORRECTION : Signer avec licence_id et expiry aussi
         let signature = self.crypto.sign_licence_data(
             &key_text,
             &format!("key_{}", licence_id),
@@ -76,9 +76,76 @@ impl LicenceService {
             public_key,
             challenge: challenge.clone(),
             id_etablissement,
+            etablissement: None,
         };
 
         info!("📤 Licence exported: {} with challenge: {}", licence_file.licence_key, challenge);
+        Ok(licence_file)
+    }
+
+    // ================================================================
+    // ✅ EXPORT AVEC ÉTABLISSEMENT - NOUVEAU
+    // ================================================================
+
+    pub async fn export_licence_key_with_etablissement(
+        &self,
+        licence_id: i64,
+        etablissement: &EtablissementInfo,
+    ) -> Result<LicenceFile, AppError> {
+        let row = sqlx::query(
+            r#"
+            SELECT 
+                key_text, school_name, plan, expires_at, max_uses, id_etablissement,
+                synced, sync_date
+            FROM activation_keys 
+            WHERE id = ?
+            "#
+        )
+        .bind(licence_id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        let key_text: String = row.get("key_text");
+        let school_name: String = row.get("school_name");
+        let plan: String = row.get("plan");
+        let expires_at_str: String = row.get("expires_at");
+        let max_uses: i64 = row.get("max_uses");
+        let id_etablissement: Option<String> = row.get("id_etablissement");
+
+        let expires_at = chrono::DateTime::parse_from_rfc3339(&expires_at_str)
+            .map(|dt| dt.with_timezone(&Utc))
+            .unwrap_or_else(|_| Utc::now());
+
+        let challenge = uuid::Uuid::new_v4().to_string();
+
+        info!("🔑 Challenge generated for licence {} with établissement: {}", licence_id, etablissement.nom);
+
+        let signature = self.crypto.sign_licence_data(
+            &key_text,
+            &format!("key_{}", licence_id),
+            &expires_at,
+            &challenge,
+        )?;
+
+        let public_key = self.crypto.get_public_key_base64()?;
+
+        let licence_file = LicenceFile {
+            licence_id: format!("key_{}", licence_id),
+            licence_key: key_text.clone(),
+            school_id: school_name.clone(),
+            plan: plan.clone(),
+            issued_at: Utc::now(),
+            expires_at,
+            max_version: env!("CARGO_PKG_VERSION").to_string(),
+            install_limit: max_uses as u32,
+            signature,
+            public_key,
+            challenge: challenge.clone(),
+            id_etablissement: Some(etablissement.id_etablissement.clone()),
+            etablissement: Some(etablissement.clone()),
+        };
+
+        info!("📤 Licence exported with établissement: {} - {}", licence_file.licence_key, etablissement.nom);
         Ok(licence_file)
     }
 
@@ -91,7 +158,6 @@ impl LicenceService {
         licence_file: &LicenceFile,
         appareil_info: &ActivationRequest,
     ) -> Result<ActivationResponse, AppError> {
-        // 🔍 LOGS DE DEBUG
         info!("🔍 === ACTIVATION LICENCE ===");
         info!("🔍 Licence key: {}", licence_file.licence_key);
         info!("🔍 Challenge: {}", licence_file.challenge);
@@ -100,7 +166,6 @@ impl LicenceService {
         info!("🔍 Appareil: {}", appareil_info.nom_appareil);
         info!("🔍 Device ID: {}", appareil_info.identifiant_unique);
         
-        // ✅ CORRECTION : Vérifier la signature AVEC licence_id et expiry
         info!("🔍 Vérification de la signature...");
         let signature_valid = self.crypto.verify_license_signature(
             &licence_file.licence_key,
@@ -121,7 +186,6 @@ impl LicenceService {
             });
         }
 
-        // ✅ Vérifier que le challenge n'a pas déjà été utilisé
         info!("🔍 Vérification du challenge...");
         let challenge_used = self.is_challenge_used(&licence_file.challenge).await?;
         info!("🔍 Challenge déjà utilisé: {}", challenge_used);
@@ -136,7 +200,6 @@ impl LicenceService {
             });
         }
 
-        // Vérifier si la licence existe déjà
         info!("🔍 Recherche de la licence existante...");
         let existing = self.get_activation_key_by_text(&licence_file.licence_key).await?;
         
@@ -205,7 +268,6 @@ impl LicenceService {
             });
         }
 
-        // Nouvelle licence (première activation)
         info!("🆕 Nouvelle licence - première activation");
         let now = Utc::now().to_rfc3339();
         let key_hash = ActivationKey::generate_key_hash(&licence_file.licence_key);
@@ -217,8 +279,13 @@ impl LicenceService {
         let install_limit = licence_file.install_limit as i64;
         let device_id = appareil_info.identifiant_unique.clone();
         let note = format!("Importée depuis fichier .licpkg - Appareil: {}", appareil_info.nom_appareil);
-        let id_etablissement = licence_file.id_etablissement.clone()
-            .unwrap_or_else(|| Uuid::new_v4().to_string());
+        
+        let id_etablissement = if let Some(ref etab) = licence_file.etablissement {
+            etab.id_etablissement.clone()
+        } else {
+            licence_file.id_etablissement.clone()
+                .unwrap_or_else(|| Uuid::new_v4().to_string())
+        };
 
         let row = sqlx::query(
             r#"
@@ -227,13 +294,15 @@ impl LicenceService {
                 created_at, expires_at, uses, max_uses,
                 hw_lock, two_fa, ip_restrict, sec_score,
                 fingerprint, activation_method, revocations,
-                key_hash, note, created_by, id_etablissement
-            ) VALUES (?, ?, ?, 'active', ?, ?, 1, ?, 0, 0, 0, 70, ?, 'file', 0, ?, ?, 'system', ?)
+                key_hash, note, created_by, id_etablissement,
+                synced, sync_date
+            ) VALUES (?, ?, ?, 'active', ?, ?, 1, ?, 0, 0, 0, 70, ?, 'file', 0, ?, ?, 'system', ?, ?, ?)
             RETURNING id, key_text, school_name, plan, status,
                 created_at, expires_at, uses, max_uses,
                 hw_lock, two_fa, ip_restrict, sec_score,
                 fingerprint, activation_method, revocations,
-                key_hash, note, created_by, id_etablissement
+                key_hash, note, created_by, id_etablissement,
+                synced, sync_date
             "#
         )
         .bind(&licence_key)
@@ -246,6 +315,8 @@ impl LicenceService {
         .bind(&key_hash)
         .bind(&note)
         .bind(&id_etablissement)
+        .bind(1)  // synced
+        .bind(&now)  // sync_date
         .fetch_one(&self.pool)
         .await?;
 
@@ -261,6 +332,10 @@ impl LicenceService {
         let result_plan: String = row.get("plan");
         let result_uses: i64 = row.get("uses");
         let result_max_uses: i64 = row.get("max_uses");
+        let created_at: String = row.get("created_at");
+        let expires_at: String = row.get("expires_at");
+        let result_synced: i64 = row.get("synced");
+        let result_sync_date: Option<String> = row.get("sync_date");
 
         info!("✅ Activation réussie pour la nouvelle licence: {}", licence_file.licence_key);
 
@@ -330,7 +405,8 @@ impl LicenceService {
                 created_at, expires_at, uses, max_uses,
                 hw_lock, two_fa, ip_restrict, sec_score,
                 fingerprint, activation_method, revocations,
-                key_hash, note, created_by, id_etablissement
+                key_hash, note, created_by, id_etablissement,
+                synced, sync_date
             FROM activation_keys
             WHERE key_text = ?
             "#
@@ -361,6 +437,8 @@ impl LicenceService {
                 note: row.get("note"),
                 created_by: row.get("created_by"),
                 id_etablissement: row.get("id_etablissement"),
+                synced: row.get("synced"),
+                sync_date: row.get("sync_date"),
             }))
         } else {
             Ok(None)
@@ -416,7 +494,8 @@ impl LicenceService {
                 created_at, expires_at, uses, max_uses,
                 hw_lock, two_fa, ip_restrict, sec_score,
                 fingerprint, activation_method, revocations,
-                key_hash, note, created_by, id_etablissement
+                key_hash, note, created_by, id_etablissement,
+                synced, sync_date
             FROM activation_keys
             ORDER BY created_at DESC
             "#
@@ -447,6 +526,8 @@ impl LicenceService {
                 note: row.get("note"),
                 created_by: row.get("created_by"),
                 id_etablissement: row.get("id_etablissement"),
+                synced: row.get("synced"),
+                sync_date: row.get("sync_date"),
             });
         }
 
@@ -461,7 +542,8 @@ impl LicenceService {
                 created_at, expires_at, uses, max_uses,
                 hw_lock, two_fa, ip_restrict, sec_score,
                 fingerprint, activation_method, revocations,
-                key_hash, note, created_by, id_etablissement
+                key_hash, note, created_by, id_etablissement,
+                synced, sync_date
             FROM activation_keys
             WHERE id = ?
             "#
@@ -492,6 +574,8 @@ impl LicenceService {
                 note: row.get("note"),
                 created_by: row.get("created_by"),
                 id_etablissement: row.get("id_etablissement"),
+                synced: row.get("synced"),
+                sync_date: row.get("sync_date"),
             }))
         } else {
             Ok(None)
@@ -508,7 +592,6 @@ impl LicenceService {
         let now = Utc::now().to_rfc3339();
         let sec_score = self.calculate_sec_score(data.hw_lock, data.two_fa, data.ip_restrict);
         
-        // ✅ Générer un ID établissement si non fourni
         let id_etablissement = data.id_etablissement
             .clone()
             .unwrap_or_else(|| Uuid::new_v4().to_string());
@@ -525,13 +608,15 @@ impl LicenceService {
                 created_at, expires_at, uses, max_uses,
                 hw_lock, two_fa, ip_restrict, sec_score,
                 fingerprint, activation_method, revocations,
-                key_hash, note, created_by, id_etablissement
-            ) VALUES (?, ?, ?, 'active', ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+                key_hash, note, created_by, id_etablissement,
+                synced, sync_date
+            ) VALUES (?, ?, ?, 'active', ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
             RETURNING id, key_text, school_name, plan, status,
                 created_at, expires_at, uses, max_uses,
                 hw_lock, two_fa, ip_restrict, sec_score,
                 fingerprint, activation_method, revocations,
-                key_hash, note, created_by, id_etablissement
+                key_hash, note, created_by, id_etablissement,
+                synced, sync_date
             "#
         )
         .bind(&key_text)
@@ -550,6 +635,8 @@ impl LicenceService {
         .bind(&data.note)
         .bind("admin")
         .bind(&id_etablissement)
+        .bind(0)  // synced
+        .bind(None::<String>)  // sync_date
         .fetch_one(&self.pool)
         .await?;
 
@@ -576,6 +663,8 @@ impl LicenceService {
             note: row.get("note"),
             created_by: row.get("created_by"),
             id_etablissement: row.get("id_etablissement"),
+            synced: row.get("synced"),
+            sync_date: row.get("sync_date"),
         })
     }
 
@@ -614,13 +703,16 @@ impl LicenceService {
                 ip_restrict = ?,
                 sec_score = ?,
                 note = ?,
-                id_etablissement = ?
+                id_etablissement = ?,
+                synced = ?,
+                sync_date = ?
             WHERE id = ?
             RETURNING id, key_text, school_name, plan, status,
                 created_at, expires_at, uses, max_uses,
                 hw_lock, two_fa, ip_restrict, sec_score,
                 fingerprint, activation_method, revocations,
-                key_hash, note, created_by, id_etablissement
+                key_hash, note, created_by, id_etablissement,
+                synced, sync_date
             "#
         )
         .bind(&school_name)
@@ -633,6 +725,8 @@ impl LicenceService {
         .bind(sec_score)
         .bind(&note)
         .bind(&id_etablissement)
+        .bind(1)  // synced
+        .bind(Utc::now().to_rfc3339())  // sync_date
         .bind(licence_id)
         .fetch_one(&self.pool)
         .await?;
@@ -661,6 +755,8 @@ impl LicenceService {
             note: row.get("note"),
             created_by: row.get("created_by"),
             id_etablissement: row.get("id_etablissement"),
+            synced: row.get("synced"),
+            sync_date: row.get("sync_date"),
         })
     }
 
@@ -672,15 +768,18 @@ impl LicenceService {
         let row = sqlx::query(
             r#"
             UPDATE activation_keys
-            SET status = 'revoked', revocations = revocations + 1
+            SET status = 'revoked', revocations = revocations + 1,
+                synced = 1, sync_date = ?
             WHERE id = ?
             RETURNING id, key_text, school_name, plan, status,
                 created_at, expires_at, uses, max_uses,
                 hw_lock, two_fa, ip_restrict, sec_score,
                 fingerprint, activation_method, revocations,
-                key_hash, note, created_by, id_etablissement
+                key_hash, note, created_by, id_etablissement,
+                synced, sync_date
             "#
         )
+        .bind(Utc::now().to_rfc3339())
         .bind(licence_id)
         .fetch_one(&self.pool)
         .await?;
@@ -709,6 +808,8 @@ impl LicenceService {
             note: row.get("note"),
             created_by: row.get("created_by"),
             id_etablissement: row.get("id_etablissement"),
+            synced: row.get("synced"),
+            sync_date: row.get("sync_date"),
         })
     }
 
@@ -720,15 +821,18 @@ impl LicenceService {
         let row = sqlx::query(
             r#"
             UPDATE activation_keys
-            SET status = 'suspended'
+            SET status = 'suspended',
+                synced = 1, sync_date = ?
             WHERE id = ?
             RETURNING id, key_text, school_name, plan, status,
                 created_at, expires_at, uses, max_uses,
                 hw_lock, two_fa, ip_restrict, sec_score,
                 fingerprint, activation_method, revocations,
-                key_hash, note, created_by, id_etablissement
+                key_hash, note, created_by, id_etablissement,
+                synced, sync_date
             "#
         )
+        .bind(Utc::now().to_rfc3339())
         .bind(licence_id)
         .fetch_one(&self.pool)
         .await?;
@@ -757,6 +861,8 @@ impl LicenceService {
             note: row.get("note"),
             created_by: row.get("created_by"),
             id_etablissement: row.get("id_etablissement"),
+            synced: row.get("synced"),
+            sync_date: row.get("sync_date"),
         })
     }
 
@@ -768,15 +874,18 @@ impl LicenceService {
         let row = sqlx::query(
             r#"
             UPDATE activation_keys
-            SET status = 'active'
+            SET status = 'active',
+                synced = 1, sync_date = ?
             WHERE id = ?
             RETURNING id, key_text, school_name, plan, status,
                 created_at, expires_at, uses, max_uses,
                 hw_lock, two_fa, ip_restrict, sec_score,
                 fingerprint, activation_method, revocations,
-                key_hash, note, created_by, id_etablissement
+                key_hash, note, created_by, id_etablissement,
+                synced, sync_date
             "#
         )
+        .bind(Utc::now().to_rfc3339())
         .bind(licence_id)
         .fetch_one(&self.pool)
         .await?;
@@ -805,6 +914,8 @@ impl LicenceService {
             note: row.get("note"),
             created_by: row.get("created_by"),
             id_etablissement: row.get("id_etablissement"),
+            synced: row.get("synced"),
+            sync_date: row.get("sync_date"),
         })
     }
 

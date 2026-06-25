@@ -1,4 +1,3 @@
-// src/lib.rs
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 pub mod commands;
@@ -80,6 +79,10 @@ pub fn run() {
             commands::paiement::webhook_mtn,
             commands::paiement::webhook_airtel,
             
+            // ---- ÉTABLISSEMENTS ----
+            commands::etablissement::get_all_etablissements,
+            commands::etablissement::force_sync_etablissements,
+            
             // ---- STATUT ----
             get_app_status,
         ])
@@ -141,7 +144,7 @@ pub fn run() {
                                             info!("✅ Payment service initialized");
                                             
                                             // ✅ payment_service est DÉJÀ Arc<PaymentService>
-                                            let payment_service = payment_service; // pas de Arc::new()
+                                            let payment_service = payment_service;
                                             
                                             // 5. ✅ Démarrer l'API HTTP (pour Surya)
                                             info!("🚀 Starting Stardust API on port 8080...");
@@ -162,14 +165,14 @@ pub fn run() {
                                         }
                                     }
                                     
-                                    // 6. Initialiser le service de synchronisation
+                                    // 6. Initialiser le service de synchronisation (SQLite ↔ PostgreSQL)
                                     match sync::init_sync_service(pool.clone(), pg_pool.clone()).await {
                                         Ok(sync_service) => {
                                             info!("✅ Sync service initialized");
                                             
                                             let sync_service_clone = sync_service.clone();
                                             
-                                            // Démarrer la sync périodique
+                                            // ✅ CORRIGÉ : start_sync_loop ne prend pas d'argument
                                             tauri::async_runtime::spawn(async move {
                                                 sync_service_clone.start_sync_loop().await;
                                             });
@@ -204,6 +207,16 @@ pub fn run() {
                                             error!("❌ Abonnement service init failed: {}", e);
                                         }
                                     }
+                                    
+                                    // ============================================================
+                                    // ✅ 9. AJOUT : SERVICE DE SYNCHRONISATION DES ÉTABLISSEMENTS (API)
+                                    // ============================================================
+                                    // Le service de synchronisation des établissements est déjà
+                                    // dans l'API via api::etablissement::sync_etablissement
+                                    // Cette route est exposée sur /api/v1/etablissements/sync
+                                    info!("✅ Établissement sync API endpoint available at /api/v1/etablissements/sync");
+                                    
+                                    info!("✅ All services initialized");
                                 }
                                 Err(e) => {
                                     error!("❌ PostgreSQL connection failed: {}", e);
@@ -238,7 +251,8 @@ async fn get_app_status() -> Result<serde_json::Value, String> {
             "offres": true,
             "mtn": true,
             "airtel": true,
-            "api": true
+            "api": true,
+            "etablissements": true
         }
     }))
 }

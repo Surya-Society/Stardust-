@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
   FiKey, FiCreditCard, FiSettings, FiLogOut, FiBell, FiSearch,
-  FiMenu, FiUser, FiChevronLeft, FiChevronRight, FiUsers, FiTag
+  FiMenu, FiUser, FiChevronLeft, FiChevronRight, FiUsers, FiTag,
+  FiHome
 } from 'react-icons/fi';
 import KeysPage          from '../components/CleActvation';
 import SubscriptionsPage from '../components/Abonnement';
 import OffresPage        from '../components/Offres';
+import EtablissementsPage from '../components/Etablissements';
+import Dashboard         from '../components/Dashboard'; 
 import Toast             from '../components/Toast';
 
 interface NavItem {
@@ -28,7 +31,7 @@ interface AccueilProps {
 }
 
 export default function Accueil({ onLogout }: AccueilProps) {
-  const [currentPage, setCurrentPage] = useState<string>('dashboard');
+  const [currentPage, setCurrentPage] = useState<string>('dashboard');  // ✅ Changé: dashboard par défaut
   const [navOpen, setNavOpen] = useState<boolean>(false);
   const [navCollapsed, setNavCollapsed] = useState<boolean>(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -60,17 +63,19 @@ export default function Accueil({ onLogout }: AccueilProps) {
   };
 
   const navItems: NavItem[] = [
-    { id: 'dashboard', icon: FiUsers, label: 'Dashboard', badge: '12', badgeColor: 'green' },
-    { id: 'keys', icon: FiKey, label: 'Clés d\'activation', badge: '5' },
+    { id: 'dashboard', icon: FiHome, label: 'Dashboard', badge: '5', badgeColor: 'amber' },
+    { id: 'etablissements', icon: FiUsers, label: 'Établissements', badge: '12', badgeColor: 'green' },
+    { id: 'keys', icon: FiKey, label: "Clés d'activation", badge: '5' },
     { id: 'subscriptions', icon: FiCreditCard, label: 'Abonnements', badge: '1', badgeColor: 'amber' },
-    { id: 'offres', icon: FiTag, label: 'Offres', badge: '8', badgeColor: 'green' },  // ✅ NOUVEAU
+    { id: 'offres', icon: FiTag, label: 'Offres', badge: '8', badgeColor: 'green' },
   ];
 
   const pageTitles: Record<string, string> = {
     dashboard: 'Dashboard',
-    keys: 'Clés d\'activation',
+    etablissements: 'Établissements',
+    keys: "Clés d'activation",
     subscriptions: 'Abonnements',
-    offres: 'Gestion des Offres',  // ✅ NOUVEAU
+    offres: 'Gestion des Offres',
     settings: 'Paramètres',
   };
 
@@ -90,17 +95,19 @@ export default function Accueil({ onLogout }: AccueilProps) {
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <div className="text-[#e6edf3]">Dashboard</div>;
+        return <Dashboard onNotify={showNotification} />;
+      case 'etablissements':
+        return <EtablissementsPage onNotify={showNotification} />;
       case 'keys':
         return <KeysPage onNotify={showNotification} />;
       case 'subscriptions':
         return <SubscriptionsPage onNotify={showNotification} />;
-      case 'offres':  // ✅ NOUVEAU
+      case 'offres':
         return <OffresPage onNotify={showNotification} />;
       case 'settings':
         return <div className="text-[#e6edf3]">Paramètres</div>;
       default:
-        return <KeysPage onNotify={showNotification} />;
+        return <Dashboard onNotify={showNotification} />;
     }
   };
 
@@ -133,7 +140,7 @@ export default function Accueil({ onLogout }: AccueilProps) {
       <nav className={`fixed top-0 left-0 bottom-0 z-[100] flex flex-col overflow-y-auto overflow-x-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-[#0d1117] border-r border-[#21262d] ${navOpen ? 'translate-x-0' : isMobile ? '-translate-x-full' : 'translate-x-0'} ${navCollapsed && !isMobile ? 'w-[80px]' : 'w-[280px]'}`}>
         <div className="relative border-b border-[#21262d]">
           <div className={`flex items-center gap-3 min-h-[72px] ${navCollapsed && !isMobile ? 'justify-center px-0 py-5' : 'p-5'}`}>
-            <img src="/LogoNova.png" alt="Stardust Logo" className="w-9 h-9 object-contain transition-transform duration-200 hover:scale-105" />
+            <img src="/LogoStardust.png" alt="Stardust Logo" className="w-9 h-9 object-contain transition-transform duration-200 hover:scale-105" />
             {(!navCollapsed || isMobile) && (
               <span className="font-semibold text-lg tracking-tight text-white whitespace-nowrap">Stardust</span>
             )}

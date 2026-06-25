@@ -28,8 +28,9 @@ pub struct ActivationKey {
     pub key_hash: String,
     pub note: Option<String>,
     pub created_by: Option<String>,
-    // ⬇️ AJOUTER CE CHAMP (obligatoire pour la création d'abonnement)
     pub id_etablissement: Option<String>,
+    pub synced: i64,
+    pub sync_date: Option<String>,
 }
 
 // ================================================================
@@ -51,6 +52,33 @@ pub struct LicenceFile {
     pub challenge: String,
     // ⬇️ AJOUTER CE CHAMP
     pub id_etablissement: Option<String>,
+    pub etablissement: Option<EtablissementInfo>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EtablissementInfo {
+    pub id_etablissement: String,
+    pub nom: String,
+    pub sigle: Option<String>,
+    pub numero_agrement: String,
+    pub numero_fiscal: String,
+    pub registre_commerciale: Option<String>,
+    pub type_etablissement: String,  // PUBLIC, PRIVE, MIXTE
+    pub statut_juridique: String,     // SARL, SA, ASSOCIATION, GIE, AUTRE
+    pub pays: String,
+    pub region: String,
+    pub ville: String,
+    pub commune: Option<String>,
+    pub quatier: Option<String>,
+    pub adresse: String,
+    pub code_postal: Option<String>,
+    pub telephone_principal: String,
+    pub telephone_secondaire: Option<String>,
+    pub email: Option<String>,
+    pub site_web: Option<String>,
+    pub annee_scolaire_debut: String,
+    pub annee_scolaire_fin: String,
+    pub statut: String,
 }
 
 // ================================================================
@@ -99,8 +127,8 @@ pub struct CreateLicenceRequest {
     pub ip_restrict: bool,
     pub activation_method: String,
     pub note: Option<String>,
-    // ⬇️ AJOUTER CE CHAMP (optionnel - généré automatiquement si non fourni)
     pub id_etablissement: Option<String>,
+    pub etablissement: Option<EtablissementInfo>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -12,7 +12,7 @@ pub async fn get_publiques(
     let rows = sqlx::query(
         r#"
         SELECT 
-            offre_id, code, nom, description, duree,
+            offre_id::TEXT, code, nom, description, duree,
             prix, devise, prix_original, reduction_pourcentage,
             fonctionnalites, est_populaire, est_meilleur_rapport,
             icon, couleur, ordre_affichage
@@ -73,7 +73,7 @@ pub async fn get_by_id(
     let row = sqlx::query(
         r#"
         SELECT 
-            offre_id, code, nom, description, statut, duree,
+            offre_id::TEXT, code, nom, description, statut, duree,
             prix, devise, prix_original, reduction_pourcentage,
             fonctionnalites, est_populaire, est_meilleur_rapport,
             icon, couleur, ordre_affichage

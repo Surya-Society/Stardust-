@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
 pub struct Offre {
-    pub offre_id: Uuid,
+    pub offre_id: String,
     pub code: String,
     pub nom: String,
     pub description: Option<String>,

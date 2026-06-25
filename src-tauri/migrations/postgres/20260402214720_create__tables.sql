@@ -6,9 +6,64 @@
 -- ============================================================================
 
 -- ============================================================================
+-- 0. FONCTIONS UTILITAIRES (DOIVENT ÊTRE CRÉÉES AVANT LES TABLES)
+-- ============================================================================
+
+-- ✅ Fonction générique pour mettre à jour le timestamp
+CREATE OR REPLACE FUNCTION update_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================================================
 -- 1. TABLE DES CLIENTS / ÉTABLISSEMENTS
 -- ============================================================================
 
+-- TABLE: Etablissement (pour synchronisation avec Surya)
+CREATE TABLE IF NOT EXISTS Etablissement (
+    id_etablissement UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nom TEXT NOT NULL,
+    sigle TEXT,
+    numero_agrement TEXT,
+    numero_fiscal TEXT,
+    registre_commerciale TEXT,
+    type_etablissement TEXT NOT NULL CHECK(type_etablissement IN ('PUBLIC', 'PRIVE', 'MIXTE')),
+    statut_juridique TEXT NOT NULL CHECK(statut_juridique IN ('SARL', 'SA', 'ASSOCIATION', 'GIE', 'AUTRE')),
+    pays TEXT NOT NULL,
+    region TEXT NOT NULL,
+    ville TEXT NOT NULL,
+    commune TEXT,
+    quatier TEXT,
+    adresse TEXT NOT NULL,
+    code_postal TEXT,
+    telephone_principal TEXT NOT NULL,
+    telephone_secondaire TEXT,
+    email TEXT,
+    site_web TEXT,
+    annee_scolaire_debut TEXT NOT NULL,
+    annee_scolaire_fin TEXT NOT NULL,
+    statut TEXT NOT NULL CHECK(statut IN ('ACTIF', 'INACTIF', 'EN_ATTENTE')),
+    date_creation TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    date_modification TIMESTAMPTZ,
+    synced INTEGER NOT NULL DEFAULT 0 CHECK(synced IN (0, 1)),
+    sync_date TIMESTAMPTZ
+);
+
+CREATE INDEX idx_etablissement_nom ON Etablissement(nom);
+CREATE INDEX idx_etablissement_ville ON Etablissement(ville);
+CREATE INDEX idx_etablissement_statut ON Etablissement(statut);
+CREATE INDEX idx_etablissement_synced ON Etablissement(synced);
+
+-- Trigger pour updated_at
+CREATE TRIGGER trg_etablissement_update_timestamp
+    BEFORE UPDATE ON Etablissement
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
+
+-- TABLE: clients
 CREATE TABLE IF NOT EXISTS clients (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
@@ -28,6 +83,12 @@ CREATE INDEX idx_clients_status ON clients(status);
 CREATE INDEX idx_clients_email ON clients(email);
 CREATE INDEX idx_clients_name ON clients(name);
 
+-- Trigger pour clients
+CREATE TRIGGER trg_clients_update_timestamp
+    BEFORE UPDATE ON clients
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
+
 -- ============================================================================
 -- 2. TABLE DES CLÉS D'ACTIVATION (Stardust)
 -- ============================================================================
@@ -35,7 +96,7 @@ CREATE INDEX idx_clients_name ON clients(name);
 CREATE TABLE IF NOT EXISTS activation_keys (
     id SERIAL PRIMARY KEY,
     client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL,
-    id_etablissement TEXT,  -- ⬅️ AJOUTÉ
+    id_etablissement TEXT,
     key_text TEXT NOT NULL UNIQUE,
     school_name TEXT NOT NULL,
     plan TEXT NOT NULL CHECK(plan IN ('Basic', 'Premium', 'Enterprise')),
@@ -70,6 +131,11 @@ CREATE INDEX idx_activation_keys_client ON activation_keys(client_id);
 CREATE INDEX idx_activation_keys_key_hash ON activation_keys(key_hash);
 CREATE INDEX idx_activation_keys_etablissement ON activation_keys(id_etablissement);
 
+CREATE TRIGGER trg_activation_keys_update_timestamp
+    BEFORE UPDATE ON activation_keys
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
+
 -- ============================================================================
 -- 3. TABLE DES ÉVÉNEMENTS DES CLÉS D'ACTIVATION
 -- ============================================================================
@@ -98,34 +164,27 @@ CREATE TABLE IF NOT EXISTS licences (
     licence_key TEXT UNIQUE NOT NULL,
     id_etablissement UUID NOT NULL,
     
-    -- Type et statut
     type_licence TEXT NOT NULL CHECK (type_licence IN ('ENTREPRISE', 'EDUCATION', 'TRIAL')),
     statut TEXT NOT NULL CHECK (statut IN ('ACTIVE', 'EXPIRED', 'REVOKED', 'SUSPENDED', 'GRACE_PERIOD')),
     
-    -- Dates
     date_expiration TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     
-    -- Activations
     activations_max INTEGER NOT NULL DEFAULT 5,
     activations_utilisees INTEGER NOT NULL DEFAULT 0,
     
-    -- Durée (pour abonnement)
     duree TEXT DEFAULT 'MENSUEL' CHECK (duree IN ('MENSUEL', 'TRIMESTRIEL', 'SEMESTRIEL', 'ANNUEL', 'A_VIE')),
     
-    -- Notifications
     notification_envoyee_j30 BOOLEAN DEFAULT FALSE,
     notification_envoyee_j15 BOOLEAN DEFAULT FALSE,
     notification_envoyee_j7 BOOLEAN DEFAULT FALSE,
     notification_envoyee_j3 BOOLEAN DEFAULT FALSE,
     notification_envoyee_j1 BOOLEAN DEFAULT FALSE,
     
-    -- Synchronisation
     synced INTEGER NOT NULL DEFAULT 0,
     sync_date TIMESTAMPTZ,
     
-    -- Contraintes
     CHECK (activations_utilisees <= activations_max)
 );
 
@@ -134,6 +193,11 @@ CREATE INDEX idx_licences_etablissement ON licences(id_etablissement);
 CREATE INDEX idx_licences_statut ON licences(statut);
 CREATE INDEX idx_licences_expiration ON licences(date_expiration);
 CREATE INDEX idx_licences_statut_expiration ON licences(statut, date_expiration);
+
+CREATE TRIGGER trg_licences_update_timestamp
+    BEFORE UPDATE ON licences
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
 -- ============================================================================
 -- 5. TABLE DES ACTIVATIONS APPAREILS
@@ -188,44 +252,35 @@ CREATE INDEX idx_used_challenges_device ON used_challenges(device_id);
 CREATE TABLE IF NOT EXISTS offres (
     offre_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
-    -- Informations de base
     code TEXT UNIQUE NOT NULL,
     nom TEXT NOT NULL,
     description TEXT,
     statut TEXT NOT NULL CHECK (statut IN ('ACTIF', 'INACTIF')) DEFAULT 'ACTIF',
     
-    -- Configuration
     duree TEXT NOT NULL CHECK (duree IN ('MENSUEL', 'TRIMESTRIEL', 'SEMESTRIEL', 'ANNUEL', 'A_VIE')),
     prix INTEGER NOT NULL CHECK (prix >= 0),
     devise TEXT DEFAULT 'XOF',
     
-    -- Réduction
     prix_original INTEGER,
     reduction_pourcentage INTEGER CHECK (reduction_pourcentage BETWEEN 0 AND 100),
     
-    -- Période d'essai
     essai_gratuit BOOLEAN DEFAULT FALSE,
     duree_essai_jours INTEGER CHECK (duree_essai_jours > 0),
     
-    -- Fonctionnalités
     fonctionnalites JSONB DEFAULT '{}'::jsonb,
     
-    -- Configuration de renouvellement
     renouvellement_automatique BOOLEAN DEFAULT TRUE,
     grace_period_jours INTEGER DEFAULT 7,
     
-    -- Métadonnées
     icon TEXT,
     couleur TEXT,
     ordre_affichage INTEGER DEFAULT 0,
     est_populaire BOOLEAN DEFAULT FALSE,
     est_meilleur_rapport BOOLEAN DEFAULT FALSE,
     
-    -- Stats
     nombre_abonnes INTEGER DEFAULT 0,
     total_revenu INTEGER DEFAULT 0,
     
-    -- Dates système
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -235,6 +290,11 @@ CREATE INDEX idx_offres_duree ON offres(duree);
 CREATE INDEX idx_offres_prix ON offres(prix);
 CREATE INDEX idx_offres_code ON offres(code);
 
+CREATE TRIGGER trg_offres_update_timestamp
+    BEFORE UPDATE ON offres
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
+
 -- ============================================================================
 -- 8. TABLE DES ABONNEMENTS
 -- ============================================================================
@@ -243,19 +303,16 @@ CREATE TABLE IF NOT EXISTS abonnements (
     abonnement_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     id_etablissement UUID NOT NULL,
     licence_id UUID NOT NULL REFERENCES licences(licence_id) ON DELETE CASCADE,
-    offre_id UUID REFERENCES offres(offre_id),
+    offre_id UUID REFERENCES offres(offre_id) ON DELETE SET NULL,
     
-    -- Plan et durée
     plan TEXT NOT NULL CHECK (plan IN ('BASIC', 'PREMIUM', 'ENTERPRISE')),
     duree TEXT NOT NULL CHECK (duree IN ('MENSUEL', 'TRIMESTRIEL', 'SEMESTRIEL', 'ANNUEL', 'A_VIE')),
     
-    -- Tarifs
     montant_original INTEGER NOT NULL,
     montant_remise INTEGER DEFAULT 0,
     montant_final INTEGER NOT NULL,
     devise TEXT DEFAULT 'XOF',
     
-    -- Périodes
     date_debut TIMESTAMPTZ NOT NULL,
     date_debut_periode TIMESTAMPTZ,
     date_fin_periode TIMESTAMPTZ,
@@ -263,23 +320,20 @@ CREATE TABLE IF NOT EXISTS abonnements (
     date_fin TIMESTAMPTZ,
     date_annulation TIMESTAMPTZ,
     
-    -- Statut
     statut TEXT NOT NULL CHECK (statut IN ('ACTIF', 'SUSPENDU', 'EXPIRE', 'ANNULE', 'EN_ATTENTE_PAIEMENT')),
     statut_renouvellement TEXT DEFAULT 'AUTO' CHECK (statut_renouvellement IN ('AUTO', 'MANUEL', 'SUSPENDU')),
     renouvellement_auto BOOLEAN NOT NULL DEFAULT TRUE,
     
-    -- Métadonnées
+    grace_period_jours INTEGER DEFAULT 7,
+    
     metadata JSONB,
     
-    -- Synchronisation
-    synced INTEGER NOT NULL DEFAULT 0,
+    synced INTEGER NOT NULL DEFAULT 0 CHECK(synced IN (0, 1)),
     sync_date TIMESTAMPTZ,
     
-    -- Dates système
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     
-    -- Contraintes
     CHECK (montant_final = montant_original - montant_remise),
     CHECK (montant_remise >= 0),
     CHECK (montant_final >= 0)
@@ -291,6 +345,12 @@ CREATE INDEX idx_abonnements_offre ON abonnements(offre_id);
 CREATE INDEX idx_abonnements_statut ON abonnements(statut);
 CREATE INDEX idx_abonnements_date_fin ON abonnements(date_fin);
 CREATE INDEX idx_abonnements_prochain_paiement ON abonnements(date_prochain_paiement);
+CREATE INDEX idx_abonnements_grace_period ON abonnements(grace_period_jours);
+
+CREATE TRIGGER trg_abonnements_update_timestamp
+    BEFORE UPDATE ON abonnements
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
 -- ============================================================================
 -- 9. TABLE DES TRANSACTIONS DE PAIEMENT
@@ -302,22 +362,18 @@ CREATE TABLE IF NOT EXISTS transactions_paiement (
     abonnement_id UUID REFERENCES abonnements(abonnement_id) ON DELETE SET NULL,
     licence_id UUID REFERENCES licences(licence_id) ON DELETE SET NULL,
     
-    -- Informations paiement
     montant INTEGER NOT NULL,
     devise TEXT DEFAULT 'XOF',
     methode TEXT NOT NULL CHECK (methode IN ('MTN_MONEY', 'AIRTELL_MONEY', 'ORANGE_MONEY', 'CARTE', 'MANUEL', 'WAVE')),
     description TEXT,
     
-    -- Coordonnées payeur
     numero_telephone TEXT NOT NULL,
     nom_payeur TEXT,
     email_payeur TEXT,
     
-    -- Références
     reference_externe TEXT UNIQUE,
     reference_interne TEXT UNIQUE,
     
-    -- Statut
     statut TEXT NOT NULL CHECK (statut IN (
         'EN_ATTENTE', 'EN_COURS', 'REUSSI', 'ECHOUE', 'ANNULE', 'REMBOURSE', 'TIMEOUT'
     )),
@@ -325,23 +381,19 @@ CREATE TABLE IF NOT EXISTS transactions_paiement (
     message_erreur TEXT,
     message_operateur TEXT,
     
-    -- Dates
     date_demande TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     date_validation TIMESTAMPTZ,
     date_expiration TIMESTAMPTZ,
     
-    -- Données API
     requete_api JSONB,
     reponse_api JSONB,
     webhook_data JSONB,
     metadata JSONB,
     notes TEXT,
     
-    -- Synchronisation
     synced INTEGER NOT NULL DEFAULT 0,
     sync_date TIMESTAMPTZ,
     
-    -- Dates système
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     
@@ -357,6 +409,11 @@ CREATE INDEX idx_transactions_methode ON transactions_paiement(methode);
 CREATE INDEX idx_transactions_reference_externe ON transactions_paiement(reference_externe);
 CREATE INDEX idx_transactions_reference_interne ON transactions_paiement(reference_interne);
 CREATE INDEX idx_transactions_date_demande ON transactions_paiement(date_demande);
+
+CREATE TRIGGER trg_transactions_update_timestamp
+    BEFORE UPDATE ON transactions_paiement
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
 -- ============================================================================
 -- 10. TABLE DES SESSIONS DE PAIEMENT
@@ -437,7 +494,6 @@ CREATE TABLE IF NOT EXISTS configuration_paiement (
     config_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     id_etablissement UUID NOT NULL UNIQUE,
     
-    -- MTN
     mtn_active BOOLEAN DEFAULT TRUE,
     mtn_api_key TEXT,
     mtn_api_secret TEXT,
@@ -446,7 +502,6 @@ CREATE TABLE IF NOT EXISTS configuration_paiement (
     mtn_callback_url TEXT,
     mtn_timeout_seconds INTEGER DEFAULT 600,
     
-    -- Airtel
     airtel_active BOOLEAN DEFAULT TRUE,
     airtel_api_key TEXT,
     airtel_api_secret TEXT,
@@ -455,7 +510,6 @@ CREATE TABLE IF NOT EXISTS configuration_paiement (
     airtel_callback_url TEXT,
     airtel_timeout_seconds INTEGER DEFAULT 600,
     
-    -- Configuration générale
     devise TEXT DEFAULT 'XOF',
     paiement_auto BOOLEAN DEFAULT TRUE,
     grace_period_days INTEGER DEFAULT 7,
@@ -463,6 +517,11 @@ CREATE TABLE IF NOT EXISTS configuration_paiement (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TRIGGER trg_configuration_paiement_update_timestamp
+    BEFORE UPDATE ON configuration_paiement
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
 -- ============================================================================
 -- 14. TABLE CACHE LICENCE (pour Surya)
@@ -626,39 +685,32 @@ CREATE TABLE IF NOT EXISTS platform_settings (
     language TEXT NOT NULL DEFAULT 'fr',
     date_format TEXT NOT NULL DEFAULT 'DD/MM/YYYY',
     
-    -- Sécurité
     two_factor_auth INTEGER NOT NULL DEFAULT 1,
     session_timeout TEXT NOT NULL DEFAULT '8',
     password_policy TEXT NOT NULL DEFAULT 'strong',
     max_login_attempts INTEGER NOT NULL DEFAULT 5,
     
-    -- Notifications
     email_notifications INTEGER NOT NULL DEFAULT 1,
     notify_payment INTEGER NOT NULL DEFAULT 1,
     notify_expiry INTEGER NOT NULL DEFAULT 1,
     
-    -- Apparence
     theme TEXT NOT NULL DEFAULT 'dark' CHECK(theme IN ('dark', 'light', 'system')),
     accent_color TEXT NOT NULL DEFAULT '#388bfd',
     compact_mode INTEGER NOT NULL DEFAULT 0,
     
-    -- Facturation
     company_name TEXT,
     vat_number TEXT,
     address TEXT,
     billing_email TEXT,
     auto_invoice INTEGER NOT NULL DEFAULT 1,
     
-    -- Synchronisation
     auto_sync INTEGER NOT NULL DEFAULT 1,
     sync_network TEXT NOT NULL DEFAULT 'wifi' CHECK(sync_network IN ('always', 'wifi', 'manual')),
     
-    -- Sauvegardes
     backup_auto INTEGER NOT NULL DEFAULT 1,
     backup_frequency TEXT NOT NULL DEFAULT 'daily' CHECK(backup_frequency IN ('daily', 'weekly', 'monthly')),
     backup_retention INTEGER NOT NULL DEFAULT 30,
     
-    -- Métadonnées
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_by INTEGER REFERENCES admin_users(id) ON DELETE SET NULL,
@@ -666,45 +718,8 @@ CREATE TABLE IF NOT EXISTS platform_settings (
     sync_date TIMESTAMPTZ
 );
 
--- ============================================================================
--- TRIGGERS
--- ============================================================================
-
-CREATE OR REPLACE FUNCTION update_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_licences_update_timestamp
-    BEFORE UPDATE ON licences
-    FOR EACH ROW
-    EXECUTE FUNCTION update_timestamp();
-
-CREATE TRIGGER trg_abonnements_update_timestamp
-    BEFORE UPDATE ON abonnements
-    FOR EACH ROW
-    EXECUTE FUNCTION update_timestamp();
-
-CREATE TRIGGER trg_transactions_update_timestamp
-    BEFORE UPDATE ON transactions_paiement
-    FOR EACH ROW
-    EXECUTE FUNCTION update_timestamp();
-
-CREATE TRIGGER trg_offres_update_timestamp
-    BEFORE UPDATE ON offres
-    FOR EACH ROW
-    EXECUTE FUNCTION update_timestamp();
-
-CREATE TRIGGER trg_configuration_paiement_update_timestamp
-    BEFORE UPDATE ON configuration_paiement
-    FOR EACH ROW
-    EXECUTE FUNCTION update_timestamp();
-
-CREATE TRIGGER trg_activation_keys_update_timestamp
-    BEFORE UPDATE ON activation_keys
+CREATE TRIGGER trg_platform_settings_update_timestamp
+    BEFORE UPDATE ON platform_settings
     FOR EACH ROW
     EXECUTE FUNCTION update_timestamp();
 

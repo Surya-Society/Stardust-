@@ -1,9 +1,7 @@
 // src/commands/offre.rs
-
 use tauri::command;
 use serde_json::{json, Value};
 use sqlx::PgPool;
-use uuid::Uuid;
 use log::{info, error};
 
 use crate::services::offre::OffreService;
@@ -42,10 +40,10 @@ pub async fn get_offre_by_id(
 ) -> Result<Value, String> {
     info!("🔍 Récupérer offre: {}", offre_id);
     
-    let id = Uuid::parse_str(&offre_id).map_err(|e| e.to_string())?;
+    // ✅ Suppression de Uuid::parse_str(), on utilise directement la String
     let service = OffreService::new(pool.inner().clone());
     
-    match service.get_offre_by_id(id).await {
+    match service.get_offre_by_id(&offre_id).await {
         Ok(Some(offre)) => {
             Ok(json!({
                 "success": true,
@@ -103,10 +101,10 @@ pub async fn update_offre(
 ) -> Result<Value, String> {
     info!("📝 Mettre à jour offre: {}", offre_id);
     
-    let id = Uuid::parse_str(&offre_id).map_err(|e| e.to_string())?;
+    // ✅ Suppression de Uuid::parse_str()
     let service = OffreService::new(pool.inner().clone());
     
-    match service.update_offre(id, request).await {
+    match service.update_offre(&offre_id, request).await {
         Ok(offre) => {
             info!("✅ Offre mise à jour: {}", offre.nom);
             Ok(json!({
@@ -131,10 +129,10 @@ pub async fn delete_offre(
 ) -> Result<Value, String> {
     info!("🗑️ Supprimer offre: {}", offre_id);
     
-    let id = Uuid::parse_str(&offre_id).map_err(|e| e.to_string())?;
+    // ✅ Suppression de Uuid::parse_str()
     let service = OffreService::new(pool.inner().clone());
     
-    match service.delete_offre(id).await {
+    match service.delete_offre(&offre_id).await {
         Ok(true) => {
             Ok(json!({
                 "success": true,
@@ -164,10 +162,10 @@ pub async fn get_offre_stats(
 ) -> Result<Value, String> {
     info!("📊 Statistiques offre: {}", offre_id);
     
-    let id = Uuid::parse_str(&offre_id).map_err(|e| e.to_string())?;
+    // ✅ Suppression de Uuid::parse_str()
     let service = OffreService::new(pool.inner().clone());
     
-    match service.get_offre_stats(id).await {
+    match service.get_offre_stats(&offre_id).await {
         Ok(stats) => {
             Ok(json!({
                 "success": true,

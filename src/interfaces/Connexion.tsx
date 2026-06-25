@@ -76,8 +76,8 @@ export default function Login({ onLogin }: LoginProps) {
         {/* Left content */}
         <div className="flex-1 flex flex-col justify-center px-[72px] py-16 relative z-[2]">
           <div className="flex items-center gap-3.5 mb-[52px]">
-            <img src="/LogoNova.png" alt="Nova" className="w-11 h-11 object-contain" />
-            <span className="font-['Syne'] text-2xl font-extrabold text-[#e6edf3] tracking-tighter">Nova</span>
+            <img src="/LogoStardust.png" alt="Stardust" className="w-11 h-11 object-contain" />
+            <span className="font-['Syne'] text-2xl font-extrabold text-[#e6edf3] tracking-tighter">Stardust</span>
           </div>
           <div className="mb-5">
             <div className="font-['Syne'] text-[42px] font-bold leading-[1.1] tracking-[-1.5px] text-[#e6edf3]">Plateforme de gestion</div>

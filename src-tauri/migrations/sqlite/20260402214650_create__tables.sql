@@ -9,6 +9,47 @@
 -- 1. TABLE DES CLIENTS / ÉTABLISSEMENTS
 -- ============================================================================
 
+-- ============================================================================
+-- TABLE: Etablissement (pour synchronisation avec Surya)
+-- ============================================================================
+-- Cette table est utilisée pour synchroniser les établissements depuis Surya
+-- et pour les afficher dans l'interface d'administration
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS Etablissement (
+    id_etablissement TEXT PRIMARY KEY,
+    nom TEXT NOT NULL,
+    sigle TEXT,
+    numero_agrement TEXT,
+    numero_fiscal TEXT,
+    registre_commerciale TEXT,
+    type_etablissement TEXT NOT NULL CHECK(type_etablissement IN ('PUBLIC', 'PRIVE', 'MIXTE')),
+    statut_juridique TEXT NOT NULL CHECK(statut_juridique IN ('SARL', 'SA', 'ASSOCIATION', 'GIE', 'AUTRE')),
+    pays TEXT NOT NULL,
+    region TEXT NOT NULL,
+    ville TEXT NOT NULL,
+    commune TEXT,
+    quatier TEXT,
+    adresse TEXT NOT NULL,
+    code_postal TEXT,
+    telephone_principal TEXT NOT NULL,
+    telephone_secondaire TEXT,
+    email TEXT,
+    site_web TEXT,
+    annee_scolaire_debut TEXT NOT NULL,
+    annee_scolaire_fin TEXT NOT NULL,
+    statut TEXT NOT NULL CHECK(statut IN ('ACTIF', 'INACTIF', 'EN_ATTENTE')),
+    date_creation TEXT NOT NULL,
+    date_modification TEXT,
+    synced INTEGER NOT NULL DEFAULT 0 CHECK(synced IN (0, 1)),
+    sync_date TEXT
+);
+
+CREATE INDEX idx_etablissement_nom ON Etablissement(nom);
+CREATE INDEX idx_etablissement_ville ON Etablissement(ville);
+CREATE INDEX idx_etablissement_statut ON Etablissement(statut);
+CREATE INDEX idx_etablissement_synced ON Etablissement(synced);
+
 CREATE TABLE IF NOT EXISTS clients (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -243,6 +284,10 @@ CREATE INDEX idx_offres_code ON offres(code);
 -- 8. TABLE DES ABONNEMENTS
 -- ============================================================================
 
+-- ============================================================================
+-- TABLE: abonnements (SQLite)
+-- ============================================================================
+
 CREATE TABLE IF NOT EXISTS abonnements (
     abonnement_id TEXT PRIMARY KEY,
     id_etablissement TEXT NOT NULL,
@@ -272,6 +317,9 @@ CREATE TABLE IF NOT EXISTS abonnements (
     statut_renouvellement TEXT DEFAULT 'AUTO' CHECK (statut_renouvellement IN ('AUTO', 'MANUEL', 'SUSPENDU')),
     renouvellement_auto INTEGER NOT NULL DEFAULT 1,
     
+    -- ✅ Période de grâce (jours après expiration avant désactivation)
+    grace_period_jours INTEGER DEFAULT 7,
+    
     -- Métadonnées
     metadata TEXT,
     
@@ -291,13 +339,13 @@ CREATE TABLE IF NOT EXISTS abonnements (
     CHECK (montant_final >= 0)
 );
 
+-- Index
 CREATE INDEX idx_abonnements_etablissement ON abonnements(id_etablissement);
 CREATE INDEX idx_abonnements_licence ON abonnements(licence_id);
 CREATE INDEX idx_abonnements_offre ON abonnements(offre_id);
 CREATE INDEX idx_abonnements_statut ON abonnements(statut);
 CREATE INDEX idx_abonnements_date_fin ON abonnements(date_fin);
 CREATE INDEX idx_abonnements_prochain_paiement ON abonnements(date_prochain_paiement);
-
 -- ============================================================================
 -- 9. TABLE DES TRANSACTIONS DE PAIEMENT
 -- ============================================================================

@@ -1,6 +1,5 @@
-use sqlx::{PgPool, Row};  // ← AJOUTER Row
+use sqlx::{PgPool, Row};
 use anyhow::Result;
-use uuid::Uuid;
 use log::info;
 use chrono::Utc;
 
@@ -15,11 +14,12 @@ impl OffreService {
         Self { pool }
     }
 
+    // ✅ CORRIGÉ : ajout de offre_id::TEXT dans la requête
     pub async fn get_all_offres(&self, actif_seulement: bool) -> Result<Vec<Offre>> {
         let query = if actif_seulement {
             r#"
             SELECT 
-                offre_id, code, nom, description, statut, duree,
+                offre_id::TEXT, code, nom, description, statut, duree,
                 prix, devise, prix_original, reduction_pourcentage,
                 essai_gratuit, duree_essai_jours, fonctionnalites,
                 renouvellement_automatique, grace_period_jours,
@@ -32,7 +32,7 @@ impl OffreService {
         } else {
             r#"
             SELECT 
-                offre_id, code, nom, description, statut, duree,
+                offre_id::TEXT, code, nom, description, statut, duree,
                 prix, devise, prix_original, reduction_pourcentage,
                 essai_gratuit, duree_essai_jours, fonctionnalites,
                 renouvellement_automatique, grace_period_jours,
@@ -50,11 +50,12 @@ impl OffreService {
         Ok(offres)
     }
 
-    pub async fn get_offre_by_id(&self, offre_id: Uuid) -> Result<Option<Offre>> {
+    // ✅ CORRIGÉ : offre_id en &str + offre_id::TEXT
+    pub async fn get_offre_by_id(&self, offre_id: &str) -> Result<Option<Offre>> {
         let offre = sqlx::query_as::<_, Offre>(
             r#"
             SELECT 
-                offre_id, code, nom, description, statut, duree,
+                offre_id::TEXT, code, nom, description, statut, duree,
                 prix, devise, prix_original, reduction_pourcentage,
                 essai_gratuit, duree_essai_jours, fonctionnalites,
                 renouvellement_automatique, grace_period_jours,
@@ -72,7 +73,7 @@ impl OffreService {
     }
 
     pub async fn create_offre(&self, request: CreateOffreRequest) -> Result<Offre> {
-        let offre_id = Uuid::new_v4();
+        let offre_id = uuid::Uuid::new_v4().to_string();
         let now = Utc::now();
 
         let offre = sqlx::query_as::<_, Offre>(
@@ -84,10 +85,16 @@ impl OffreService {
                 icon, couleur, ordre_affichage, est_populaire, est_meilleur_rapport,
                 created_at, updated_at
             ) VALUES ($1, $2, $3, $4, 'ACTIF', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
-            RETURNING *
+            RETURNING 
+                offre_id::TEXT, code, nom, description, statut, duree,
+                prix, devise, prix_original, reduction_pourcentage,
+                essai_gratuit, duree_essai_jours, fonctionnalites,
+                renouvellement_automatique, grace_period_jours,
+                icon, couleur, ordre_affichage, est_populaire, est_meilleur_rapport,
+                nombre_abonnes, total_revenu, created_at, updated_at
             "#
         )
-        .bind(offre_id)
+        .bind(&offre_id)
         .bind(&request.code)
         .bind(&request.nom)
         .bind(&request.description)
@@ -114,7 +121,8 @@ impl OffreService {
         Ok(offre)
     }
 
-    pub async fn update_offre(&self, offre_id: Uuid, request: UpdateOffreRequest) -> Result<Offre> {
+    // ✅ CORRIGÉ : offre_id en &str
+    pub async fn update_offre(&self, offre_id: &str, request: UpdateOffreRequest) -> Result<Offre> {
         let offre = sqlx::query_as::<_, Offre>(
             r#"
             UPDATE offres
@@ -135,7 +143,13 @@ impl OffreService {
                 est_meilleur_rapport = COALESCE($14, est_meilleur_rapport),
                 updated_at = CURRENT_TIMESTAMP
             WHERE offre_id = $15
-            RETURNING *
+            RETURNING 
+                offre_id::TEXT, code, nom, description, statut, duree,
+                prix, devise, prix_original, reduction_pourcentage,
+                essai_gratuit, duree_essai_jours, fonctionnalites,
+                renouvellement_automatique, grace_period_jours,
+                icon, couleur, ordre_affichage, est_populaire, est_meilleur_rapport,
+                nombre_abonnes, total_revenu, created_at, updated_at
             "#
         )
         .bind(&request.nom)
@@ -161,7 +175,8 @@ impl OffreService {
         Ok(offre)
     }
 
-    pub async fn delete_offre(&self, offre_id: Uuid) -> Result<bool> {
+    // ✅ CORRIGÉ : offre_id en &str
+    pub async fn delete_offre(&self, offre_id: &str) -> Result<bool> {
         let result = sqlx::query(
             r#"
             DELETE FROM offres WHERE offre_id = $1
@@ -174,8 +189,8 @@ impl OffreService {
         Ok(result.rows_affected() > 0)
     }
 
-    // ✅ CORRECTION: Utiliser Row::get au lieu de try_get
-    pub async fn get_offre_stats(&self, offre_id: Uuid) -> Result<serde_json::Value> {
+    // ✅ CORRIGÉ : offre_id en &str + offre_id::TEXT
+    pub async fn get_offre_stats(&self, offre_id: &str) -> Result<serde_json::Value> {
         let row = sqlx::query(
             r#"
             SELECT 
@@ -191,7 +206,6 @@ impl OffreService {
         .fetch_one(&self.pool)
         .await?;
 
-        // ✅ Utiliser row.get() au lieu de row.try_get()
         let total_abonnes: i64 = row.get("total_abonnes");
         let abonnes_actifs: i64 = row.get("abonnes_actifs");
         let revenu_total: i64 = row.get("revenu_total");
@@ -205,11 +219,12 @@ impl OffreService {
         }))
     }
 
+    // ✅ CORRIGÉ : offre_id::TEXT
     pub async fn get_offres_publiques(&self) -> Result<Vec<Offre>> {
         let offres = sqlx::query_as::<_, Offre>(
             r#"
             SELECT 
-                offre_id, code, nom, description, statut, duree,
+                offre_id::TEXT, code, nom, description, statut, duree,
                 prix, devise, prix_original, reduction_pourcentage,
                 essai_gratuit, duree_essai_jours, fonctionnalites,
                 renouvellement_automatique, grace_period_jours,

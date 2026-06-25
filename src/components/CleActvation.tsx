@@ -1,6 +1,8 @@
 // frontend/src/components/CleActivation.tsx
 import { useState, useEffect } from "react";
 import { invoke } from '@tauri-apps/api/core';
+import EtablissementForm, { EtablissementInfo } from './EtablissementForm';
+import { FiAlertCircle } from 'react-icons/fi';
 
 // ================================================================
 // TYPES
@@ -67,20 +69,6 @@ interface LicenceFile {
 interface Toast {
   msg: string;
   type: "green" | "red" | "amber" | "blue";
-}
-
-interface FormData {
-  school: string;
-  offre_id: string;
-  plan: "Basic" | "Premium" | "Enterprise";
-  expires: string;
-  maxUses: string;
-  hwLock: boolean;
-  twoFa: boolean;
-  ipRestrict: boolean;
-  autoRevoke: boolean;
-  activationMethod: "online" | "usb" | "file";
-  note: string;
 }
 
 interface SecurityOption {
@@ -200,13 +188,12 @@ const STATUS_ACCENT: Record<ActivationKey["status"], string> = {
   revoked:"#f85149" 
 };
 
-// ✅ DUREE_LABELS pour le calcul de l'expiration
 const DUREE_LABELS: Record<string, number> = {
   "MENSUEL": 30,
   "TRIMESTRIEL": 90,
   "SEMESTRIEL": 180,
   "ANNUEL": 365,
-  "A_VIE": 36500 // 100 ans
+  "A_VIE": 36500
 };
 
 function seg(): string { return Math.random().toString(36).substring(2,6).toUpperCase(); }
@@ -353,12 +340,17 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
   const [previewKey, setPreviewKey] = useState<string>(genKey());
   const [toast, setToast] = useState<Toast | null>(null);
   
-  // ✅ État pour les offres
+  // États pour les offres
   const [offres, setOffres] = useState<Offre[]>([]);
   const [offresLoading, setOffresLoading] = useState<boolean>(true);
   
+  // État pour les données du formulaire d'établissement
+  const [etablissementData, setEtablissementData] = useState<EtablissementInfo | null>(null);
+  const [isEtablissementStep, setIsEtablissementStep] = useState(false);
+  
+  // ✅ SUPPRIMER "school" du formulaire
   const [form, setForm] = useState<FormData>({
-    school: "",
+    school: "",  // ← Gardé mais caché, utilisé pour la compatibilité
     offre_id: "",
     plan: "Enterprise",
     expires: "",
@@ -373,19 +365,18 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
 
   const PER_PAGE = 9;
 
-  // ✅ Charger les données au démarrage
+  // Charger les données au démarrage
   useEffect(() => {
     loadLicences();
     loadOffres();
   }, []);
 
-  // ✅ Charger les licences
+  // Charger les licences
   const loadLicences = async () => {
     try {
       setLoading(true);
       const result = await invoke<ActivationKey[]>('get_all_licences');
       console.log('📋 Licences chargées:', result);
-      // ✅ Vérifier que result est un tableau
       setKeys(Array.isArray(result) ? result : []);
     } catch (error) {
       console.error('❌ Erreur de chargement:', error);
@@ -396,14 +387,13 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
     }
   };
 
-  // ✅ Charger les offres
+  // Charger les offres
   const loadOffres = async () => {
     try {
       setOffresLoading(true);
       const result = await invoke<{ success: boolean; data: Offre[] }>('get_offres_publiques');
       if (result && result.success && result.data && result.data.length > 0) {
         setOffres(result.data);
-        // Sélectionner la première offre par défaut
         setForm(prev => ({ ...prev, offre_id: result.data[0].offre_id }));
       } else {
         setOffres([]);
@@ -423,7 +413,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
     notify(msg, type);
   }
 
-  // ✅ EXPORT vers fichier .licpkg
+  // EXPORT vers fichier .licpkg
   const handleExportToFile = async (key: ActivationKey) => {
     try {
       showToast(`Export de ${key.key} en cours...`, "blue");
@@ -452,25 +442,18 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
     }
   };
 
-  // ✅ CRÉER une licence (appel backend réel)
-  const handleGenerate = async () => {
+  // ✅ CRÉER une licence avec les infos d'établissement
+  const handleGenerateWithEtablissement = async (etablissement: EtablissementInfo) => {
     try {
-      if (!form.school) {
-        showToast('❌ Veuillez saisir un nom d\'établissement', 'red');
-        return;
-      }
-
       if (!form.offre_id) {
         showToast('❌ Veuillez sélectionner une offre', 'red');
         return;
       }
 
-      // Trouver l'offre sélectionnée
       const selectedOffre = offres.find(o => o.offre_id === form.offre_id);
 
       showToast('Création de la licence...', 'blue');
       
-      // ✅ Calculer la date d'expiration automatiquement
       let expiresAt = form.expires;
       if (!expiresAt && selectedOffre) {
         const days = DUREE_LABELS[selectedOffre.duree] || 365;
@@ -479,9 +462,10 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
         expiresAt = date.toISOString().split('T')[0];
       }
 
+      // ✅ Utiliser les données de l'établissement pour school_name
       const result = await invoke('create_licence', {
         data: {
-          school_name: form.school,
+          school_name: etablissement.nom,  // ← Utiliser le nom de l'établissement
           plan: selectedOffre?.nom || form.plan,
           offre_id: form.offre_id,
           expires_at: expiresAt || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -490,15 +474,17 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
           two_fa: form.twoFa,
           ip_restrict: form.ipRestrict,
           activation_method: form.activationMethod,
-          note: form.note || "Générée depuis l'interface"
+          note: form.note || "Générée depuis l'interface",
+          etablissement: etablissement
         }
       });
       
-      console.log('✅ Licence créée:', result);
+      console.log('✅ Licence créée avec établissement:', result);
       showToast('✅ Licence générée avec succès', 'green');
       setModal(null);
+      setIsEtablissementStep(false);
+      setEtablissementData(null);
       
-      // Recharger la liste
       await loadLicences();
       
     } catch (error) {
@@ -507,7 +493,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
     }
   };
 
-  // ✅ Filtrer les clés avec vérification que keys est un tableau
+  // Filtrer les clés
   const filtered = Array.isArray(keys) ? keys.filter(k => {
     const q = search.toLowerCase();
     return (!q || k.school.toLowerCase().includes(q) || k.key.toLowerCase().includes(q) || k.fingerprint.includes(q))
@@ -591,7 +577,6 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
     { label: "2FA actif", val: `${Array.isArray(keys) ? keys.filter(k => k.twoFa).length : 0}/${stats.total}`, color: "#3fb950" }
   ];
 
-  // ✅ Afficher un état de chargement
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -617,7 +602,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
         .ka-d3 { animation-delay:.15s; }
       `}</style>
 
-      {/* TOPBAR - Inchangé */}
+      {/* TOPBAR */}
       <div className="flex items-center justify-between py-4 pb-5 border-b border-[#21262d] mb-6 ka-enter">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-[rgba(56,139,253,0.08)] border border-[rgba(56,139,253,0.25)] flex items-center justify-center text-[#388bfd]"><Ico d={I.key} s={16}/></div>
@@ -633,7 +618,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
         </div>
       </div>
 
-      {/* STATS - Inchangé */}
+      {/* STATS */}
       <div className="grid grid-cols-5 gap-px bg-[#21262d] border border-[#21262d] mb-5 max-[900px]:grid-cols-3 max-[640px]:grid-cols-2">
         {statItems.map((s, i) => (
           <div className="bg-[#0d1117] p-4 relative transition-colors duration-150 hover:bg-[#161b22]" key={i}>
@@ -644,7 +629,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
         ))}
       </div>
 
-      {/* TOOLBAR - Inchangé */}
+      {/* TOOLBAR */}
       <div className="flex gap-2 mb-5 items-center flex-wrap ka-enter ka-d2">
         <div className="flex items-center gap-2 bg-[#0d1117] border border-[#21262d] px-3 h-[34px] flex-1 max-w-[380px] transition-colors duration-150 focus-within:border-[#388bfd]">
           <Ico d={I.search} s={13}/>
@@ -663,7 +648,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
         <span className="text-[11px] text-[#484f58] font-mono">{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
-      {/* BULK BAR - Inchangé */}
+      {/* BULK BAR */}
       {selected.size > 0 && (
         <div className="flex items-center gap-3 py-2.5 px-4 bg-[rgba(56,139,253,0.08)] border border-[rgba(56,139,253,0.25)] mb-4 text-xs">
           <span className="text-[#388bfd] font-semibold">{selected.size} sélectionné{selected.size > 1 ? "s" : ""}</span>
@@ -676,7 +661,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
         </div>
       )}
 
-      {/* CARD GRID - Inchangé */}
+      {/* CARD GRID */}
       <div className="ka-enter ka-d3">
         {paginated.length === 0 ? (
           <div className="py-14 text-center text-[#484f58] bg-[#0d1117] border border-[#21262d]">
@@ -716,7 +701,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
         )}
       </div>
 
-      {/* DETAIL PANEL - Inchangé */}
+      {/* DETAIL PANEL */}
       {detailKey && (
         <>
           <div className="fixed inset-0 z-[199]" onClick={() => setDetailKey(null)}/>
@@ -801,127 +786,192 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
         </>
       )}
 
-      {/* MODAL GÉNÉRER - AVEC SÉLECTION D'OFFRES ✅ */}
+      {/* MODAL GÉNÉRER - AVEC FORMULAIRE ÉTABLISSEMENT */}
       {modal === "generate" && (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-[1000] p-5 animate-[kaFadeIn_0.2s]" onClick={e => e.target === e.currentTarget && setModal(null)}>
-          <div className="bg-[#0d1117] border border-[#30363d] w-full max-w-[540px] animate-[kaSlideUp_0.25s_cubic-bezier(0.4,0,0.2,1)]">
-            <div className="p-5 pb-4 border-b border-[#21262d] flex items-center justify-between">
+          <div className="bg-[#0d1117] border border-[#30363d] w-full max-w-[600px] max-h-[90vh] overflow-y-auto animate-[kaSlideUp_0.25s_cubic-bezier(0.4,0,0.2,1)]">
+            <div className="p-5 pb-4 border-b border-[#21262d] flex items-center justify-between sticky top-0 bg-[#0d1117] z-10">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 bg-[rgba(56,139,253,0.08)] border border-[rgba(56,139,253,0.25)] flex items-center justify-center text-[#388bfd]"><Ico d={I.key} s={14}/></div>
-                <span className="text-sm font-semibold">Générer une clé d'activation</span>
-              </div>
-              <button className="w-6 h-6 bg-transparent border-none text-[#484f58] cursor-pointer flex items-center justify-center transition-colors duration-150 hover:text-[#e6edf3]" onClick={() => setModal(null)}><Ico d={I.close} s={14}/></button>
-            </div>
-            <div className="p-5 pb-4 max-h-[70vh] overflow-y-auto">
-              {/* Établissement */}
-              <div className="mb-3.5">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5"><Ico d={I.globe} s={11}/> Établissement</div>
-                <input className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] placeholder:text-[#484f58]" placeholder="Nom de l'établissement" value={form.school} onChange={e => setForm({ ...form, school: e.target.value })}/>
-              </div>
-
-              {/* ✅ OFFRE - Nouveau sélecteur */}
-              <div className="mb-3.5">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">
-                  <Ico d={I.globe} s={11}/> Offre
+                <div className="w-7 h-7 bg-[rgba(56,139,253,0.08)] border border-[rgba(56,139,253,0.25)] flex items-center justify-center text-[#388bfd]">
+                  <Ico d={I.key} s={14}/>
                 </div>
-                <select 
-                  className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] cursor-pointer appearance-none" 
-                  value={form.offre_id} 
-                  onChange={e => {
-                    const offreId = e.target.value;
-                    const selectedOffre = offres.find(o => o.offre_id === offreId);
-                    setForm({ 
-                      ...form, 
-                      offre_id: offreId,
-                      plan: selectedOffre?.nom as "Basic" | "Premium" | "Enterprise" || form.plan
-                    });
-                  }}
-                  disabled={offresLoading}
-                >
-                  {offresLoading ? (
-                    <option value="">Chargement des offres...</option>
-                  ) : offres.length === 0 ? (
-                    <option value="">Aucune offre disponible</option>
-                  ) : (
-                    offres.map(offre => (
-                      <option key={offre.offre_id} value={offre.offre_id}>
-                        {offre.nom} — {offre.prix} {offre.devise}/{offre.duree}
-                      </option>
-                    ))
-                  )}
-                </select>
+                <span className="text-sm font-semibold">
+                  {isEtablissementStep ? "Informations de l'établissement" : "Générer une clé d'activation"}
+                </span>
               </div>
-
-              {/* Max utilisateurs + Expiration */}
-              <div className="grid grid-cols-2 gap-3 mb-3.5">
-                <div>
-                  <div className="text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">Max utilisateurs</div>
-                  <input className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd]" type="number" value={form.maxUses} onChange={e => setForm({ ...form, maxUses: e.target.value })}/>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5"><Ico d={I.clock} s={11}/> Expiration</div>
-                  <input className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd]" type="date" value={form.expires} onChange={e => setForm({ ...form, expires: e.target.value })}/>
-                </div>
-              </div>
-
-              {/* Méthode d'activation */}
-              <div className="mb-3.5">
-                <div className="text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">Méthode d'activation</div>
-                <select className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] cursor-pointer appearance-none" value={form.activationMethod} onChange={e => setForm({ ...form, activationMethod: e.target.value as FormData["activationMethod"] })}>
-                  <option value="online">En ligne</option><option value="usb">Clé USB</option><option value="file">Fichier .licpkg</option>
-                </select>
-              </div>
-
-              {/* Sécurité avancée */}
-              <div className="mb-3.5">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5"><Ico d={I.shield} s={11}/> Sécurité avancée</div>
-                <div className="flex flex-col gap-1.5 mt-1">
-                  {securityOptions.map(opt => (
-                    <div
-                      key={opt.key}
-                      className={`flex items-center justify-between p-2.5 bg-[#090c10] border border-[#21262d] cursor-pointer select-none transition-colors duration-150 hover:border-[#30363d] ${form[opt.key] ? "border-[rgba(56,139,253,0.25)] bg-[rgba(56,139,253,0.08)]" : ""}`}
-                      onClick={() => setForm(f => ({ ...f, [opt.key]: !f[opt.key] }))}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 flex items-center justify-center text-[#8b949e]"><Ico d={opt.icon} s={14}/></div>
-                        <div><div className="text-xs font-medium">{opt.name}</div><div className="text-[11px] text-[#484f58] mt-0.5">{opt.desc}</div></div>
-                      </div>
-                      <Toggle on={form[opt.key]} onChange={() => {}}/>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Aperçu de la clé */}
-              <div className="mb-3.5">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5"><Ico d={I.hash} s={11}/> Aperçu de la clé</div>
-                <div className="bg-[#090c10] border border-[#21262d] p-2.5 flex items-center justify-between mt-1.5">
-                  <span className="font-mono text-xs text-[#388bfd] tracking-[0.5px]">{previewKey}</span>
-                  <button className="bg-none border-none text-[#484f58] cursor-pointer flex items-center transition-colors duration-150 hover:text-[#388bfd]" onClick={() => setPreviewKey(genKey())}><Ico d={I.refresh} s={14}/></button>
-                </div>
-              </div>
-
-              {/* Note interne */}
-              <div className="mb-3.5">
-                <div className="text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">Note interne (optionnel)</div>
-                <textarea className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] resize-vertical min-h-[56px]" rows={2} placeholder="Remarque, contexte, référence commande…" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })}/>
-              </div>
-            </div>
-            <div className="p-4 pt-3 border-t border-[#21262d] flex justify-end gap-2">
-              <button className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]" onClick={() => setModal(null)}>Annuler</button>
-              <button 
-                className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]" 
-                onClick={handleGenerate} 
-                disabled={!form.school || !form.offre_id}
-              >
-                <Ico d={I.check} s={13}/> Générer
+              <button className="w-6 h-6 bg-transparent border-none text-[#484f58] cursor-pointer flex items-center justify-center transition-colors duration-150 hover:text-[#e6edf3]" onClick={() => { 
+                setModal(null); 
+                setIsEtablissementStep(false);
+                setEtablissementData(null);
+              }}>
+                <Ico d={I.close} s={14}/>
               </button>
             </div>
+
+            <div className="p-5">
+              {!isEtablissementStep ? (
+                // ✅ Étape 1: Informations de la licence (SANS le champ établissement)
+                <>
+                  {/* ✅ Message informatif à la place du champ établissement */}
+                  <div className="bg-[rgba(56,139,253,0.08)] border border-[rgba(56,139,253,0.25)] p-3 mb-4">
+                    <p className="text-xs text-[#8b949e] flex items-start gap-1.5">
+                      <FiAlertCircle className="inline flex-shrink-0 mt-0.5 text-[#388bfd]" size={14} />
+                      <span>Les informations de l'établissement seront saisies à l'étape suivante.</span>
+                    </p>
+                  </div>
+
+                  {/* Offre */}
+                  <div className="mb-3.5">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">
+                      <Ico d={I.globe} s={11}/> Offre
+                    </div>
+                    <select 
+                      className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] cursor-pointer appearance-none" 
+                      value={form.offre_id} 
+                      onChange={e => {
+                        const offreId = e.target.value;
+                        const selectedOffre = offres.find(o => o.offre_id === offreId);
+                        setForm({ 
+                          ...form, 
+                          offre_id: offreId,
+                          plan: selectedOffre?.nom as "Basic" | "Premium" | "Enterprise" || form.plan
+                        });
+                      }}
+                      disabled={offresLoading}
+                    >
+                      {offresLoading ? (
+                        <option value="">Chargement des offres...</option>
+                      ) : offres.length === 0 ? (
+                        <option value="">Aucune offre disponible</option>
+                      ) : (
+                        offres.map(offre => (
+                          <option key={offre.offre_id} value={offre.offre_id}>
+                            {offre.nom} — {offre.prix} {offre.devise}/{offre.duree}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+
+                  {/* Max utilisateurs + Expiration */}
+                  <div className="grid grid-cols-2 gap-3 mb-3.5">
+                    <div>
+                      <div className="text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">Max utilisateurs</div>
+                      <input 
+                        className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd]" 
+                        type="number" 
+                        value={form.maxUses} 
+                        onChange={e => setForm({ ...form, maxUses: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">
+                        <Ico d={I.clock} s={11}/> Expiration
+                      </div>
+                      <input 
+                        className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd]" 
+                        type="date" 
+                        value={form.expires} 
+                        onChange={e => setForm({ ...form, expires: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Méthode d'activation */}
+                  <div className="mb-3.5">
+                    <div className="text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">Méthode d'activation</div>
+                    <select 
+                      className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] cursor-pointer appearance-none" 
+                      value={form.activationMethod} 
+                      onChange={e => setForm({ ...form, activationMethod: e.target.value as FormData["activationMethod"] })}
+                    >
+                      <option value="online">En ligne</option>
+                      <option value="usb">Clé USB</option>
+                      <option value="file">Fichier .licpkg</option>
+                    </select>
+                  </div>
+
+                  {/* Sécurité avancée */}
+                  <div className="mb-3.5">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">
+                      <Ico d={I.shield} s={11}/> Sécurité avancée
+                    </div>
+                    <div className="flex flex-col gap-1.5 mt-1">
+                      {securityOptions.map(opt => (
+                        <div
+                          key={opt.key}
+                          className={`flex items-center justify-between p-2.5 bg-[#090c10] border border-[#21262d] cursor-pointer select-none transition-colors duration-150 hover:border-[#30363d] ${form[opt.key] ? "border-[rgba(56,139,253,0.25)] bg-[rgba(56,139,253,0.08)]" : ""}`}
+                          onClick={() => setForm(f => ({ ...f, [opt.key]: !f[opt.key] }))}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 flex items-center justify-center text-[#8b949e]"><Ico d={opt.icon} s={14}/></div>
+                            <div><div className="text-xs font-medium">{opt.name}</div><div className="text-[11px] text-[#484f58] mt-0.5">{opt.desc}</div></div>
+                          </div>
+                          <Toggle on={form[opt.key]} onChange={() => {}}/>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Aperçu de la clé */}
+                  <div className="mb-3.5">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">
+                      <Ico d={I.hash} s={11}/> Aperçu de la clé
+                    </div>
+                    <div className="bg-[#090c10] border border-[#21262d] p-2.5 flex items-center justify-between mt-1.5">
+                      <span className="font-mono text-xs text-[#388bfd] tracking-[0.5px]">{previewKey}</span>
+                      <button className="bg-none border-none text-[#484f58] cursor-pointer flex items-center transition-colors duration-150 hover:text-[#388bfd]" onClick={() => setPreviewKey(genKey())}>
+                        <Ico d={I.refresh} s={14}/>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Note interne */}
+                  <div className="mb-3.5">
+                    <div className="text-[11px] font-semibold tracking-[0.6px] uppercase text-[#484f58] mb-1.5">Note interne (optionnel)</div>
+                    <textarea 
+                      className="w-full bg-[#090c10] border border-[#21262d] p-2 text-[#e6edf3] font-['IBM_Plex_Sans'] text-[13px] outline-none transition-colors duration-150 focus:border-[#388bfd] resize-vertical min-h-[56px]" 
+                      rows={2} 
+                      placeholder="Remarque, contexte, référence commande…" 
+                      value={form.note} 
+                      onChange={e => setForm({ ...form, note: e.target.value })}
+                    />
+                  </div>
+                </>
+              ) : (
+                // Étape 2: Formulaire d'établissement
+                <EtablissementForm
+                  initialData={etablissementData || undefined}
+                  onComplete={handleGenerateWithEtablissement}
+                  onBack={() => setIsEtablissementStep(false)}
+                  isLoading={false}
+                />
+              )}
+            </div>
+
+            {/* Actions */}
+            {!isEtablissementStep && (
+              <div className="p-4 pt-3 border-t border-[#21262d] flex justify-end gap-2 sticky bottom-0 bg-[#0d1117]">
+                <button 
+                  className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-transparent border border-[#21262d] text-[#8b949e] hover:border-[#30363d] hover:text-[#e6edf3] hover:bg-[#161b22]"
+                  onClick={() => setModal(null)}
+                >
+                  Annuler
+                </button>
+                <button 
+                  className="inline-flex items-center gap-1.5 h-[34px] px-3.5 text-xs font-medium cursor-pointer transition-all duration-150 bg-[#388bfd] text-white hover:bg-[#58a6ff]"
+                  onClick={() => setIsEtablissementStep(true)}
+                  disabled={!form.offre_id}
+                >
+                  <Ico d={I.plus} s={13}/> Suivant - Infos établissement
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* MODAL RÉVOQUER - Inchangé */}
+      {/* MODAL RÉVOQUER */}
       {modal === "revoke" && (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-[1000] p-5 animate-[kaFadeIn_0.2s]" onClick={e => e.target === e.currentTarget && setModal(null)}>
           <div className="bg-[#0d1117] border border-[#30363d] w-full max-w-[420px] animate-[kaSlideUp_0.25s_cubic-bezier(0.4,0,0.2,1)]">
@@ -952,7 +1002,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
         </div>
       )}
 
-      {/* MODAL AUDIT - Inchangé */}
+      {/* MODAL AUDIT */}
       {modal === "audit" && (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-[1000] p-5 animate-[kaFadeIn_0.2s]" onClick={e => e.target === e.currentTarget && setModal(null)}>
           <div className="bg-[#0d1117] border border-[#30363d] w-full max-w-[540px] animate-[kaSlideUp_0.25s_cubic-bezier(0.4,0,0.2,1)]">
