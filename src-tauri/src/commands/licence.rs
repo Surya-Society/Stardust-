@@ -1,4 +1,4 @@
-// src/commands/licence.rs
+// src/commands/licence.rs - VERSION COMPLÈTE CORRIGÉE
 use tauri::command;
 use serde_json::{json, Value};
 use sqlx::SqlitePool;
@@ -10,6 +10,99 @@ use log::{info, error};
 use crate::services::licence_service::LicenceService;
 use crate::models::licence::*;
 use crate::models::abonnement::Abonnement;
+
+// ================================================================
+// FONCTION UTILITAIRE - Capitaliser le plan
+// ================================================================
+
+/// ✅ Capitalise le plan de licence (Basic, Premium, Gold)
+fn capitalize_plan(plan: &str) -> String {
+    let lower = plan.to_lowercase();
+    match lower.as_str() {
+        "basic" => "Basic".to_string(),
+        "premium" => "Premium".to_string(),
+        "gold" => "Gold".to_string(),
+        _ => {
+            let mut chars = lower.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
+            }
+        }
+    }
+}
+
+// ================================================================
+// FONCTION UTILITAIRE - Créer ou récupérer un établissement
+// ================================================================
+
+/// ✅ Crée un établissement dans Stardust si il n'existe pas déjà
+async fn create_or_get_etablissement(
+    pool: &SqlitePool,
+    etablissement_info: &EtablissementInfo,
+) -> Result<EtablissementInfo, String> {
+    let exists = sqlx::query_scalar::<_, i64>(
+        "SELECT 1 FROM Etablissement WHERE id_etablissement = ?"
+    )
+    .bind(&etablissement_info.id_etablissement)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("Erreur vérification établissement: {}", e))?
+    .unwrap_or(0) == 1;
+
+    if exists {
+        info!("✅ Établissement existe déjà dans Stardust: {}", etablissement_info.nom);
+        return Ok(etablissement_info.clone());
+    }
+
+    info!("🏫 Création de l'établissement dans Stardust: {}", etablissement_info.nom);
+
+    let now = Utc::now().to_rfc3339();
+
+    sqlx::query(
+        r#"
+        INSERT INTO Etablissement (
+            id_etablissement, nom, sigle, numero_agrement, numero_fiscal,
+            registre_commerciale, type_etablissement, statut_juridique,
+            pays, region, ville, commune, quartier, adresse, code_postal,
+            telephone_principal, telephone_secondaire, email, site_web,
+            annee_scolaire_debut, annee_scolaire_fin, statut,
+            date_creation, synced
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        "#
+    )
+    .bind(&etablissement_info.id_etablissement)
+    .bind(&etablissement_info.nom)
+    .bind(&etablissement_info.sigle)
+    .bind(&etablissement_info.numero_agrement)
+    .bind(&etablissement_info.numero_fiscal)
+    .bind(&etablissement_info.registre_commerciale)
+    .bind(&etablissement_info.type_etablissement)
+    .bind(&etablissement_info.statut_juridique)
+    .bind(&etablissement_info.pays)
+    .bind(&etablissement_info.region)
+    .bind(&etablissement_info.ville)
+    .bind(&etablissement_info.commune)
+    .bind(&etablissement_info.quartier)
+    .bind(&etablissement_info.adresse)
+    .bind(&etablissement_info.code_postal)
+    .bind(&etablissement_info.telephone_principal)
+    .bind(&etablissement_info.telephone_secondaire)
+    .bind(&etablissement_info.email)
+    .bind(&etablissement_info.site_web)
+    .bind(&etablissement_info.annee_scolaire_debut)
+    .bind(&etablissement_info.annee_scolaire_fin)
+    .bind(&etablissement_info.statut)
+    .bind(&now)
+    .bind(0)
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Erreur création établissement dans Stardust: {}", e))?;
+
+    info!("✅ Établissement créé dans Stardust: {}", etablissement_info.nom);
+
+    Ok(etablissement_info.clone())
+}
 
 // ================================================================
 // EXPORT - Générer le fichier .licpkg
@@ -86,7 +179,7 @@ pub async fn get_licence_by_id(
 }
 
 // ================================================================
-// CREATE LICENCE - AVEC ABONNEMENT AUTOMATIQUE ET ÉTABLISSEMENT ✅
+// CREATE LICENCE - SOLUTION 1 : CRÉATION D'ABORD DANS `licences`
 // ================================================================
 
 #[command]
@@ -96,15 +189,27 @@ pub async fn create_licence(
 ) -> Result<Value, String> {
     info!("🆕 CREATE_LICENCE called: {}", data.school_name);
     
+    // ✅ Convertir le plan en capitalisé
+    let mut data_upper = data;
+    data_upper.plan = capitalize_plan(&data_upper.plan);
+    
+    // ✅ VALIDER LE PLAN
+    let valid_plans = ["Basic", "Premium", "Gold"];
+    if !valid_plans.contains(&data_upper.plan.as_str()) {
+        return Ok(json!({
+            "success": false,
+            "error": format!("Plan invalide: {}. Plans valides: Basic, Premium, Gold", data_upper.plan)
+        }));
+    }
+    
     let service = LicenceService::new(pool.inner().clone());
     
-    // 1. ✅ Si des infos établissement sont fournies, les utiliser
-    //    Sinon, en créer un par défaut
-    let etablissement_info = data.etablissement.clone().unwrap_or_else(|| {
-        let id = data.id_etablissement.clone().unwrap_or_else(|| Uuid::new_v4().to_string());
+    // 1. ✅ Créer ou récupérer l'établissement
+    let etablissement_info = data_upper.etablissement.clone().unwrap_or_else(|| {
+        let id = data_upper.id_etablissement.clone().unwrap_or_else(|| Uuid::new_v4().to_string());
         EtablissementInfo {
             id_etablissement: id.clone(),
-            nom: data.school_name.clone(),
+            nom: data_upper.school_name.clone(),
             sigle: None,
             numero_agrement: format!("AGR-{}", Uuid::new_v4().simple()),
             numero_fiscal: format!("FISC-{}", Uuid::new_v4().simple()),
@@ -115,7 +220,7 @@ pub async fn create_licence(
             region: "Abidjan".to_string(),
             ville: "Abidjan".to_string(),
             commune: None,
-            quatier: None,
+            quartier: None,
             adresse: "N/A".to_string(),
             code_postal: None,
             telephone_principal: "00000000".to_string(),
@@ -128,11 +233,13 @@ pub async fn create_licence(
         }
     });
 
-    // 2. Créer la licence
-    let licence = match service.create_licence(data).await {
-        Ok(licence) => {
-            info!("✅ LICENCE CREATED: {}", licence.key_text);
-            licence
+    let etablissement = create_or_get_etablissement(&pool, &etablissement_info).await?;
+
+    // 2. ✅ Créer la CLÉ D'ACTIVATION (activation_keys)
+    let activation_key = match service.create_licence(data_upper).await {
+        Ok(key) => {
+            info!("✅ CLÉ D'ACTIVATION CREATED: {}", key.key_text);
+            key
         }
         Err(e) => {
             error!("❌ CREATE_LICENCE ERROR: {:?}", e);
@@ -153,13 +260,13 @@ pub async fn create_licence(
         LIMIT 1
         "#
     )
-    .bind(&licence.plan)
-    .bind(&licence.plan)
+    .bind(&activation_key.plan)
+    .bind(&activation_key.plan)
     .fetch_optional(&*pool)
     .await
     .map_err(|e| e.to_string())?;
 
-    // 4. ✅ SI OFFRE TROUVÉE → UTILISER SES VALEURS
+    // 4. ✅ UTILISER LES VALEURS DE L'OFFRE
     let (offre_id, duree, montant, devise, renouvellement_auto, grace_period) = 
         if let Some(row) = offre_row {
             let offre_id: String = row.get("offre_id");
@@ -177,21 +284,23 @@ pub async fn create_licence(
             
             (Some(offre_id), duree, prix, devise, renouvellement_auto, grace_period)
         } else {
-            let (duree, montant) = match licence.plan.as_str() {
+            let (duree, montant) = match activation_key.plan.as_str() {
                 "Basic" => ("MENSUEL", 10000),
                 "Premium" => ("MENSUEL", 25000),
-                "Enterprise" => ("MENSUEL", 50000),
+                "Gold" => ("MENSUEL", 35000),
                 _ => ("MENSUEL", 10000),
             };
             
-            info!("⚠️ Aucune offre trouvée pour {}, utilisation des valeurs par défaut", licence.plan);
+            info!("⚠️ Aucune offre trouvée pour {}, utilisation des valeurs par défaut", activation_key.plan);
             
             (None, duree.to_string(), montant, "XOF".to_string(), true, 7)
         };
 
-    // 5. ✅ CRÉER L'ABONNEMENT
-    let abonnement_id = Uuid::new_v4().to_string();
-    let now = Utc::now().to_rfc3339();
+    // 5. ✅ CRÉER LA LICENCE DANS LA TABLE `licences` (SOLUTION 1)
+    let licence_uuid = Uuid::new_v4().to_string();
+    let etablissement_id = activation_key.id_etablissement
+        .clone()
+        .unwrap_or_else(|| etablissement.id_etablissement.clone());
     
     let date_fin = match duree.as_str() {
         "MENSUEL" => Utc::now() + Duration::days(30),
@@ -202,10 +311,37 @@ pub async fn create_licence(
         _ => Utc::now() + Duration::days(30),
     };
     let date_fin_str = date_fin.to_rfc3339();
+    let now = Utc::now().to_rfc3339();
 
-    let etablissement_id = licence.id_etablissement
-        .clone()
-        .unwrap_or_else(|| Uuid::new_v4().to_string());
+    // ✅ Insertion dans la table licences
+    let _ = sqlx::query(
+        r#"
+        INSERT INTO licences (
+            licence_id, licence_key, id_etablissement, 
+            type_licence, statut, date_expiration,
+            activations_max, activations_utilisees, duree,
+            created_at, updated_at
+        ) VALUES (?, ?, ?, 'EDUCATION', 'ACTIVE', ?, 5, 0, ?, ?, ?)
+        "#
+    )
+    .bind(&licence_uuid)
+    .bind(&activation_key.key_text)
+    .bind(&etablissement_id)
+    .bind(&date_fin_str)
+    .bind(&duree)
+    .bind(&now)
+    .bind(&now)
+    .execute(&*pool)
+    .await
+    .map_err(|e| {
+        error!("❌ LICENCE INSERT ERROR: {:?}", e);
+        e.to_string()
+    })?;
+
+    info!("✅ LICENCE INSERTED: {}", licence_uuid);
+
+    // 6. ✅ CRÉER L'ABONNEMENT AVEC LE BON ID (licence_uuid)
+    let abonnement_id = Uuid::new_v4().to_string();
 
     let _ = sqlx::query(
         r#"
@@ -220,9 +356,9 @@ pub async fn create_licence(
     )
     .bind(&abonnement_id)
     .bind(&etablissement_id)
-    .bind(licence.id.to_string())
+    .bind(&licence_uuid)  // ✅ BON ID (table licences)
     .bind(&offre_id)
-    .bind(&licence.plan)
+    .bind(&activation_key.plan)
     .bind(&duree)
     .bind(montant)
     .bind(0)
@@ -235,10 +371,10 @@ pub async fn create_licence(
     .bind(grace_period)
     .bind(json!({
         "created_from": "licence_creation",
-        "licence_key": licence.key_text,
-        "school_name": licence.school_name,
+        "licence_key": activation_key.key_text,
+        "school_name": activation_key.school_name,
         "offre_id": offre_id,
-        "etablissement": etablissement_info.nom,
+        "etablissement": etablissement.nom,
     }).to_string())
     .bind(&now)
     .bind(&now)
@@ -251,7 +387,7 @@ pub async fn create_licence(
 
     info!("✅ ABONNEMENT CREATED: {}", abonnement_id);
 
-    // 6. Récupérer l'abonnement créé
+    // 7. Récupérer l'abonnement créé
     let abonnement_row = sqlx::query(
         r#"
         SELECT 
@@ -300,20 +436,22 @@ pub async fn create_licence(
         updated_at: abonnement_row.get("updated_at"),
     };
 
-        let licence_file = service.export_licence_key_with_etablissement(
-            licence.id,
-            &etablissement_info,
-        ).await.map_err(|e| e.to_string())?;
+    // 8. Exporter la licence avec l'établissement
+    let licence_file = service.export_licence_key_with_etablissement(
+        activation_key.id,
+        &etablissement,
+    ).await.map_err(|e| e.to_string())?;
 
-    info!("✅ LICENCE EXPORTED with établissement: {}", etablissement_info.nom);
+    info!("✅ LICENCE EXPORTED with établissement: {}", etablissement.nom);
 
-    // 8. Retourner la licence, l'abonnement ET le fichier
+    // 9. Retourner le résultat
     Ok(json!({
         "success": true,
-        "licence": licence,
+        "activation_key": activation_key,
+        "licence_id": licence_uuid,
         "abonnement": abonnement,
         "licence_file": licence_file,
-        "message": format!("Licence et abonnement créés pour {}", licence.school_name)
+        "message": format!("Licence et abonnement créés pour {}", activation_key.school_name)
     }))
 }
 
@@ -344,7 +482,7 @@ pub async fn update_licence(
 }
 
 // ================================================================
-// REVOKE LICENCE - Met aussi à jour l'abonnement
+// REVOKE LICENCE
 // ================================================================
 
 #[command]
@@ -394,7 +532,7 @@ pub async fn revoke_licence(
 }
 
 // ================================================================
-// SUSPEND LICENCE - Met aussi à jour l'abonnement
+// SUSPEND LICENCE
 // ================================================================
 
 #[command]
@@ -443,7 +581,7 @@ pub async fn suspend_licence(
 }
 
 // ================================================================
-// REACTIVATE LICENCE - Met aussi à jour l'abonnement
+// REACTIVATE LICENCE
 // ================================================================
 
 #[command]
@@ -525,7 +663,6 @@ pub async fn create_test_licence(
 ) -> Result<Value, String> {
     info!("🧪 CREATE_TEST_LICENCE called");
     
-    use chrono::Utc;
     use sha3::{Digest, Sha3_256};
     
     let key_text = format!("SCO-2025-TEST-{}", Uuid::new_v4().simple().to_string().chars().take(8).collect::<String>());
@@ -574,38 +711,66 @@ pub async fn create_test_licence(
         e.to_string()
     })?;
 
-            let licence = ActivationKey {
-            id: row.get("id"),
-            key_text: row.get("key_text"),
-            school_name: row.get("school_name"),
-            plan: row.get("plan"),
-            status: row.get("status"),
-            created_at: row.get("created_at"),
-            expires_at: row.get("expires_at"),
-            uses: row.get("uses"),
-            max_uses: row.get("max_uses"),
-            hw_lock: row.get("hw_lock"),
-            two_fa: row.get("two_fa"),
-            ip_restrict: row.get("ip_restrict"),
-            sec_score: row.get("sec_score"),
-            fingerprint: row.get("fingerprint"),
-            activation_method: row.get("activation_method"),
-            revocations: row.get("revocations"),
-            key_hash: row.get("key_hash"),
-            note: row.get("note"),
-            created_by: row.get("created_by"),
-            id_etablissement: row.get("id_etablissement"),
-            synced: row.get("synced"),           // ⬅️ AJOUTER
-            sync_date: row.get("sync_date"),     // ⬅️ AJOUTER
-        };
+    let activation_key = ActivationKey {
+        id: row.get("id"),
+        key_text: row.get("key_text"),
+        school_name: row.get("school_name"),
+        plan: row.get("plan"),
+        status: row.get("status"),
+        created_at: row.get("created_at"),
+        expires_at: row.get("expires_at"),
+        uses: row.get("uses"),
+        max_uses: row.get("max_uses"),
+        hw_lock: row.get("hw_lock"),
+        two_fa: row.get("two_fa"),
+        ip_restrict: row.get("ip_restrict"),
+        sec_score: row.get("sec_score"),
+        fingerprint: row.get("fingerprint"),
+        activation_method: row.get("activation_method"),
+        revocations: row.get("revocations"),
+        key_hash: row.get("key_hash"),
+        note: row.get("note"),
+        created_by: row.get("created_by"),
+        id_etablissement: row.get("id_etablissement"),
+        synced: row.get("synced"),
+        sync_date: row.get("sync_date"),
+    };
     
-    info!("✅ TEST LICENCE CREATED: id={}, key={}", licence.id, licence.key_text);
+    info!("✅ TEST ACTIVATION KEY CREATED: id={}, key={}", activation_key.id, activation_key.key_text);
 
-    let abonnement_id = Uuid::new_v4().to_string();
-    let montant = 25000;
-    let duree = "MENSUEL";
+    // ✅ Créer la licence dans la table licences
+    let licence_uuid = Uuid::new_v4().to_string();
     let date_fin = Utc::now() + Duration::days(30);
     let date_fin_str = date_fin.to_rfc3339();
+
+    let _ = sqlx::query(
+        r#"
+        INSERT INTO licences (
+            licence_id, licence_key, id_etablissement, 
+            type_licence, statut, date_expiration,
+            activations_max, activations_utilisees, duree,
+            created_at, updated_at
+        ) VALUES (?, ?, ?, 'EDUCATION', 'ACTIVE', ?, 5, 0, 'MENSUEL', ?, ?)
+        "#
+    )
+    .bind(&licence_uuid)
+    .bind(&activation_key.key_text)
+    .bind(&etablissement_id)
+    .bind(&date_fin_str)
+    .bind(&now)
+    .bind(&now)
+    .execute(&*pool.inner())
+    .await
+    .map_err(|e| {
+        error!("❌ LICENCE INSERT ERROR: {:?}", e);
+        e.to_string()
+    })?;
+
+    info!("✅ TEST LICENCE INSERTED: {}", licence_uuid);
+
+    // ✅ Créer l'abonnement
+    let abonnement_id = Uuid::new_v4().to_string();
+    let montant = 25000;
 
     let _ = sqlx::query(
         r#"
@@ -614,24 +779,21 @@ pub async fn create_test_licence(
             plan, duree, montant_original, montant_remise, montant_final,
             devise, date_debut, date_prochain_paiement, date_fin,
             statut, renouvellement_auto, metadata, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIF', 1, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, 'MENSUEL', ?, 0, ?, 'XOF', ?, ?, ?, 'ACTIF', 1, ?, ?, ?)
         "#
     )
     .bind(&abonnement_id)
     .bind(&etablissement_id)
-    .bind(licence.id.to_string())
-    .bind(&licence.plan)
-    .bind(duree)
+    .bind(&licence_uuid)  // ✅ BON ID
+    .bind(&activation_key.plan)
     .bind(montant)
-    .bind(0)
     .bind(montant)
-    .bind("XOF")
     .bind(&now)
     .bind(&now)
     .bind(&date_fin_str)
     .bind(json!({
         "created_from": "test_licence_creation",
-        "licence_key": licence.key_text,
+        "licence_key": activation_key.key_text,
     }).to_string())
     .bind(&now)
     .bind(&now)
@@ -646,8 +808,9 @@ pub async fn create_test_licence(
     
     Ok(json!({
         "success": true,
-        "licence": licence,
+        "activation_key": activation_key,
+        "licence_id": licence_uuid,
         "abonnement_id": abonnement_id,
-        "message": format!("Licence et abonnement de test créés pour {}", licence.school_name)
+        "message": format!("Licence et abonnement de test créés pour {}", activation_key.school_name)
     }))
 }

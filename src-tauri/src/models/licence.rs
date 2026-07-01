@@ -63,13 +63,13 @@ pub struct EtablissementInfo {
     pub numero_agrement: String,
     pub numero_fiscal: String,
     pub registre_commerciale: Option<String>,
-    pub type_etablissement: String,  // PUBLIC, PRIVE, MIXTE
-    pub statut_juridique: String,     // SARL, SA, ASSOCIATION, GIE, AUTRE
+    pub type_etablissement: String,
+    pub statut_juridique: String,
     pub pays: String,
     pub region: String,
     pub ville: String,
     pub commune: Option<String>,
-    pub quatier: Option<String>,
+    pub quartier: Option<String>, 
     pub adresse: String,
     pub code_postal: Option<String>,
     pub telephone_principal: String,

@@ -1,4 +1,4 @@
-// src/commands/etablissement.rs (STARDUST)
+// src/commands/etablissement.rs - VERSION CORRIGÉE
 use tauri::command;
 use serde_json::{json, Value};
 use sqlx::SqlitePool;
@@ -18,7 +18,7 @@ pub async fn get_all_etablissements(
         SELECT 
             id_etablissement, nom, sigle, numero_agrement, numero_fiscal,
             registre_commerciale, type_etablissement, statut_juridique,
-            pays, region, ville, commune, quatier, adresse, code_postal,
+            pays, region, ville, commune, quartier, adresse, code_postal,
             telephone_principal, telephone_secondaire, email, site_web,
             annee_scolaire_debut, annee_scolaire_fin, statut,
             date_creation, date_modification, synced, sync_date
@@ -44,6 +44,7 @@ pub async fn get_all_etablissements(
             "pays": row.get::<String, _>("pays"),
             "region": row.get::<String, _>("region"),
             "ville": row.get::<String, _>("ville"),
+            "quartier": row.get::<Option<String>, _>("quartier"),
             "telephone_principal": row.get::<String, _>("telephone_principal"),
             "email": row.get::<Option<String>, _>("email"),
             "date_creation": row.get::<String, _>("date_creation"),

@@ -12,7 +12,7 @@ interface ActivationKey {
   id: number;
   key: string;
   school: string;
-  plan: "Basic" | "Premium" | "Enterprise";
+  plan: string;  // ← DYNAMIQUE - récupéré depuis la DB
   status: "active" | "expired" | "suspended" | "revoked";
   created: string;
   expires: string;
@@ -199,6 +199,22 @@ const DUREE_LABELS: Record<string, number> = {
 function seg(): string { return Math.random().toString(36).substring(2,6).toUpperCase(); }
 function genKey(): string { return `SCO-2025-${seg()}-${seg()}`; }
 
+// ✅ Fonction dynamique pour les couleurs des plans
+function getPlanCls(plan: string): string {
+  const lowerPlan = plan.toLowerCase();
+  if (lowerPlan === "gold") {
+    return "bg-[rgba(210,153,34,0.08)] text-[#d29922] border border-[rgba(210,153,34,0.25)]";
+  }
+  if (lowerPlan === "premium") {
+    return "bg-[rgba(63,185,80,0.08)] text-[#3fb950] border border-[rgba(63,185,80,0.25)]";
+  }
+  if (lowerPlan === "enterprise") {
+    return "bg-[rgba(56,139,253,0.08)] text-[#388bfd] border border-[rgba(56,139,253,0.25)]";
+  }
+  // Basic ou autre
+  return "bg-[#1c2330] text-[#484f58] border border-[#21262d]";
+}
+
 // ================================================================
 // COMPOSANTS
 // ================================================================
@@ -246,7 +262,7 @@ function Checkbox({ checked, onChange }: CheckboxProps) {
 function KeyCard({ k, selected, onSelect, onDetail, onCopy, onSuspend, onReactivate, onRevoke, onExport }: KeyCardProps) {
   const pct = Math.min(k.uses/k.maxUses*100,100);
   const usageColor = pct>85?"#f85149":pct>60?"#d29922":"#388bfd";
-  const planCls = k.plan==="Enterprise" ? "bg-[rgba(56,139,253,0.08)] text-[#388bfd] border border-[rgba(56,139,253,0.25)]" : k.plan==="Premium" ? "bg-[rgba(63,185,80,0.08)] text-[#3fb950] border border-[rgba(63,185,80,0.25)]" : "bg-[#1c2330] text-[#484f58] border border-[#21262d]";
+  const planCls = getPlanCls(k.plan);  // ✅ Utilisation de la fonction dynamique
 
   return (
     <div className={`bg-[#0d1117] flex flex-col transition-colors duration-150 cursor-pointer relative ${selected ? "bg-[rgba(56,139,253,0.08)]" : ""}`} onClick={() => onDetail(k)}>
@@ -344,6 +360,9 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
   const [offres, setOffres] = useState<Offre[]>([]);
   const [offresLoading, setOffresLoading] = useState<boolean>(true);
   
+  // ✅ État pour les plans disponibles (extraits dynamiquement des offres)
+  const [availablePlans, setAvailablePlans] = useState<string[]>([]);
+  
   // État pour les données du formulaire d'établissement
   const [etablissementData, setEtablissementData] = useState<EtablissementInfo | null>(null);
   const [isEtablissementStep, setIsEtablissementStep] = useState(false);
@@ -352,7 +371,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
   const [form, setForm] = useState<FormData>({
     school: "",  // ← Gardé mais caché, utilisé pour la compatibilité
     offre_id: "",
-    plan: "Enterprise",
+    plan: "Basic",
     expires: "",
     maxUses: "150",
     hwLock: true,
@@ -387,21 +406,37 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
     }
   };
 
-  // Charger les offres
+  // ✅ Charger les offres et extraire les plans dynamiquement
   const loadOffres = async () => {
     try {
       setOffresLoading(true);
       const result = await invoke<{ success: boolean; data: Offre[] }>('get_offres_publiques');
       if (result && result.success && result.data && result.data.length > 0) {
         setOffres(result.data);
-        setForm(prev => ({ ...prev, offre_id: result.data[0].offre_id }));
+        
+        // ✅ Extraire les plans uniques depuis les offres
+        const plans = result.data
+          .map(o => o.nom)
+          .filter((v, i, a) => a.indexOf(v) === i);
+        setAvailablePlans(plans);
+        
+        // ✅ Définir le premier plan comme sélectionné si disponible
+        if (plans.length > 0) {
+          setForm(prev => ({ 
+            ...prev, 
+            offre_id: result.data[0].offre_id,
+            plan: plans[0]
+          }));
+        }
       } else {
         setOffres([]);
+        setAvailablePlans([]);
       }
     } catch (error) {
       console.error('❌ Erreur de chargement des offres:', error);
       showToast('❌ Erreur de chargement des offres', 'red');
       setOffres([]);
+      setAvailablePlans([]);
     } finally {
       setOffresLoading(false);
     }
@@ -465,7 +500,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
       // ✅ Utiliser les données de l'établissement pour school_name
       const result = await invoke('create_licence', {
         data: {
-          school_name: etablissement.nom,  // ← Utiliser le nom de l'établissement
+          school_name: etablissement.nom,
           plan: selectedOffre?.nom || form.plan,
           offre_id: form.offre_id,
           expires_at: expiresAt || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -638,9 +673,19 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
         <select className="h-[34px] bg-[#0d1117] border border-[#21262d] text-[#8b949e] font-['IBM_Plex_Sans'] text-xs px-2.5 cursor-pointer outline-none appearance-none transition-colors duration-150 focus:border-[#388bfd] focus:text-[#e6edf3]" value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }}>
           <option value="all">Tous statuts</option><option value="active">Actives</option><option value="expired">Expirées</option><option value="suspended">Suspendues</option>
         </select>
-        <select className="h-[34px] bg-[#0d1117] border border-[#21262d] text-[#8b949e] font-['IBM_Plex_Sans'] text-xs px-2.5 cursor-pointer outline-none appearance-none transition-colors duration-150 focus:border-[#388bfd] focus:text-[#e6edf3]" value={filterPlan} onChange={e => { setFilterPlan(e.target.value); setPage(1); }}>
-          <option value="all">Tous plans</option><option value="Basic">Basic</option><option value="Premium">Premium</option><option value="Enterprise">Enterprise</option>
+        
+        {/* ✅ Filtre des plans DYNAMIQUE */}
+        <select 
+          className="h-[34px] bg-[#0d1117] border border-[#21262d] text-[#8b949e] font-['IBM_Plex_Sans'] text-xs px-2.5 cursor-pointer outline-none appearance-none transition-colors duration-150 focus:border-[#388bfd] focus:text-[#e6edf3]" 
+          value={filterPlan} 
+          onChange={e => { setFilterPlan(e.target.value); setPage(1); }}
+        >
+          <option value="all">Tous plans</option>
+          {availablePlans.map(plan => (
+            <option key={plan} value={plan}>{plan}</option>
+          ))}
         </select>
+        
         <select className="h-[34px] bg-[#0d1117] border border-[#21262d] text-[#8b949e] font-['IBM_Plex_Sans'] text-xs px-2.5 cursor-pointer outline-none appearance-none transition-colors duration-150 focus:border-[#388bfd] focus:text-[#e6edf3]" value={filterMethod} onChange={e => { setFilterMethod(e.target.value); setPage(1); }}>
           <option value="all">Toutes méthodes</option><option value="online">En ligne</option><option value="usb">Clé USB</option><option value="file">Fichier</option>
         </select>
@@ -810,7 +855,6 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
 
             <div className="p-5">
               {!isEtablissementStep ? (
-                // ✅ Étape 1: Informations de la licence (SANS le champ établissement)
                 <>
                   {/* ✅ Message informatif à la place du champ établissement */}
                   <div className="bg-[rgba(56,139,253,0.08)] border border-[rgba(56,139,253,0.25)] p-3 mb-4">
@@ -834,7 +878,7 @@ export default function CleActivation({ onNotify }: CleActivationProps) {
                         setForm({ 
                           ...form, 
                           offre_id: offreId,
-                          plan: selectedOffre?.nom as "Basic" | "Premium" | "Enterprise" || form.plan
+                          plan: selectedOffre?.nom || form.plan
                         });
                       }}
                       disabled={offresLoading}

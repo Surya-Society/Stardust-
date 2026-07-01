@@ -228,6 +228,24 @@ pub fn run() {
                             error!("❌ Local database connection failed: {}", e);
                         }
                     }
+
+                    // ============================================================
+                    // ✅ FIX CRITIQUE : empêcher ce bloc async de se terminer
+                    // ============================================================
+                    // Sans ça, dès que toutes les étapes d'init ci-dessus sont
+                    // terminées (quelques millisecondes), block_on() retourne,
+                    // le thread se termine, le `System` actix_rt est droppé,
+                    // et TOUTES les tâches spawnées dessus (dont le serveur HTTP
+                    // api::start_api) sont tuées avant d'avoir pu accepter une
+                    // seule connexion. C'est pour ça que curl / Surya n'arrivaient
+                    // jamais à se connecter à http://localhost:8080, même si les
+                    // logs de démarrage s'affichaient normalement.
+                    //
+                    // Ce futur ne se résout jamais, donc block_on() reste bloqué
+                    // indéfiniment ici, ce qui garde le thread (et donc le
+                    // serveur API) vivant tant que l'application tourne.
+                    info!("🟢 Runtime API maintenu actif (serveur HTTP en écoute sur :8080)");
+                    std::future::pending::<()>().await;
                 });
             });
             

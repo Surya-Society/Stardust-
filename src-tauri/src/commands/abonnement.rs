@@ -1,3 +1,4 @@
+// src/commands/abonnement.rs
 use tauri::command;
 use serde_json::{json, Value};
 use sqlx::SqlitePool;
@@ -7,6 +8,31 @@ use uuid::Uuid;
 use chrono::Utc;
 
 use crate::models::abonnement::{Abonnement, CreateAbonnementRequest, UpdateAbonnementRequest};
+
+// ================================================================
+// FONCTION UTILITAIRE - Capitaliser le plan
+// ================================================================
+
+/// ✅ Capitalise le plan de licence (Basic, Premium, Gold)
+/// - "basic" → "Basic"
+/// - "BASIC" → "Basic"
+/// - "Premium" → "Premium"
+/// - "GOLD" → "Gold"
+fn capitalize_plan(plan: &str) -> String {
+    let lower = plan.to_lowercase();
+    match lower.as_str() {
+        "basic" => "Basic".to_string(),
+        "premium" => "Premium".to_string(),
+        "gold" => "Gold".to_string(),
+        _ => {
+            let mut chars = lower.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
+            }
+        }
+    }
+}
 
 #[command]
 pub async fn get_all_abonnements(
@@ -80,6 +106,9 @@ pub async fn create_abonnement(
 ) -> Result<Value, String> {
     info!("🆕 Créer abonnement");
     
+    // ✅ Convertir le plan en capitalisé (Basic, Premium, Gold)
+    let plan_capitalized = capitalize_plan(&request.plan);
+    
     let abonnement_id = Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
     
@@ -96,7 +125,7 @@ pub async fn create_abonnement(
     .bind(&abonnement_id)
     .bind(&request.id_etablissement)
     .bind(&request.licence_id)
-    .bind(&request.plan)
+    .bind(&plan_capitalized)  // ← Capitalisé
     .bind(&request.duree)
     .bind(request.montant_original)
     .bind(request.montant_remise)
@@ -131,8 +160,9 @@ pub async fn update_abonnement(
     let mut binds: Vec<String> = Vec::new();
     
     if let Some(plan) = request.plan {
+        // ✅ Convertir le plan en capitalisé
         updates.push("plan = ?");
-        binds.push(plan);
+        binds.push(capitalize_plan(&plan));
     }
     if let Some(duree) = request.duree {
         updates.push("duree = ?");
@@ -179,7 +209,7 @@ pub async fn update_abonnement(
     query_builder
         .execute(&*pool)
         .await
-        .map_err(|e| e.to_string())?;
+    .map_err(|e| e.to_string())?;
 
     Ok(json!({
         "success": true,
@@ -241,9 +271,9 @@ pub async fn get_abonnement_stats(
             SUM(CASE WHEN statut = 'SUSPENDU' THEN 1 ELSE 0 END) as suspendu,
             SUM(CASE WHEN statut = 'EXPIRE' THEN 1 ELSE 0 END) as expire,
             SUM(CASE WHEN statut = 'ANNULE' THEN 1 ELSE 0 END) as annule,
-            SUM(CASE WHEN plan = 'BASIC' THEN 1 ELSE 0 END) as basic,
-            SUM(CASE WHEN plan = 'PREMIUM' THEN 1 ELSE 0 END) as premium,
-            SUM(CASE WHEN plan = 'ENTERPRISE' THEN 1 ELSE 0 END) as enterprise
+            SUM(CASE WHEN plan = 'Basic' THEN 1 ELSE 0 END) as basic,
+            SUM(CASE WHEN plan = 'Premium' THEN 1 ELSE 0 END) as premium,
+            SUM(CASE WHEN plan = 'Gold' THEN 1 ELSE 0 END) as gold
         FROM abonnements
         "#
     )
@@ -258,7 +288,7 @@ pub async fn get_abonnement_stats(
     let annule: Option<i64> = row.get("annule");
     let basic: Option<i64> = row.get("basic");
     let premium: Option<i64> = row.get("premium");
-    let enterprise: Option<i64> = row.get("enterprise");
+    let gold: Option<i64> = row.get("gold");
 
     Ok(json!({
         "success": true,
@@ -271,7 +301,7 @@ pub async fn get_abonnement_stats(
             "plans": {
                 "basic": basic.unwrap_or(0),
                 "premium": premium.unwrap_or(0),
-                "enterprise": enterprise.unwrap_or(0)
+                "gold": gold.unwrap_or(0)
             }
         }
     }))

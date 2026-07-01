@@ -1,8 +1,9 @@
 -- ============================================================================
 -- STARDUST - Base de données PostgreSQL COMPLÈTE (CORRIGÉE)
 -- ============================================================================
--- Version: 2.0.0
+-- Version: 2.1.0
 -- Description: Gestion des licences, activation_keys, abonnements, offres, paiements
+-- OFFRES DISPONIBLES: Basic, Premium, Gold (3 plans × 4 durées = 12 offres)
 -- ============================================================================
 
 -- ============================================================================
@@ -36,7 +37,7 @@ CREATE TABLE IF NOT EXISTS Etablissement (
     region TEXT NOT NULL,
     ville TEXT NOT NULL,
     commune TEXT,
-    quatier TEXT,
+    quartier TEXT,
     adresse TEXT NOT NULL,
     code_postal TEXT,
     telephone_principal TEXT NOT NULL,
@@ -92,6 +93,8 @@ CREATE TRIGGER trg_clients_update_timestamp
 -- ============================================================================
 -- 2. TABLE DES CLÉS D'ACTIVATION (Stardust)
 -- ============================================================================
+-- ✅ MODIFICATION: plan accepte Basic, Premium, Gold uniquement
+-- ============================================================================
 
 CREATE TABLE IF NOT EXISTS activation_keys (
     id SERIAL PRIMARY KEY,
@@ -99,7 +102,7 @@ CREATE TABLE IF NOT EXISTS activation_keys (
     id_etablissement TEXT,
     key_text TEXT NOT NULL UNIQUE,
     school_name TEXT NOT NULL,
-    plan TEXT NOT NULL CHECK(plan IN ('Basic', 'Premium', 'Enterprise')),
+    plan TEXT NOT NULL CHECK(plan IN ('Basic', 'Premium', 'Gold')),
     status TEXT NOT NULL CHECK(status IN ('active', 'expired', 'suspended', 'revoked')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     expires_at TIMESTAMPTZ NOT NULL,
@@ -248,6 +251,8 @@ CREATE INDEX idx_used_challenges_device ON used_challenges(device_id);
 -- ============================================================================
 -- 7. TABLE DES OFFRES
 -- ============================================================================
+-- ✅ UNIQUEMENT: Basic, Premium, Gold (3 plans × 4 durées = 12 offres)
+-- ============================================================================
 
 CREATE TABLE IF NOT EXISTS offres (
     offre_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -296,7 +301,9 @@ CREATE TRIGGER trg_offres_update_timestamp
     EXECUTE FUNCTION update_timestamp();
 
 -- ============================================================================
--- 8. TABLE DES ABONNEMENTS
+-- 8. TABLE DES ABONNEMENTS (CORRIGÉE)
+-- ============================================================================
+-- ✅ MODIFICATION: plan CHECK en ('Basic', 'Premium', 'Gold')
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS abonnements (
@@ -305,7 +312,8 @@ CREATE TABLE IF NOT EXISTS abonnements (
     licence_id UUID NOT NULL REFERENCES licences(licence_id) ON DELETE CASCADE,
     offre_id UUID REFERENCES offres(offre_id) ON DELETE SET NULL,
     
-    plan TEXT NOT NULL CHECK (plan IN ('BASIC', 'PREMIUM', 'ENTERPRISE')),
+    -- ✅ CORRIGÉ: plan en Basic, Premium, Gold (capitalisé)
+    plan TEXT NOT NULL CHECK (plan IN ('Basic', 'Premium', 'Gold')),
     duree TEXT NOT NULL CHECK (duree IN ('MENSUEL', 'TRIMESTRIEL', 'SEMESTRIEL', 'ANNUEL', 'A_VIE')),
     
     montant_original INTEGER NOT NULL,
@@ -824,22 +832,67 @@ $$ LANGUAGE plpgsql;
 -- ============================================================================
 -- INSERTION DES OFFRES PAR DÉFAUT
 -- ============================================================================
+-- ✅ UNIQUEMENT: Basic, Premium, Gold (3 plans × 4 durées = 12 offres)
+-- ============================================================================
 
 INSERT INTO offres (code, nom, description, duree, prix, devise, fonctionnalites, est_populaire, ordre_affichage) VALUES
-('BASIC_MENSUEL', 'Basic', 'Pour les petites structures', 'MENSUEL', 10000, 'XOF', '{"users": 5, "storage": "10GB", "support": "standard"}', FALSE, 1),
-('BASIC_TRIMESTRIEL', 'Basic Trimestriel', 'Économisez 10%', 'TRIMESTRIEL', 27000, 'XOF', '{"users": 5, "storage": "10GB", "support": "standard"}', FALSE, 2),
-('BASIC_ANNUEL', 'Basic Annuel', 'Économisez 25%', 'ANNUEL', 90000, 'XOF', '{"users": 5, "storage": "10GB", "support": "standard"}', FALSE, 3),
-('BASIC_A_VIE', 'Basic À vie', 'Payez une fois, utilisez toujours', 'A_VIE', 250000, 'XOF', '{"users": 5, "storage": "10GB", "support": "standard"}', FALSE, 4),
 
-('PREMIUM_MENSUEL', 'Premium', 'Pour les établissements en croissance', 'MENSUEL', 25000, 'XOF', '{"users": 20, "storage": "50GB", "support": "priority", "parents": true, "api": true}', TRUE, 5),
-('PREMIUM_TRIMESTRIEL', 'Premium Trimestriel', 'Économisez 10%', 'TRIMESTRIEL', 67500, 'XOF', '{"users": 20, "storage": "50GB", "support": "priority", "parents": true, "api": true}', FALSE, 6),
-('PREMIUM_ANNUEL', 'Premium Annuel', 'Économisez 25%', 'ANNUEL', 225000, 'XOF', '{"users": 20, "storage": "50GB", "support": "priority", "parents": true, "api": true}', FALSE, 7),
-('PREMIUM_A_VIE', 'Premium À vie', 'Payez une fois, utilisez toujours', 'A_VIE', 600000, 'XOF', '{"users": 20, "storage": "50GB", "support": "priority", "parents": true, "api": true}', FALSE, 8),
+-- ============================================================
+-- BASIC (4 offres)
+-- ============================================================
+('BASIC_MENSUEL', 'Basic', 
+ 'Solution simple pour les petites structures', 'MENSUEL', 10000, 'XOF', 
+ '{"users": 5, "storage": "10GB", "support": "standard"}', FALSE, 1),
 
-('ENTERPRISE_MENSUEL', 'Enterprise', 'Solution complète pour les grandes écoles', 'MENSUEL', 50000, 'XOF', '{"users": "illimite", "storage": "200GB", "support": "24/7", "multi_etablissement": true, "personnalisation": true}', FALSE, 9),
-('ENTERPRISE_TRIMESTRIEL', 'Enterprise Trimestriel', 'Économisez 10%', 'TRIMESTRIEL', 135000, 'XOF', '{"users": "illimite", "storage": "200GB", "support": "24/7", "multi_etablissement": true, "personnalisation": true}', FALSE, 10),
-('ENTERPRISE_ANNUEL', 'Enterprise Annuel', 'Économisez 25%', 'ANNUEL', 450000, 'XOF', '{"users": "illimite", "storage": "200GB", "support": "24/7", "multi_etablissement": true, "personnalisation": true}', FALSE, 11),
-('ENTERPRISE_A_VIE', 'Enterprise À vie', 'Payez une fois, utilisez toujours', 'A_VIE', 1200000, 'XOF', '{"users": "illimite", "storage": "200GB", "support": "24/7", "multi_etablissement": true, "personnalisation": true}', FALSE, 12);
+('BASIC_TRIMESTRIEL', 'Basic Trimestriel', 
+ 'Économisez 10% sur votre abonnement Basic', 'TRIMESTRIEL', 27000, 'XOF', 
+ '{"users": 5, "storage": "10GB", "support": "standard"}', FALSE, 2),
+
+('BASIC_ANNUEL', 'Basic Annuel', 
+ 'Économisez 25% sur votre abonnement Basic', 'ANNUEL', 90000, 'XOF', 
+ '{"users": 5, "storage": "10GB", "support": "standard"}', FALSE, 3),
+
+('BASIC_A_VIE', 'Basic À vie', 
+ 'Payez une fois, utilisez toujours - Basic', 'A_VIE', 250000, 'XOF', 
+ '{"users": 5, "storage": "10GB", "support": "standard"}', FALSE, 4),
+
+-- ============================================================
+-- PREMIUM (4 offres)
+-- ============================================================
+('PREMIUM_MENSUEL', 'Premium', 
+ 'Pour les établissements en croissance', 'MENSUEL', 25000, 'XOF', 
+ '{"users": 20, "storage": "50GB", "support": "priority", "parents": true, "api": true}', TRUE, 5),
+
+('PREMIUM_TRIMESTRIEL', 'Premium Trimestriel', 
+ 'Économisez 10% sur votre abonnement Premium', 'TRIMESTRIEL', 67500, 'XOF', 
+ '{"users": 20, "storage": "50GB", "support": "priority", "parents": true, "api": true}', FALSE, 6),
+
+('PREMIUM_ANNUEL', 'Premium Annuel', 
+ 'Économisez 25% sur votre abonnement Premium', 'ANNUEL', 225000, 'XOF', 
+ '{"users": 20, "storage": "50GB", "support": "priority", "parents": true, "api": true}', FALSE, 7),
+
+('PREMIUM_A_VIE', 'Premium À vie', 
+ 'Payez une fois, utilisez toujours - Premium', 'A_VIE', 600000, 'XOF', 
+ '{"users": 20, "storage": "50GB", "support": "priority", "parents": true, "api": true}', FALSE, 8),
+
+-- ============================================================
+-- GOLD (4 offres)
+-- ============================================================
+('GOLD_MENSUEL', 'Gold', 
+ 'La solution premium avec support prioritaire et analytics avancés', 'MENSUEL', 35000, 'XOF', 
+ '{"users": 50, "storage": "100GB", "support": "24/7", "parents": true, "api": true, "analytics": true}', TRUE, 9),
+
+('GOLD_TRIMESTRIEL', 'Gold Trimestriel', 
+ 'Économisez 10% sur votre abonnement Gold', 'TRIMESTRIEL', 94500, 'XOF', 
+ '{"users": 50, "storage": "100GB", "support": "24/7", "parents": true, "api": true, "analytics": true}', FALSE, 10),
+
+('GOLD_ANNUEL', 'Gold Annuel', 
+ 'Économisez 25% sur votre abonnement Gold', 'ANNUEL', 315000, 'XOF', 
+ '{"users": 50, "storage": "100GB", "support": "24/7", "parents": true, "api": true, "analytics": true}', FALSE, 11),
+
+('GOLD_A_VIE', 'Gold À vie', 
+ 'Payez une fois, utilisez toujours - Gold', 'A_VIE', 850000, 'XOF', 
+ '{"users": 50, "storage": "100GB", "support": "24/7", "parents": true, "api": true, "analytics": true}', FALSE, 12);
 
 -- ============================================================================
 -- FIN DE LA BASE DE DONNÉES COMPLÈTE

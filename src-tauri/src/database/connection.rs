@@ -1,5 +1,4 @@
-// src/database/connection.rs
-
+// src/database/connection.rs - VERSION CORRIGÉE
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::path::PathBuf;
@@ -9,32 +8,17 @@ use std::fs;
 use std::env;
 
 pub async fn ensure_db_exists(app_handle: &AppHandle) -> Result<PathBuf, Box<dyn std::error::Error + Send + Sync + 'static>> {
-    let db_path = if let Ok(db_url) = env::var("DATABASE_URL") {
-        let path_str = db_url
-            .strip_prefix("sqlite://")
-            .unwrap_or(&db_url);
-        PathBuf::from(path_str)
-    } else {
-        let app_dir = app_handle.path()
-            .app_data_dir()
-            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync + 'static>)?;
-        
-        if !app_dir.exists() {
-            fs::create_dir_all(&app_dir)?;
-        }
-        app_dir.join("Stardust.sqlite")
-    };
+    // ✅ Utiliser le dossier AppData (hors du projet)
+    let app_dir = app_handle.path()
+        .app_data_dir()
+        .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync + 'static>)?;
     
-    if let Some(parent) = db_path.parent() {
-        if !parent.exists() {
-            fs::create_dir_all(parent)?;
-        }
+    if !app_dir.exists() {
+        fs::create_dir_all(&app_dir)?;
     }
     
-    if !db_path.exists() {
-        info!("📄 Creating new database at: {}", db_path.display());
-        fs::File::create(&db_path)?;
-    }
+    // ✅ Le fichier est dans AppData, PAS dans src-tauri
+    let db_path = app_dir.join("Stardust.sqlite");
     
     info!("📁 Database path: {}", db_path.display());
     Ok(db_path)
@@ -51,8 +35,8 @@ pub async fn init_sqlite_pool(app_handle: &AppHandle) -> Result<SqlitePool, sqlx
     info!("📁 SQLite database: {}", url);
     
     SqlitePoolOptions::new()
-        .max_connections(10)
-        .acquire_timeout(std::time::Duration::from_secs(30))
+        .max_connections(5)
+        .acquire_timeout(std::time::Duration::from_secs(10))
         .connect(&url)
         .await
 }
@@ -65,9 +49,11 @@ pub async fn init_pg_pool() -> Result<PgPool, sqlx::Error> {
     info!("☁️ Connecting to PostgreSQL...");
     
     PgPoolOptions::new()
-        .max_connections(10)
-        .min_connections(2)
-        .acquire_timeout(std::time::Duration::from_secs(30))
+        .max_connections(5)
+        .min_connections(1)
+        .acquire_timeout(std::time::Duration::from_secs(10))
+        .idle_timeout(std::time::Duration::from_secs(60))
+        .max_lifetime(std::time::Duration::from_secs(300))
         .connect(&database_url)
         .await
 }

@@ -43,7 +43,6 @@ pub async fn sync_etablissement(
     
     let now = Utc::now().to_rfc3339();
     
-    // ✅ UPSERT dans PostgreSQL de Stardust
     let result = sqlx::query(
         r#"
         INSERT INTO Etablissement (
@@ -105,8 +104,8 @@ pub async fn sync_etablissement(
     .bind(&req.statut)
     .bind(&req.date_creation)
     .bind(&req.date_modification)
-    .bind(1)  // synced = 1
-    .bind(&now)  // sync_date
+    .bind(1)
+    .bind(&now)
     .execute(&**pg_pool)
     .await;
 
@@ -222,4 +221,89 @@ pub async fn sync_etablissements_batch(
         "total": req.len(),
         "errors": errors
     }))
+}
+
+// ================================================================
+// ✅ NOUVEL ENDPOINT - Récupérer un établissement par son ID
+// ================================================================
+
+/// ✅ Récupère un établissement par son ID (pour Surya)
+pub async fn get_etablissement(
+    path: web::Path<String>,
+    pg_pool: web::Data<PgPool>,
+) -> impl Responder {
+    let id_etablissement = path.into_inner();
+    
+    info!("🔍 Récupération établissement: {}", id_etablissement);
+    
+    let row = sqlx::query(
+        r#"
+        SELECT 
+            id_etablissement, nom, sigle, numero_agrement, numero_fiscal,
+            registre_commerciale, type_etablissement, statut_juridique,
+            pays, region, ville, commune, quatier, adresse, code_postal,
+            telephone_principal, telephone_secondaire, email, site_web,
+            annee_scolaire_debut, annee_scolaire_fin, statut,
+            date_creation, date_modification, synced, sync_date
+        FROM Etablissement
+        WHERE id_etablissement = $1
+        "#
+    )
+    .bind(&id_etablissement)
+    .fetch_optional(&**pg_pool)
+    .await;
+
+    match row {
+        Ok(Some(row)) => {
+            info!("✅ Établissement trouvé: {}", id_etablissement);
+            
+            let etablissement = json!({
+                "id_etablissement": row.get::<String, _>("id_etablissement"),
+                "nom": row.get::<String, _>("nom"),
+                "sigle": row.get::<Option<String>, _>("sigle"),
+                "numero_agrement": row.get::<String, _>("numero_agrement"),
+                "numero_fiscal": row.get::<String, _>("numero_fiscal"),
+                "registre_commerciale": row.get::<Option<String>, _>("registre_commerciale"),
+                "type_etablissement": row.get::<String, _>("type_etablissement"),
+                "statut_juridique": row.get::<String, _>("statut_juridique"),
+                "pays": row.get::<String, _>("pays"),
+                "region": row.get::<String, _>("region"),
+                "ville": row.get::<String, _>("ville"),
+                "commune": row.get::<Option<String>, _>("commune"),
+                "quatier": row.get::<Option<String>, _>("quatier"),
+                "adresse": row.get::<String, _>("adresse"),
+                "code_postal": row.get::<Option<String>, _>("code_postal"),
+                "telephone_principal": row.get::<String, _>("telephone_principal"),
+                "telephone_secondaire": row.get::<Option<String>, _>("telephone_secondaire"),
+                "email": row.get::<Option<String>, _>("email"),
+                "site_web": row.get::<Option<String>, _>("site_web"),
+                "annee_scolaire_debut": row.get::<String, _>("annee_scolaire_debut"),
+                "annee_scolaire_fin": row.get::<String, _>("annee_scolaire_fin"),
+                "statut": row.get::<String, _>("statut"),
+                "date_creation": row.get::<String, _>("date_creation"),
+                "date_modification": row.get::<Option<String>, _>("date_modification"),
+                "synced": row.get::<i32, _>("synced"),
+                "sync_date": row.get::<Option<String>, _>("sync_date"),
+            });
+            
+            HttpResponse::Ok().json(json!({
+                "success": true,
+                "data": etablissement
+            }))
+        }
+        Ok(None) => {
+            info!("❌ Établissement non trouvé: {}", id_etablissement);
+            HttpResponse::NotFound().json(json!({
+                "success": false,
+                "error": "Établissement non trouvé"
+            }))
+        }
+        Err(e) => {
+            error!("❌ Erreur récupération établissement: {}", e);
+            HttpResponse::InternalServerError().json(json!({
+                "success": false,
+                "error": format!("Erreur: {}", e)
+            }))
+        }
+    }
 }

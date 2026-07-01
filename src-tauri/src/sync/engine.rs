@@ -1,9 +1,12 @@
-// src/sync/engine.rs
+// src/sync/engine.rs - VERSION COMPLÈTE CORRIGÉE
 use sqlx::{SqlitePool, PgPool, Row};
 use anyhow::Result;
 use log::{info, error, warn};
 use crate::database::local::repositories as LocalRepo;
 use crate::database::remote::repositories as RemoteRepo;
+use serde_json::Value as JsonValue;
+use chrono::{DateTime, Utc};
+use uuid::Uuid;
 
 pub struct SyncEngine {
     local: SqlitePool,
@@ -117,13 +120,71 @@ impl SyncEngine {
 
         info!("📤 {} établissements à synchroniser", etablissements.len());
 
+        let mut success_count = 0;
+        let mut errors = Vec::new();
+
+        // ✅ Utiliser une transaction PostgreSQL
+        let mut tx = self.remote.begin().await?;
+
         for etab in &etablissements {
-            RemoteRepo::etablissement::upsert(&self.remote, etab).await?;
-            LocalRepo::etablissement::mark_synced(&self.local, &etab.id_etablissement).await?;
+            // ✅ Vérifier que l'ID n'est pas vide
+            if etab.id_etablissement.is_empty() {
+                error!("❌ ID vide pour '{}', génération forcée", etab.nom);
+                let new_id = Uuid::new_v4().to_string();
+                
+                sqlx::query(
+                    r#"
+                    UPDATE Etablissement 
+                    SET id_etablissement = ?, sync_date = ? 
+                    WHERE id_etablissement = '' AND nom = ?
+                    "#
+                )
+                .bind(&new_id)
+                .bind(chrono::Utc::now().to_rfc3339())
+                .bind(&etab.nom)
+                .execute(&self.local)
+                .await?;
+                
+                let mut etab_corrige = etab.clone();
+                etab_corrige.id_etablissement = new_id;
+                
+                // ✅ CORRECTION: Utiliser &mut *tx au lieu de &mut tx
+                match RemoteRepo::etablissement::upsert(&mut *tx, &etab_corrige).await {
+                    Ok(_) => {
+                        LocalRepo::etablissement::mark_synced(&self.local, &etab_corrige.id_etablissement).await?;
+                        success_count += 1;
+                        info!("✅ Établissement synchronisé après correction: {}", etab_corrige.nom);
+                    }
+                    Err(e) => {
+                        error!("❌ Erreur upsert {}: {}", etab_corrige.nom, e);
+                        errors.push(format!("{}: {}", etab_corrige.nom, e));
+                    }
+                }
+                continue;
+            }
+
+            // ✅ CORRECTION: Utiliser &mut *tx au lieu de &mut tx
+            match RemoteRepo::etablissement::upsert(&mut *tx, etab).await {
+                Ok(_) => {
+                    LocalRepo::etablissement::mark_synced(&self.local, &etab.id_etablissement).await?;
+                    success_count += 1;
+                    info!("✅ Établissement synchronisé: {} ({})", etab.nom, etab.id_etablissement);
+                }
+                Err(e) => {
+                    error!("❌ Erreur upsert {}: {}", etab.nom, e);
+                    errors.push(format!("{}: {}", etab.nom, e));
+                }
+            }
         }
 
-        info!("✅ {} établissements synchronisés", etablissements.len());
-        Ok(etablissements.len())
+        tx.commit().await?;
+
+        if !errors.is_empty() {
+            warn!("⚠️ {} erreurs lors de la sync", errors.len());
+        }
+
+        info!("✅ {} établissements synchronisés sur {}", success_count, etablissements.len());
+        Ok(success_count)
     }
 
     // ================================================================
@@ -156,7 +217,7 @@ impl SyncEngine {
                     INSERT INTO Etablissement (
                         id_etablissement, nom, sigle, numero_agrement, numero_fiscal,
                         registre_commerciale, type_etablissement, statut_juridique,
-                        pays, region, ville, commune, quatier, adresse, code_postal,
+                        pays, region, ville, commune, quartier, adresse, code_postal,
                         telephone_principal, telephone_secondaire, email, site_web,
                         annee_scolaire_debut, annee_scolaire_fin, statut,
                         date_creation, date_modification, synced, sync_date
@@ -175,7 +236,7 @@ impl SyncEngine {
                 .bind(&etab.region)
                 .bind(&etab.ville)
                 .bind(&etab.commune)
-                .bind(&etab.quatier)
+                .bind(&etab.quartier)
                 .bind(&etab.adresse)
                 .bind(&etab.code_postal)
                 .bind(&etab.telephone_principal)
@@ -208,11 +269,10 @@ impl SyncEngine {
     pub async fn sync_offres_remote_to_local(&self) -> Result<usize> {
         info!("📥 Synchronisation offres: PostgreSQL → SQLite");
         
-        // ✅ Récupérer toutes les offres actives depuis PostgreSQL
         let remote_offres = sqlx::query(
             r#"
             SELECT 
-                offre_id, code, nom, description, statut, duree,
+                offre_id::TEXT, code, nom, description, statut, duree,
                 prix, devise, prix_original, reduction_pourcentage,
                 essai_gratuit, duree_essai_jours, fonctionnalites,
                 renouvellement_automatique, grace_period_jours,
@@ -244,22 +304,26 @@ impl SyncEngine {
             let devise: String = record.get("devise");
             let prix_original: Option<i32> = record.get("prix_original");
             let reduction_pourcentage: Option<i32> = record.get("reduction_pourcentage");
-            let essai_gratuit: i32 = record.get("essai_gratuit");
+            let essai_gratuit: bool = record.get("essai_gratuit");
             let duree_essai_jours: Option<i32> = record.get("duree_essai_jours");
-            let fonctionnalites: Option<String> = record.get("fonctionnalites");
-            let renouvellement_automatique: i32 = record.get("renouvellement_automatique");
+            let fonctionnalites: JsonValue = record.get("fonctionnalites");
+            let renouvellement_automatique: bool = record.get("renouvellement_automatique");
             let grace_period_jours: i32 = record.get("grace_period_jours");
             let icon: Option<String> = record.get("icon");
             let couleur: Option<String> = record.get("couleur");
             let ordre_affichage: i32 = record.get("ordre_affichage");
-            let est_populaire: i32 = record.get("est_populaire");
-            let est_meilleur_rapport: i32 = record.get("est_meilleur_rapport");
+            let est_populaire: bool = record.get("est_populaire");
+            let est_meilleur_rapport: bool = record.get("est_meilleur_rapport");
             let nombre_abonnes: i32 = record.get("nombre_abonnes");
             let total_revenu: i32 = record.get("total_revenu");
-            let created_at: String = record.get("created_at");
-            let updated_at: String = record.get("updated_at");
+            
+            let created_at: DateTime<Utc> = record.get("created_at");
+            let updated_at: DateTime<Utc> = record.get("updated_at");
 
-            // ✅ Vérifier si l'offre existe déjà en local
+            let created_at_str = created_at.to_rfc3339();
+            let updated_at_str = updated_at.to_rfc3339();
+            let fonctionnalites_str = fonctionnalites.to_string();
+
             let exists = sqlx::query_scalar::<_, i64>(
                 "SELECT 1 FROM offres_cache WHERE offre_id = ?"
             )
@@ -269,7 +333,6 @@ impl SyncEngine {
             .is_some();
 
             if exists {
-                // ✅ Mise à jour
                 sqlx::query(
                     r#"
                     UPDATE offres_cache SET
@@ -296,24 +359,23 @@ impl SyncEngine {
                 .bind(&devise)
                 .bind(prix_original)
                 .bind(reduction_pourcentage)
-                .bind(essai_gratuit)
+                .bind(essai_gratuit as i32)
                 .bind(duree_essai_jours)
-                .bind(&fonctionnalites)
-                .bind(renouvellement_automatique)
+                .bind(&fonctionnalites_str)
+                .bind(renouvellement_automatique as i32)
                 .bind(grace_period_jours)
                 .bind(&icon)
                 .bind(&couleur)
                 .bind(ordre_affichage)
-                .bind(est_populaire)
-                .bind(est_meilleur_rapport)
+                .bind(est_populaire as i32)
+                .bind(est_meilleur_rapport as i32)
                 .bind(nombre_abonnes)
                 .bind(total_revenu)
-                .bind(&updated_at)
+                .bind(&updated_at_str)
                 .bind(&offre_id)
                 .execute(&self.local)
                 .await?;
             } else {
-                // ✅ Insertion
                 sqlx::query(
                     r#"
                     INSERT INTO offres_cache (
@@ -336,20 +398,20 @@ impl SyncEngine {
                 .bind(&devise)
                 .bind(prix_original)
                 .bind(reduction_pourcentage)
-                .bind(essai_gratuit)
+                .bind(essai_gratuit as i32)
                 .bind(duree_essai_jours)
-                .bind(&fonctionnalites)
-                .bind(renouvellement_automatique)
+                .bind(&fonctionnalites_str)
+                .bind(renouvellement_automatique as i32)
                 .bind(grace_period_jours)
                 .bind(&icon)
                 .bind(&couleur)
                 .bind(ordre_affichage)
-                .bind(est_populaire)
-                .bind(est_meilleur_rapport)
+                .bind(est_populaire as i32)
+                .bind(est_meilleur_rapport as i32)
                 .bind(nombre_abonnes)
                 .bind(total_revenu)
-                .bind(&created_at)
-                .bind(&updated_at)
+                .bind(&created_at_str)
+                .bind(&updated_at_str)
                 .execute(&self.local)
                 .await?;
             }
@@ -378,10 +440,18 @@ impl SyncEngine {
 
         info!("📤 {} licences à synchroniser", licences.len());
 
+        // ✅ Utiliser une transaction
+        let mut tx = self.remote.begin().await?;
+
         for licence in &licences {
-            RemoteRepo::licence::upsert(&self.remote, licence).await?;
+            // ✅ CORRECTION: RemoteRepo::licence::upsert n'accepte pas Executor
+            // Utiliser upsert_simple avec le pool directement
+            // OU modifier licence::upsert pour accepter Executor
+            RemoteRepo::licence::upsert_simple(&self.remote, licence).await?;
             LocalRepo::licence::mark_synced(&self.local, licence.id).await?;
         }
+
+        tx.commit().await?;
 
         info!("✅ {} licences synchronisées", licences.len());
         Ok(licences.len())
@@ -490,6 +560,10 @@ impl SyncEngine {
         info!("📤 {} abonnements à synchroniser", abonnements.len());
 
         let mut count = 0;
+        let mut errors = Vec::new();
+
+        let mut tx = self.remote.begin().await?;
+
         for record in abonnements {
             let abonnement_id: String = record.get("abonnement_id");
             let id_etablissement: String = record.get("id_etablissement");
@@ -514,7 +588,6 @@ impl SyncEngine {
             let created_at: String = record.get("created_at");
             let updated_at: String = record.get("updated_at");
 
-            // ✅ Vérifier si l'abonnement existe en remote
             let exists = sqlx::query_scalar::<_, i64>(
                 "SELECT 1 FROM abonnements WHERE abonnement_id = $1"
             )
@@ -523,8 +596,9 @@ impl SyncEngine {
             .await?
             .is_some();
 
-            if exists {
-                // ✅ Mise à jour
+            let now = chrono::Utc::now().to_rfc3339();
+
+            let result = if exists {
                 sqlx::query(
                     r#"
                     UPDATE abonnements SET
@@ -573,12 +647,11 @@ impl SyncEngine {
                 .bind(renouvellement_auto)
                 .bind(&metadata)
                 .bind(&updated_at)
-                .bind(chrono::Utc::now().to_rfc3339())
+                .bind(&now)
                 .bind(&abonnement_id)
-                .execute(&self.remote)
-                .await?;
+                .execute(&mut *tx)  // ✅ CORRECTION
+                .await
             } else {
-                // ✅ Insertion
                 sqlx::query(
                     r#"
                     INSERT INTO abonnements (
@@ -614,26 +687,39 @@ impl SyncEngine {
                 .bind(&created_at)
                 .bind(&updated_at)
                 .bind(1)
-                .bind(chrono::Utc::now().to_rfc3339())
-                .execute(&self.remote)
-                .await?;
+                .bind(&now)
+                .execute(&mut *tx)  // ✅ CORRECTION
+                .await
+            };
+
+            match result {
+                Ok(_) => {
+                    sqlx::query(
+                        r#"
+                        UPDATE abonnements
+                        SET synced = 1, sync_date = ?
+                        WHERE abonnement_id = ?
+                        "#
+                    )
+                    .bind(&now)
+                    .bind(&abonnement_id)
+                    .execute(&self.local)
+                    .await?;
+
+                    count += 1;
+                    info!("✅ Abonnement synchronisé: {} ({})", abonnement_id, plan);
+                }
+                Err(e) => {
+                    error!("❌ Erreur sync abonnement {}: {}", abonnement_id, e);
+                    errors.push(format!("{}: {}", abonnement_id, e));
+                }
             }
+        }
 
-            // ✅ Marquer comme synchronisé en local
-            sqlx::query(
-                r#"
-                UPDATE abonnements
-                SET synced = 1, sync_date = ?
-                WHERE abonnement_id = ?
-                "#
-            )
-            .bind(chrono::Utc::now().to_rfc3339())
-            .bind(&abonnement_id)
-            .execute(&self.local)
-            .await?;
+        tx.commit().await?;
 
-            count += 1;
-            info!("✅ Abonnement synchronisé: {} ({})", abonnement_id, plan);
+        if !errors.is_empty() {
+            warn!("⚠️ {} erreurs lors de la sync des abonnements", errors.len());
         }
 
         info!("✅ {} abonnements synchronisés", count);
@@ -833,11 +919,14 @@ impl SyncEngine {
         .fetch_one(&self.local)
         .await?;
         
-        Ok((licences + abonnements + etablissements) as usize)
+        let total = (licences + abonnements + etablissements) as usize;
+        info!("📊 Modifications en attente: {} (licences: {}, abonnements: {}, établissements: {})", 
+            total, licences, abonnements, etablissements);
+        
+        Ok(total)
     }
 }
 
-// ✅ Implémentation de Clone pour SyncEngine
 impl Clone for SyncEngine {
     fn clone(&self) -> Self {
         Self {

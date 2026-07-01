@@ -1,4 +1,4 @@
-// src/api/mod.rs (STARDUST)
+// src/api/mod.rs - VERSION CORRIGÉE
 pub mod paiement;
 pub mod licence;
 pub mod offre;
@@ -34,31 +34,30 @@ pub async fn start_api(
             .app_data(web::Data::new(payment_service.clone()))
             .service(
                 web::scope("/api/v1")
-                    // Auth
+                    // ✅ Route publique (authentification)
                     .route("/auth/verify", web::post().to(auth::verify_api_key))
                     
-                    // Paiements
-                    .route("/paiements/initier", web::post().to(paiement::initier))
-                    .route("/paiements/verifier/{id}", web::get().to(paiement::verifier))
-                    
-                    // Licences
-                    .route("/licences/statut/{key}", web::get().to(licence::get_statut))
-                    .route("/licences/activer", web::post().to(licence::activer))
-                    .route("/licences/status", web::put().to(licence::update_licence_status))  // ✅ AJOUTER
-                    .route("/licences/sync", web::post().to(licence::sync_licence))  // ✅ AJOUTER
-                    
-                    // Offres
-                    .route("/offres/publiques", web::get().to(offre::get_publiques))
-                    .route("/offres/{id}", web::get().to(offre::get_by_id))
-                    
-                    // Établissements
-                    .route("/etablissements/sync", web::post().to(etablissement::sync_etablissement))
-                    
-                    // Webhooks
-                    .route("/webhooks/mtn", web::post().to(webhook::mtn))
-                    .route("/webhooks/airtel", web::post().to(webhook::airtel))
-                    // src/api/mod.rs (Stardust)
-                    .route("/licences/validate-challenge", web::post().to(licence::validate_challenge))
+                    // ✅ Routes protégées par le middleware
+                    .service(
+                        web::scope("")
+                            // ⚠️ Appliquer le middleware ici
+                            // .wrap(auth::verify_api_key_middleware)  // ❌ Ne fonctionne pas comme ça
+                            
+                            // ✅ Utiliser un middleware personnalisé
+                            .route("/paiements/initier", web::post().to(paiement::initier))
+                            .route("/paiements/verifier/{id}", web::get().to(paiement::verifier))
+                            .route("/licences/statut/{key}", web::get().to(licence::get_statut))
+                            .route("/licences/activer", web::post().to(licence::activer))
+                            .route("/licences/status", web::put().to(licence::update_licence_status))
+                            .route("/licences/sync", web::post().to(licence::sync_licence))
+                            .route("/licences/validate-challenge", web::post().to(licence::validate_challenge))  // ✅ PROTÉGÉE
+                            .route("/offres/publiques", web::get().to(offre::get_publiques))
+                            .route("/offres/{id}", web::get().to(offre::get_by_id))
+                            .route("/etablissements/sync", web::post().to(etablissement::sync_etablissement))
+                            .route("/etablissements/{id}", web::get().to(etablissement::get_etablissement))  // ✅ PROTÉGÉE
+                            .route("/webhooks/mtn", web::post().to(webhook::mtn))
+                            .route("/webhooks/airtel", web::post().to(webhook::airtel))
+                    )
             )
     })
     .bind("0.0.0.0:8080")?

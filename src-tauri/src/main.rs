@@ -8,4 +8,4 @@ fn main() {
 }
 
 // sqlx migrate run --source migrations/sqlite --database-url sqlite://./Stardust.sqlite
-// sqlx migrate run --source migrations/postgres --database-url postgres://postgres:Raphael@localhost:5432/stardust
+// sqlx migrate run --source migrations/postgres --database-url postgres://postgres:SuryaSociety@localhost:5432/stardust
